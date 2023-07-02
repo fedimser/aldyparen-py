@@ -1,0 +1,8 @@
+/.idea
+/.ipynb_checkpoints
+/.pytest_cache
+/images
+/tmp
+/venv
+*.pyc
+TODO.txt
