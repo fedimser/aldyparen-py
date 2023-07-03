@@ -1,5 +1,5 @@
-matplotlib==3.7.1
-moviepy==1.0.3
-numba==0.55.2
-numpy==1.21
-PyQt5==5.15.9
+matplotlib>=3.7.1
+moviepy>=1.0.3
+numba>=0.55.2
+numpy>=1.21
+PyQt5>=5.15.9
