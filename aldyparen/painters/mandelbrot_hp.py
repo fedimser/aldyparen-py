@@ -60,4 +60,5 @@ class MadnelbrotHighPrecisionPainter:
 
         w = renderer.width_pxl
         h = renderer.height_pxl
-        return mandelbrot_high_precision_numba(center_x, center_y, mgrid_x  - w // 2, mgrid_y - h//2,  w, h, upp, self.max_iter)
+        return mandelbrot_high_precision_numba(center_x, center_y, mgrid_x - w // 2, mgrid_y - h // 2, w, h, upp,
+                                               self.max_iter)
