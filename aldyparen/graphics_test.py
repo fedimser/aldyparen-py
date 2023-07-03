@@ -20,16 +20,17 @@ def assert_picture(picture, golden_name, overwrite=False):
     if os.path.exists(golden_path):
         golden = mpimg.imread(golden_path)
     if golden is None or picture.shape != golden.shape or not np.allclose(picture, golden):
-        plt.imsave(os.path.join(GOLDEN_DIR, golden_name + "expected.bmp", picture))
+        plt.imsave(os.path.join(GOLDEN_DIR, golden_name + "_expected.bmp"), picture)
         raise AssertionError(f"Golden mismatch: {golden_name}")
 
 
 def test_renders_mandelbroids():
     renderer = StaticRenderer(200, 200)
     transform = Transform(0, 4, 0.0)
-    for gen_function in ["z*z+c", "z*z*z+c", "z*z*z+3**z+c"]:
-        frame = Frame(MandelbroidPainter(gen_function=gen_function, max_iter=20), transform, PALETTE)
-        assert_picture(renderer.render(frame), f"mandelbroid_{gen_function}")
+    funcs = ["z*z+c", "z*z*z+c", "z*z*z+3**z+c"]
+    for i in range(3):
+        frame = Frame(MandelbroidPainter(gen_function=funcs[i], max_iter=20), transform, PALETTE)
+        assert_picture(renderer.render(frame), f"mandelbroid_{i}")
 
 
 def test_renders_sierpinski_carpet():
