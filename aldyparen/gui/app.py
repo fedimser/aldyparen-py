@@ -1,4 +1,5 @@
 import copy
+import os
 import sys
 import json
 import time
@@ -7,7 +8,7 @@ import numpy as np
 
 from .main import MainWindow
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtCore import QTimer, QThread
+from PyQt5.QtCore import QTimer, QThread, QThreadPool, QRunnable
 from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette
 from ..painters import MandelbroidPainter, AxisPainter, ALL_PAINTERS
 from ..mixing import make_animation
@@ -40,9 +41,6 @@ class AldyparenApp:
 
         self.frames = []  # type: List[Frame]
         self.selected_frame_idx = -1
-
-        # TODO: use QThreadPool isntead.
-        self.very_stupid_thread_pool = []
 
     def run(self):
         self.main_window.show()
@@ -101,7 +99,9 @@ class AldyparenApp:
 
         # Update UI status labels.
         wf_status_emoji = "✅" if self.work_frame_renderer.renderer_thread.is_idle else "⏳"
-        self.main_window.show_status(wf_status_emoji)
+        status = wf_status_emoji
+        #  "🎥📷"
+        self.main_window.show_status(status)
         pos = self.main_window.scene_work_frame.cursor_math_pos
         pos_text = "" if pos is None else "Cursor position: %.4g;%.4g" % (np.real(pos), np.imag(pos))
         self.main_window.label_cursor_position.setText(pos_text)
@@ -114,18 +114,6 @@ class AldyparenApp:
     def update_work_frame_palette(self, new_palette: ColorPalette):
         self.work_frame = replace(self.work_frame, palette=new_palette)
         self.on_work_frame_changed()
-
-    def export_image(self):
-        print(f"Preparing to render photo")
-        file_name = "images/" + datetime.now().isoformat()[:19]
-        if type(self.work_frame.painter) is MandelbroidPainter:
-            file_name += "[" + self.work_frame.painter.gen_function + "]"
-        file_name += ".bmp"
-        print(f"file name:", file_name)
-        thread = ImageRenderThread(self.work_frame, StaticRenderer(3840, 2160), file_name)
-        thread.start()
-        self.very_stupid_thread_pool.append(thread)
-        print(f"ImageRenderThread started")
 
     def append_movie_frame(self):
         self.frames.append(self.work_frame)
@@ -176,9 +164,30 @@ class AldyparenApp:
         self.selected_frame_idx += length
         self.main_window.on_movie_updated()
 
+    def export_image_4k(self):
+        print(f"Preparing to render photo")
+        dir = os.path.join(os.getcwd(), "images")
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        file_name = datetime.now().isoformat()[:19]
+        if type(self.work_frame.painter) is MandelbroidPainter:
+            file_name += "[" + self.work_frame.painter.gen_function + "]"
+        file_name += ".bmp"
+        file_name = os.path.join(dir, file_name)
+        print(f"file name:", file_name)
+        thread = ImageRenderThread(self.work_frame, StaticRenderer(3840, 2160), file_name)
+        QThreadPool.globalInstance().start(thread)
+        print(f"ImageRenderThread started")
+
+    def render_video(self, width, height, fps, file_name):
+        print(f"Preparing to render video")
+        thread = VideoRenderThread(self.frames, StaticRenderer(width, height), file_name, fps=fps)
+        QThreadPool.globalInstance().start(thread)
+        print(f"ImageRenderThread started")
+
 
 # Maybe this can be merged with StaticRenderer?
-class ImageRenderThread(QThread):
+class ImageRenderThread(QRunnable):
 
     def __init__(self, frame: Frame, renderer: StaticRenderer, file_name: str):
         super().__init__()
@@ -190,4 +199,20 @@ class ImageRenderThread(QThread):
         print(f"Start rendering photo")
         time_start = time.time()
         self.renderer.render_picture(self.frame, self.file_name)
+        print(f"Rendered f{self.file_name}, time={time.time() - time_start}")
+
+
+class VideoRenderThread(QRunnable):
+
+    def __init__(self, frames: List[Frame], renderer: StaticRenderer, file_name: str, fps: int = 16):
+        super().__init__()
+        self.frames = copy.copy(frames)
+        self.renderer = renderer
+        self.file_name = file_name
+        self.fps = fps
+
+    def run(self):
+        print(f"Start rendering video")
+        time_start = time.time()
+        self.renderer.render_video(frames=self.frames, file_name=self.file_name, fps=self.fps)
         print(f"Rendered f{self.file_name}, time={time.time() - time_start}")

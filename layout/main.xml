@@ -195,7 +195,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">
@@ -417,8 +417,8 @@
      <widget class="QPushButton" name="button_force_update">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>50</y>
+        <x>0</x>
+        <y>40</y>
         <width>121</width>
         <height>25</height>
        </rect>
@@ -465,11 +465,11 @@
        <number>1</number>
       </property>
      </widget>
-     <widget class="QPushButton" name="button_export_image">
+     <widget class="QPushButton" name="button_render_photo">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>80</y>
+        <x>0</x>
+        <y>70</y>
         <width>121</width>
         <height>25</height>
        </rect>
@@ -481,7 +481,90 @@
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Re-render working frame from scratch&lt;/p&gt;&lt;p&gt;Helps to unfreeze it (in case of accidentaly extremely expensive frame) &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="text">
-       <string>Export image 4K</string>
+       <string>Render photo</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_6">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>130</y>
+        <width>81</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Resolution</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spin_box_video_resolution_1">
+      <property name="geometry">
+       <rect>
+        <x>90</x>
+        <y>120</y>
+        <width>61</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>10</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>2560</number>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spin_box_video_resolution_2">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>120</y>
+        <width>61</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>10</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>1440</number>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="button_render_video">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>150</y>
+        <width>121</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="mouseTracking">
+       <bool>true</bool>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Re-render working frame from scratch&lt;/p&gt;&lt;p&gt;Helps to unfreeze it (in case of accidentaly extremely expensive frame) &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="text">
+       <string>Render video</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_7">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>120</y>
+        <width>21</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>x</string>
       </property>
      </widget>
     </widget>

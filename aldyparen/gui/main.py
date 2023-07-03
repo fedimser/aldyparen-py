@@ -1,8 +1,10 @@
+import os
+
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from PyQt5.QtCore import QPointF, QCoreApplication
 from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
-    QPlainTextEdit, QLabel, QSpinBox, QScrollBar
+    QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog
 from typing import Union
 
 from .. import ColorPalette
@@ -118,17 +120,18 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.confirm_then("Reset painter config?", self.app.reset_config))
         self.button_generate_palette.clicked.connect(self.on_generate_palette_click)
         self.button_force_update.clicked.connect(self.on_force_update_clicked)
-        self.button_export_image.clicked.connect(self.app.export_image)
+        self.button_render_photo.clicked.connect(self.app.export_image_4k)
+        self.button_render_video.clicked.connect(self.render_video)
         self.button_make_animation.clicked.connect(self.make_animation)
 
         # Menu items.
-        self.menu_new_project.triggered.connect(lambda: show_alert(""))
-        self.menu_open_project.triggered.connect(lambda: show_alert(""))
-        self.menu_save_project.triggered.connect(lambda: show_alert(""))
-        self.menu_save_project_as.triggered.connect(lambda: show_alert(""))
-        self.menu_render_photo.triggered.connect(lambda: show_alert(""))
-        self.menu_render_video.triggered.connect(lambda: show_alert(""))
-        self.menu_settings.triggered.connect(lambda: show_alert(""))
+        self.menu_new_project.triggered.connect(lambda: show_alert("Not implemented"))
+        self.menu_open_project.triggered.connect(lambda: show_alert("Not implemented"))
+        self.menu_save_project.triggered.connect(lambda: show_alert("Not implemented"))
+        self.menu_save_project_as.triggered.connect(lambda: show_alert("Not implemented"))
+        self.menu_render_photo.triggered.connect(self.app.export_image_4k)
+        self.menu_render_video.triggered.connect(self.render_video)
+        self.menu_settings.triggered.connect(lambda: show_alert("Not implemented"))
         self.menu_exit.triggered.connect(self.on_exit)
         self.menu_video_clear.triggered.connect(self.clear_movie)
         self.menu_video_append.triggered.connect(self.app.append_movie_frame)
@@ -146,6 +149,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_movie.setScene(self.scene_movie)
         self.scene_work_frame = WorkFrameScene(self, app)
         self.view_work_frame.setScene(self.scene_work_frame)
+
+        self.work_dir = os.getcwd()
 
     def set_image(self, view, scene, image):
         image = QtGui.QImage(
@@ -287,3 +292,23 @@ class MainWindow(QtWidgets.QMainWindow):
         # TODO: check for unsaved changes and active tasks.
         if self.confirm("Exit?"):
             QCoreApplication.exit(0)
+
+    def render_video(self):
+        frames_count = len(self.app.frames)
+        if frames_count == 0:
+            show_alert("Movie is empty, can't render.")
+            return
+        width = self.spin_box_video_resolution_1.value()
+        height = self.spin_box_video_resolution_2.value()
+        fps = 16
+        filters = "Video files (*.mp4 *.avi);;All files (*.*)"
+        file_name = QFileDialog.getSaveFileName(self, 'Choose video location', self.work_dir, filters)[0]
+        prompt = "\n".join([
+            "Confirm video render.",
+            f"Resolution: {width}x{height}",
+            f"Frame rate: {fps} FPS",
+            f"Location: {file_name}",
+            f"Duration: {len(self.app.frames)} frames."
+        ])
+        if self.confirm(prompt):
+            self.app.render_video(width, height, fps, file_name)
