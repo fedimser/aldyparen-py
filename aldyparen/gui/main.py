@@ -120,7 +120,7 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.confirm_then("Reset painter config?", self.app.reset_config))
         self.button_generate_palette.clicked.connect(self.on_generate_palette_click)
         self.button_force_update.clicked.connect(self.on_force_update_clicked)
-        self.button_render_photo.clicked.connect(self.app.export_image_4k)
+        self.button_render_photo.clicked.connect(self.render_image)
         self.button_render_video.clicked.connect(self.render_video)
         self.button_make_animation.clicked.connect(self.make_animation)
 
@@ -129,7 +129,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu_open_project.triggered.connect(lambda: show_alert("Not implemented"))
         self.menu_save_project.triggered.connect(lambda: show_alert("Not implemented"))
         self.menu_save_project_as.triggered.connect(lambda: show_alert("Not implemented"))
-        self.menu_render_photo.triggered.connect(self.app.export_image_4k)
+        self.menu_render_photo.triggered.connect(self.render_image)
         self.menu_render_video.triggered.connect(self.render_video)
         self.menu_settings.triggered.connect(lambda: show_alert("Not implemented"))
         self.menu_exit.triggered.connect(self.on_exit)
@@ -292,6 +292,11 @@ class MainWindow(QtWidgets.QMainWindow):
         # TODO: check for unsaved changes and active tasks.
         if self.confirm("Exit?"):
             QCoreApplication.exit(0)
+
+    def render_image(self):
+        width = self.spin_box_image_resolution_1.value()
+        height = self.spin_box_image_resolution_2.value()
+        self.app.render_image(width, height)
 
     def render_video(self):
         frames_count = len(self.app.frames)

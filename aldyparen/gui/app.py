@@ -170,8 +170,7 @@ class AldyparenApp:
         self.selected_frame_idx += length
         self.main_window.on_movie_updated()
 
-    def export_image_4k(self):
-        print(f"Preparing to render photo")
+    def render_image(self, width, height):
         dir = os.path.join(os.getcwd(), "images")
         if not os.path.exists(dir):
             os.makedirs(dir)
@@ -180,10 +179,8 @@ class AldyparenApp:
             file_name += "[" + self.work_frame.painter.gen_function + "]"
         file_name += ".bmp"
         file_name = os.path.join(dir, file_name)
-        print(f"file name:", file_name)
-        thread = ImageRenderThread(self, self.work_frame, StaticRenderer(3840, 2160), file_name)
+        thread = ImageRenderThread(self, self.work_frame, StaticRenderer(width, height), file_name)
         QThreadPool.globalInstance().start(thread)
-        print(f"ImageRenderThread started")
 
     def render_video(self, width, height, fps, file_name):
         print(f"Preparing to render video")
