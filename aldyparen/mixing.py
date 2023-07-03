@@ -25,6 +25,8 @@ def mix_frames(frame1: Frame, frame2: Frame, w: float) -> Frame:
 
 
 def mix_painters(p1: 'Painter', p2: 'Painter', w: float) -> Painter:
+    if p1 == p2:
+        return p1
     cl = p1.__class__
     assert p2.__class__ == cl
     if cl == MandelbroidPainter:

@@ -194,11 +194,16 @@ class AldyparenApp:
 
     def save_project(self):
         assert self.opened_file_name is not None
+        frames_json = []
+        prev = None
+        for frame in self.frames:
+            frames_json.append(frame.serialize(prev=prev))
+            prev = frame
         data = {
             "saved_timestamp": datetime.now().isoformat(),
             "version": VERSION,
             "work_frame": self.work_frame.serialize(),
-            "frames": [f.serialize() for f in self.frames],
+            "frames": frames_json,
             "selected_frame_idx": self.selected_frame_idx,
         }
         with open(self.opened_file_name, "w", encoding="utf-8") as f:
@@ -216,9 +221,11 @@ class AldyparenApp:
         self.work_frame = Frame.deserialize(data["work_frame"])
         print("Deserialized work frame")
         self.frames = []
-        for f in data["frames"]:
-            self.frames.append(Frame.deserialize(f))
-            print("Deserialized frames %d of %d" % (len(self.frames), len(data["frames"])))
+        prev = None
+        for frame_json in data["frames"]:
+            frame = Frame.deserialize(frame_json, prev=prev)
+            self.frames.append(frame)
+            prev = frame
         self.selected_frame_idx = data["selected_frame_idx"]
         self.opened_file_name = file_name
         self.have_unsaved_changes = False

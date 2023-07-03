@@ -126,21 +126,36 @@ class Frame:
     transform: Transform
     palette: ColorPalette
 
-    def serialize(self):
-        return {
-            "pn": self.painter.__class__.__name__,
-            "pt": self.painter.to_object(),
+    def serialize(self, prev: 'Frame' = None):
+        data = {
             "tr": self.transform.serialize(),
-            "pl": self.palette.serialize()
         }
+        if prev is not None and prev.painter == self.painter:
+            data["pn"] = "prev"
+        else:
+            data["pn"] = self.painter.__class__.__name__
+            data["pt"] = self.painter.to_object()
+        if prev is not None and prev.palette == self.palette:
+            data["pl"] = "prev"
+        else:
+            data["pl"] = self.palette.serialize()
+        return data
 
     @staticmethod
-    def deserialize(data: Dict) -> 'Frame':
+    def deserialize(data: Dict, prev: 'Frame' = None) -> 'Frame':
         from aldyparen.painters import Painter
+        if data["pn"] == "prev":
+            painter = prev.painter
+        else:
+            painter = Painter.deserialize(data["pn"], data["pt"])
+        if data["pl"] == "prev":
+            palette = prev.palette
+        else:
+            palette = ColorPalette.deserialize(data["pl"])
         return Frame(
-            painter=Painter.deserialize(data["pn"], data["pt"]),
+            painter=painter,
             transform=Transform.deserialize(data["tr"]),
-            palette=ColorPalette.deserialize(data["pl"])
+            palette=palette
         )
 
 
