@@ -8,7 +8,7 @@ from .mandelbrot_hp import MadnelbrotHighPrecisionPainter
 
 
 # Contract:
-# __init__ takes all args as kwargs. Should create default instanjce with no args.
+# __init__ takes all args as kwargs. Should create default instance with no args.
 # to_object produces the same kwargs as taken by __init__
 # paint takes 2d array of complex points and paints them (think about how this works for arbitrary precision).
 
@@ -21,7 +21,11 @@ def fff(p, width):
 
 
 class Painter:
-    pass
+    @staticmethod
+    def deserialize(class_name: str, data: dict) -> 'Painter':
+        assert class_name in PAINTERS_INDEX
+        painter_class = PAINTERS_INDEX[class_name]
+        return painter_class(**data)
 
 
 class AxisPainter(Painter):
@@ -33,6 +37,7 @@ class AxisPainter(Painter):
 
     def paint(self, points):
         return fff(points, self.width)
+
 
 # If point is inside, returns 0.
 # If point is outside, returns at which iteration we exited it.
@@ -73,3 +78,4 @@ class SierpinskiCarpetPainter(Painter):
 
 # All supported painters.
 ALL_PAINTERS = [MandelbroidPainter, MadnelbrotHighPrecisionPainter, AxisPainter, SierpinskiCarpetPainter]
+PAINTERS_INDEX = {p.__name__: p for p in ALL_PAINTERS}

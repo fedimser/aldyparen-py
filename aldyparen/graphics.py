@@ -1,12 +1,14 @@
-import numpy as np
-import numba
+import base64
+import time
+from dataclasses import dataclass
+from typing import Callable, Dict, List
+
 import matplotlib
+import numba
+import numpy as np
+from PyQt5.QtCore import QThread
 from matplotlib import pyplot as plt
 from moviepy.editor import concatenate, ImageClip
-from dataclasses import dataclass
-from typing import Callable, Union
-from PyQt5.QtCore import QThread, QObject
-import time
 
 
 @numba.jit("u1[:,:,:](u4[:,:],u1[:,:])", parallel=True, nogil=True)
@@ -73,6 +75,17 @@ class ColorPalette:
     def color_to_html(color):
         return '#{:02X}{:02X}{:02X}'.format(color[0], color[1], color[2])
 
+    def serialize(self) -> str:
+        return base64.b64encode(self.colors)
+
+    @staticmethod
+    def deserialize(data: str) -> 'ColorPalette':
+        colors = np.frombuffer(base64.decodebytes(data), dtype=np.ubyte).reshape((-1, 3))
+        return ColorPalette(colors)
+
+    def __eq__(self, other: 'ColorPalette'):
+        return np.array_equal(self.colors, other.colors)
+
 
 @dataclass(frozen=True)
 class Transform:
@@ -92,12 +105,41 @@ class Transform:
     def __str__(self):
         return f"{self.center} {self.scale} {self.rotation}"
 
+    def serialize(self) -> List[float]:
+        return [self.center.real, self.center.imag, self.scale, self.rotation]
+
+    @staticmethod
+    def deserialize(data: List[float]) -> 'Transform':
+        assert len(data) == 4
+        return Transform(np.complex128(data[0] + 1j * data[1]), data[2], data[3])
+
+    def __eq__(self, other: 'Transform'):
+        return np.isclose(self.center, other.center) and np.isclose(self.scale, other.scale) and np.isclose(
+            self.rotation, other.rotation)
+
 
 @dataclass(frozen=True)
 class Frame:
     painter: 'Painter'
     transform: Transform
     palette: ColorPalette
+
+    def serialize(self):
+        return {
+            "pn": self.painter.__class__.__name__,
+            "pt": self.painter.to_object(),
+            "tr": self.transform.serialize(),
+            "pl": self.palette.serialize()
+        }
+
+    @staticmethod
+    def deserialize(data: Dict) -> 'Frame':
+        from aldyparen.painters import Painter
+        return Frame(
+            painter=Painter.deserialize(data["pn"], data["pt"]),
+            transform=Transform.deserialize(data["tr"]),
+            palette=ColorPalette.deserialize(data["pl"])
+        )
 
 
 class Renderer:

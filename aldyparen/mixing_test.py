@@ -26,10 +26,9 @@ def test_make_animation():
     assert animation[0] == frame1
     assert animation[10] == frame2
     mid_frame = animation[5]
-    np.testing.assert_almost_equal(mid_frame.transform.center, 1 + 2j)
-    np.testing.assert_almost_equal(mid_frame.transform.scale, 5)
-    np.testing.assert_almost_equal(mid_frame.transform.rotation, 1)
+    assert mid_frame.transform == Transform(1 + 2j, 5, 1)
     mid_painter = mid_frame.painter  # type: MandelbroidPainter
     assert mid_painter.max_iter == 75
     assert np.allclose(mid_painter.radius, 15)
     assert mid_painter.gen_function == "z**6.0+c"
+    # TODO: assert palette.

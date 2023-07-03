@@ -4,8 +4,8 @@ import matplotlib.image as mpimg
 import numpy as np
 from matplotlib import pyplot as plt
 
-from aldyparen.graphics import Frame, StaticRenderer, InteractiveRenderer, Transform, ColorPalette
-from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter
+from aldyparen.graphics import Frame, StaticRenderer, Transform, ColorPalette
+from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter, MadnelbrotHighPrecisionPainter
 
 GOLDEN_DIR = os.path.join(os.getcwd(), "goldens")
 
@@ -39,5 +39,24 @@ def test_renders_sierpinski_carpet():
     palette = ColorPalette.gradient('black', 'white', size=2)
     frame = Frame(SierpinskiCarpetPainter(depth=4), transform, palette)
     assert_picture(renderer.render(frame), "sierpinski_carpet")
+
+
+def _verify_serialization(frame1: Frame):
+    data1 = frame1.serialize()
+    frame2 = Frame.deserialize(data1)
+    data2 = frame2.serialize()
+    assert data1 == data2
+    assert frame1.transform == frame2.transform
+    assert frame1.palette == frame2.palette
+    assert frame1.painter.__class__ == frame2.painter.__class__
+    assert frame1.painter.to_object() == frame2.painter.to_object()
+
+
+def test_serialization():
+    _verify_serialization(Frame(SierpinskiCarpetPainter(depth=4), Transform(0, 1, 0), ColorPalette.default()))
+    _verify_serialization(
+        Frame(MandelbroidPainter(gen_function="z**3+sin(z)+c"), Transform(2 + 3j, 10, 3.1), ColorPalette.random()))
+    _verify_serialization(
+        Frame(MadnelbrotHighPrecisionPainter(), Transform(2j, 1e-3, -6), ColorPalette.grayscale(20)))
 
 # TODO: add test for cascade rendering with InteractiveRenderer.

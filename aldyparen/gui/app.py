@@ -16,6 +16,8 @@ from dataclasses import replace
 from datetime import datetime
 from typing import List
 
+VERSION = "3.0"
+
 
 class AldyparenApp:
     def __init__(self):
@@ -187,6 +189,24 @@ class AldyparenApp:
         thread = VideoRenderThread(self, self.frames, StaticRenderer(width, height), file_name, fps=fps)
         QThreadPool.globalInstance().start(thread)
         print(f"ImageRenderThread started")
+
+    def serialize_current_project(self) -> str:
+        data = {
+            "saved_timestamp": datetime.now().isoformat(),
+            "version": VERSION,
+            "work_frame": self.work_frame.serialize(),
+            "frames": [f.serialize() for f in self.frames],
+            "selected_frame_idx": self.selected_frame_idx,
+        }
+        return json.dumps(data)
+
+    def load_project(self, project_json: str):
+        data = json.loads(project_json)
+        self.work_frame = Frame.deserialize(data["work_frame"])
+        self.frames = [Frame.deserialize(f) for f in data["frames"]]
+        self.selected_frame_idx = data["selected_frame_idx"]
+        self.on_work_frame_changed()
+        self.main_window.on_movie_updated()
 
 
 # Maybe this can be merged with StaticRenderer?
