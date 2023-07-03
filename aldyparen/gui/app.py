@@ -42,6 +42,9 @@ class AldyparenApp:
         self.frames = []  # type: List[Frame]
         self.selected_frame_idx = -1
 
+        self.photo_rendering_tasks_count = 0
+        self.video_rendering_tasks_count = 0
+
     def run(self):
         self.main_window.show()
         self.reset_config()
@@ -100,7 +103,10 @@ class AldyparenApp:
         # Update UI status labels.
         wf_status_emoji = "✅" if self.work_frame_renderer.renderer_thread.is_idle else "⏳"
         status = wf_status_emoji
-        #  "🎥📷"
+        if self.photo_rendering_tasks_count > 0:
+            status += f" 📷({self.photo_rendering_tasks_count})"
+        if self.video_rendering_tasks_count > 0:
+            status += f" 🎥({self.video_rendering_tasks_count})"
         self.main_window.show_status(status)
         pos = self.main_window.scene_work_frame.cursor_math_pos
         pos_text = "" if pos is None else "Cursor position: %.4g;%.4g" % (np.real(pos), np.imag(pos))
@@ -175,13 +181,13 @@ class AldyparenApp:
         file_name += ".bmp"
         file_name = os.path.join(dir, file_name)
         print(f"file name:", file_name)
-        thread = ImageRenderThread(self.work_frame, StaticRenderer(3840, 2160), file_name)
+        thread = ImageRenderThread(self, self.work_frame, StaticRenderer(3840, 2160), file_name)
         QThreadPool.globalInstance().start(thread)
         print(f"ImageRenderThread started")
 
     def render_video(self, width, height, fps, file_name):
         print(f"Preparing to render video")
-        thread = VideoRenderThread(self.frames, StaticRenderer(width, height), file_name, fps=fps)
+        thread = VideoRenderThread(self, self.frames, StaticRenderer(width, height), file_name, fps=fps)
         QThreadPool.globalInstance().start(thread)
         print(f"ImageRenderThread started")
 
@@ -189,30 +195,36 @@ class AldyparenApp:
 # Maybe this can be merged with StaticRenderer?
 class ImageRenderThread(QRunnable):
 
-    def __init__(self, frame: Frame, renderer: StaticRenderer, file_name: str):
+    def __init__(self, app: AldyparenApp, frame: Frame, renderer: StaticRenderer, file_name: str, ):
         super().__init__()
+        self.app = app
         self.frame = frame
         self.renderer = renderer
         self.file_name = file_name
 
     def run(self):
+        self.app.photo_rendering_tasks_count += 1
         print(f"Start rendering photo")
         time_start = time.time()
         self.renderer.render_picture(self.frame, self.file_name)
         print(f"Rendered f{self.file_name}, time={time.time() - time_start}")
+        self.app.photo_rendering_tasks_count -= 1
 
 
 class VideoRenderThread(QRunnable):
 
-    def __init__(self, frames: List[Frame], renderer: StaticRenderer, file_name: str, fps: int = 16):
+    def __init__(self, app: AldyparenApp, frames: List[Frame], renderer: StaticRenderer, file_name: str, fps: int = 16):
         super().__init__()
+        self.app = app
         self.frames = copy.copy(frames)
         self.renderer = renderer
         self.file_name = file_name
         self.fps = fps
 
     def run(self):
+        self.app.video_rendering_tasks_count += 1
         print(f"Start rendering video")
         time_start = time.time()
         self.renderer.render_video(frames=self.frames, file_name=self.file_name, fps=self.fps)
         print(f"Rendered f{self.file_name}, time={time.time() - time_start}")
+        self.app.video_rendering_tasks_count -= 1
