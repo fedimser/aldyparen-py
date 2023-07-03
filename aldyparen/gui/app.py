@@ -10,6 +10,7 @@ from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import QTimer, QThread
 from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette
 from ..painters import MandelbroidPainter, AxisPainter, ALL_PAINTERS
+from ..mixing import make_animation
 from dataclasses import replace
 from datetime import datetime
 from typing import List
@@ -126,13 +127,53 @@ class AldyparenApp:
         self.very_stupid_thread_pool.append(thread)
         print(f"ImageRenderThread started")
 
-    def make_animation(self, length):
-        # return "Not implemented"
-        self.main_window.on_movie_updated()
-
     def append_movie_frame(self):
         self.frames.append(self.work_frame)
         self.selected_frame_idx = len(self.frames) - 1
+        self.main_window.on_movie_updated()
+
+    def replace_movie_frame(self):
+        if len(self.frames) == 0:
+            return
+        self.frames[self.selected_frame_idx] = self.work_frame
+        self.main_window.on_movie_updated()
+
+    def remove_last_frames(self, count):
+        count = min(count, len(self.frames))
+        self.frames = self.frames[:-count]
+        self.main_window.on_movie_updated()
+
+    def remove_selected_frame(self):
+        if len(self.frames) == 0:
+            return
+        cur_idx = self.selected_frame_idx
+        self.frames = self.frames[:cur_idx] + self.frames[cur_idx + 1:]
+        if cur_idx >= len(self.frames):
+            self.selected_frame_idx = len(self.frames) - 1
+        self.main_window.on_movie_updated()
+
+    def clone_selected_frame(self):
+        if len(self.frames) == 0:
+            return
+        self.work_frame = self.frames[self.selected_frame_idx]
+        self.on_work_frame_changed()
+
+    def make_animation(self, length: int):
+        assert length >= 2
+        cur_idx = self.selected_frame_idx
+        assert 0 <= cur_idx < len(self.frames)
+        begin_frame = self.frames[cur_idx]
+        end_frame = self.work_frame
+        if begin_frame.painter.__class__ != end_frame.painter.__class__:
+            raise ValueError("Begin and frame use painters of different kinds.")
+        if begin_frame.palette.colors.shape != end_frame.palette.colors.shape:
+            raise ValueError("Begin and frame have palettes of different size.")
+        anim_frames = make_animation(begin_frame, end_frame, length)
+        assert len(anim_frames) == length + 1
+        assert anim_frames[0] == begin_frame
+        assert anim_frames[-1] == end_frame
+        self.frames = self.frames[0:cur_idx] + anim_frames + self.frames[cur_idx + 1:]
+        self.selected_frame_idx += length
         self.main_window.on_movie_updated()
 
 

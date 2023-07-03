@@ -164,7 +164,7 @@
        <number>2</number>
       </property>
       <property name="maximum">
-       <number>1000</number>
+       <number>100</number>
       </property>
       <property name="value">
        <number>10</number>
@@ -526,14 +526,14 @@
     <property name="title">
      <string>Video edit</string>
     </property>
-    <addaction name="menu_clear"/>
-    <addaction name="menu_append"/>
-    <addaction name="actionReplace"/>
-    <addaction name="actionRemove_last_frame"/>
-    <addaction name="actionRemove_last_10_frames"/>
-    <addaction name="actionMake_animation"/>
-    <addaction name="actionRemove_selected_frame"/>
-    <addaction name="actionSelected_frame_work_area"/>
+    <addaction name="menu_video_clear"/>
+    <addaction name="menu_video_append"/>
+    <addaction name="menu_video_replace"/>
+    <addaction name="menu_video_remove_last_frame"/>
+    <addaction name="menu_video_remove_last_10_frames"/>
+    <addaction name="menu_video_make_animation"/>
+    <addaction name="menu_video_remove_selected_frame"/>
+    <addaction name="menu_video_selected_frame_to_work_area"/>
    </widget>
    <widget class="QMenu" name="menuTransform">
     <property name="title">
@@ -614,44 +614,53 @@
     <string>Annotation</string>
    </property>
   </action>
-  <action name="menu_clear">
+  <action name="menu_video_clear">
    <property name="text">
     <string>Clear</string>
    </property>
   </action>
-  <action name="menu_append">
+  <action name="menu_video_append">
    <property name="text">
     <string>Append</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Left</string>
+   </property>
   </action>
-  <action name="actionReplace">
+  <action name="menu_video_replace">
    <property name="text">
     <string>Replace</string>
    </property>
   </action>
-  <action name="actionRemove_last_frame">
+  <action name="menu_video_remove_last_frame">
    <property name="text">
     <string>Remove last frame</string>
    </property>
   </action>
-  <action name="actionRemove_last_10_frames">
+  <action name="menu_video_remove_last_10_frames">
    <property name="text">
     <string>Remove last 10 frames</string>
    </property>
   </action>
-  <action name="actionMake_animation">
+  <action name="menu_video_make_animation">
    <property name="text">
     <string>Make animation</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+A</string>
+   </property>
   </action>
-  <action name="actionRemove_selected_frame">
+  <action name="menu_video_remove_selected_frame">
    <property name="text">
     <string>Remove selected frame</string>
    </property>
   </action>
-  <action name="actionSelected_frame_work_area">
+  <action name="menu_video_selected_frame_to_work_area">
    <property name="text">
     <string>Selected frame -&gt; work area</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Right</string>
    </property>
   </action>
   <action name="actionSettings">

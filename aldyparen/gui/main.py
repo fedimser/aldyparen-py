@@ -115,17 +115,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_reset_transform.clicked.connect(
             lambda: self.app.reset_transform())
         self.button_reset_painter_config.clicked.connect(
-            lambda: self.confirm("Reset painter config?", self.app.reset_config))
-        self.button_generate_palette.clicked.connect(
-            self.on_generate_palette_click)
+            lambda: self.confirm_then("Reset painter config?", self.app.reset_config))
+        self.button_generate_palette.clicked.connect(self.on_generate_palette_click)
         self.button_force_update.clicked.connect(self.on_force_update_clicked)
         self.button_export_image.clicked.connect(self.app.export_image)
         self.button_make_animation.clicked.connect(self.make_animation)
 
         # Menu items.
-        self.menu_append.triggered.connect(self.app.append_movie_frame)
-        self.menu_clear.triggered.connect(
-            lambda: self.confirm("Permanently delete all frames?", self.clear_movie))
+        self.menu_video_clear.triggered.connect(self.clear_movie)
+        self.menu_video_append.triggered.connect(self.app.append_movie_frame)
+        self.menu_video_replace.triggered.connect(self.app.replace_movie_frame)
+        self.menu_video_remove_last_frame.triggered.connect(lambda: self.app.remove_last_frames(1))
+        self.menu_video_remove_last_10_frames.triggered.connect(lambda: self.app.remove_last_frames(10))
+        self.menu_video_make_animation.triggered.connect(self.make_animation)
+        self.menu_video_remove_selected_frame.triggered.connect(self.app.remove_selected_frame)
+        self.menu_video_selected_frame_to_work_area.triggered.connect(self.app.clone_selected_frame)
 
         self.scroll_bar_movie.sliderMoved.connect(self.on_movie_scroll)
         self.scroll_bar_movie.valueChanged.connect(self.on_movie_scroll)
@@ -178,9 +182,12 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             label.setStyleSheet("color: red;")
 
-    def confirm(self, text, action):
+    def confirm(self, text) -> bool:
         qm = QMessageBox
-        if qm.question(self, '', text, qm.Yes | qm.No) == qm.Yes:
+        return qm.question(self, '', text, qm.Yes | qm.No) == qm.Yes
+
+    def confirm_then(self, text, action):
+        if self.confirm(text):
             action()
 
     def show_status(self, status):
@@ -218,11 +225,23 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def make_animation(self):
         if len(self.app.frames) == 0:
-            show_alert()
+            show_alert("Movie is empty")
+            return
+        if self.app.selected_frame_idx != len(self.app.frames) - 1:
+            if not self.confirm("Are you sure you want insert animation in the middle of movie?"):
+                return
+        length = self.spin_box_animation_length.value()
+        try:
+            self.app.make_animation(length)
+        except ValueError as err:
+            show_alert(str(err))
+            return
+        self.on_movie_updated()
 
     def clear_movie(self):
-        self.app.frames = []
-        self.on_movie_updated()
+        if self.confirm("Permanently delete all frames?"):
+            self.app.frames = []
+            self.on_movie_updated()
 
     def on_movie_scroll(self):
         new_idx = self.scroll_bar_movie.value()
