@@ -2,7 +2,7 @@ import numpy as np
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from PyQt5.QtCore import QPointF
 from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
-    QPlainTextEdit, QLabel, QSpinBox
+    QPlainTextEdit, QLabel, QSpinBox, QScrollBar
 from typing import Union
 
 from .. import ColorPalette
@@ -57,7 +57,8 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         if self.cursor_math_pos is None:
             return
         if bool(modifiers & QtCore.Qt.ControlModifier):
-            angle = delta * (np.pi / 90)  # 2 degrees minimal increment (for standard mouse).
+            # 2 degrees minimal increment (for standard mouse).
+            angle = delta * (np.pi / 90)
             self.app.update_work_frame_transform(
                 self.app.work_frame.transform.rotate_at_point(self.cursor_math_pos, angle))
         else:
@@ -66,7 +67,8 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
 
     def apply_drag(self, dx_pxl, dy_pxl):
         upsp = self.units_per_screen_pixel()
-        self.app.update_work_frame_transform(self.app.work_frame.transform.translate(dx_pxl * upsp, -dy_pxl * upsp))
+        self.app.update_work_frame_transform(
+            self.app.work_frame.transform.translate(dx_pxl * upsp, -dy_pxl * upsp))
 
     def units_per_screen_pixel(self):
         return self.app.work_frame.transform.scale / self.frame_width_pxl
@@ -80,7 +82,8 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
             upsp = self.units_per_screen_pixel()
             x = x - 0.5 * self.width()
             y = -(y - 0.5 * self.height())
-            self.cursor_math_pos = self.app.work_frame.transform.center + np.complex128(x + 1j * y) * upsp
+            self.cursor_math_pos = self.app.work_frame.transform.center + \
+                                   np.complex128(x + 1j * y) * upsp
         return self.cursor_math_pos
 
 
@@ -105,14 +108,27 @@ class MainWindow(QtWidgets.QMainWindow):
         combo.addItem("Gradient")
         combo.addItem("Gradient+Black")
 
-        self.edit_painter_config.textChanged.connect(lambda: self.on_config_text_changed())
+        self.edit_painter_config.textChanged.connect(
+            lambda: self.on_config_text_changed())
 
-        self.button_reset_transform.clicked.connect(lambda: self.app.reset_transform())
+        # Buttons.
+        self.button_reset_transform.clicked.connect(
+            lambda: self.app.reset_transform())
         self.button_reset_painter_config.clicked.connect(
             lambda: self.confirm("Reset painter config?", self.app.reset_config))
-        self.button_generate_palette.clicked.connect(self.on_generate_palette_click)
+        self.button_generate_palette.clicked.connect(
+            self.on_generate_palette_click)
         self.button_force_update.clicked.connect(self.on_force_update_clicked)
         self.button_export_image.clicked.connect(self.app.export_image)
+        self.button_make_animation.clicked.connect(self.make_animation)
+
+        # Menu items.
+        self.menu_append.triggered.connect(self.app.append_movie_frame)
+        self.menu_clear.triggered.connect(
+            lambda: self.confirm("Permanently delete all frames?", self.clear_movie))
+
+        self.scroll_bar_movie.sliderMoved.connect(self.on_movie_scroll)
+        self.scroll_bar_movie.valueChanged.connect(self.on_movie_scroll)
 
         self.scene_movie = QtWidgets.QGraphicsScene(self)
         self.view_movie.setScene(self.scene_movie)
@@ -120,11 +136,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_work_frame.setScene(self.scene_work_frame)
 
     def set_image(self, view, scene, image):
-        image = QtGui.QImage(image, image.shape[1], image.shape[0], image.shape[1] * 3, QtGui.QImage.Format_RGB888)
+        image = QtGui.QImage(
+            image, image.shape[1], image.shape[0], image.shape[1] * 3, QtGui.QImage.Format_RGB888)
         pix = QtGui.QPixmap(image)
         if not (pix.width() == view.width() and pix.height() == view.height()):
-            scale = min(view.width() / pix.width(), view.height() / pix.height())
-            pix = pix.scaled(int(pix.width() * scale), int(pix.height() * scale))
+            scale = min(view.width() / pix.width(),
+                        view.height() / pix.height())
+            pix = pix.scaled(int(pix.width() * scale),
+                             int(pix.height() * scale))
         scene.clear()
         scene.addPixmap(pix)
         if hasattr(scene, "frame_width_pxl"):
@@ -196,3 +215,34 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_force_update_clicked(self):
         downsample_factor = self.spin_box_downsampling.value()
         self.app.reset_work_frame(downsample_factor=downsample_factor)
+
+    def make_animation(self):
+        if len(self.app.frames) == 0:
+            show_alert()
+
+    def clear_movie(self):
+        self.app.frames = []
+        self.on_movie_updated()
+
+    def on_movie_scroll(self):
+        new_idx = self.scroll_bar_movie.value()
+        if new_idx != self.app.selected_frame_idx:
+            self.app.selected_frame_idx = new_idx
+            self.on_movie_updated()
+
+    def on_movie_updated(self):
+        mov_len = len(self.app.frames)
+        cur_idx = self.app.selected_frame_idx
+        sb = self.scroll_bar_movie  # type: QScrollBar
+        if mov_len == 0:
+            self.scene_movie.clear()
+            self.label_frame_info.setText("Movie is empty")
+            sb.setEnabled(False)
+        else:
+            assert 0 <= cur_idx < mov_len
+            image = self.app.movie_frame_renderer.render(self.app.frames[cur_idx])
+            self.set_movie_frame(image)
+            self.label_frame_info.setText("Frame %d of %d" % (cur_idx + 1, mov_len))
+            sb.setEnabled(True)
+            sb.setMaximum(mov_len - 1)
+            sb.setValue(cur_idx)

@@ -12,6 +12,7 @@ from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, Co
 from ..painters import MandelbroidPainter, AxisPainter, ALL_PAINTERS
 from dataclasses import replace
 from datetime import datetime
+from typing import List
 
 
 class AldyparenApp:
@@ -31,10 +32,15 @@ class AldyparenApp:
 
         self.main_window = MainWindow(self)
         self.work_frame_renderer = InteractiveRenderer(480, 270, self.main_window.set_work_frame)
+        self.movie_frame_renderer = StaticRenderer(240, 135)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.tick)
 
+        self.frames = []  # type: List[Frame]
+        self.selected_frame_idx = -1
+
+        # TODO: use QThreadPool isntead.
         self.very_stupid_thread_pool = []
 
     def run(self):
@@ -119,6 +125,15 @@ class AldyparenApp:
         thread.start()
         self.very_stupid_thread_pool.append(thread)
         print(f"ImageRenderThread started")
+
+    def make_animation(self, length):
+        # return "Not implemented"
+        self.main_window.on_movie_updated()
+
+    def append_movie_frame(self):
+        self.frames.append(self.work_frame)
+        self.selected_frame_idx = len(self.frames) - 1
+        self.main_window.on_movie_updated()
 
 
 # Maybe this can be merged with StaticRenderer?

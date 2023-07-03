@@ -3,4 +3,3 @@ moviepy==1.0.3
 numba==0.55.2
 numpy==1.21
 PyQt5==5.15.9
-pytest==7.2.2

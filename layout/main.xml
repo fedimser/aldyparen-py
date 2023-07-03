@@ -79,7 +79,10 @@
      <enum>Qt::ScrollBarAlwaysOff</enum>
     </property>
    </widget>
-   <widget class="QScrollBar" name="horizontalScrollBar">
+   <widget class="QScrollBar" name="scroll_bar_movie">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>5</x>
@@ -87,6 +90,15 @@
       <width>480</width>
       <height>16</height>
      </rect>
+    </property>
+    <property name="maximum">
+     <number>2</number>
+    </property>
+    <property name="pageStep">
+     <number>1</number>
+    </property>
+    <property name="value">
+     <number>0</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -102,17 +114,75 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
       <string>Frame info</string>
      </attribute>
+     <widget class="QLabel" name="label_frame_info">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>10</y>
+        <width>351</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>TextLabel</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_2">
      <attribute name="title">
       <string>Animation</string>
      </attribute>
+     <widget class="QLabel" name="label_5">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>111</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Length (frames)</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spin_box_animation_length">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>10</y>
+        <width>61</width>
+        <height>26</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>2</number>
+      </property>
+      <property name="maximum">
+       <number>1000</number>
+      </property>
+      <property name="value">
+       <number>10</number>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="button_make_animation">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>10</y>
+        <width>89</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Make!</string>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="QTabWidget" name="tabWidget_2">
@@ -125,7 +195,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">
@@ -456,9 +526,9 @@
     <property name="title">
      <string>Video edit</string>
     </property>
-    <addaction name="actionClear"/>
-    <addaction name="actionAppend"/>
-    <addaction name="actionReplae"/>
+    <addaction name="menu_clear"/>
+    <addaction name="menu_append"/>
+    <addaction name="actionReplace"/>
     <addaction name="actionRemove_last_frame"/>
     <addaction name="actionRemove_last_10_frames"/>
     <addaction name="actionMake_animation"/>
@@ -544,19 +614,19 @@
     <string>Annotation</string>
    </property>
   </action>
-  <action name="actionClear">
+  <action name="menu_clear">
    <property name="text">
     <string>Clear</string>
    </property>
   </action>
-  <action name="actionAppend">
+  <action name="menu_append">
    <property name="text">
     <string>Append</string>
    </property>
   </action>
-  <action name="actionReplae">
+  <action name="actionReplace">
    <property name="text">
-    <string>Replae</string>
+    <string>Replace</string>
    </property>
   </action>
   <action name="actionRemove_last_frame">
