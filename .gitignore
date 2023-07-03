@@ -6,4 +6,6 @@
 /tmp
 /venv
 *.pyc
+*.mp4
+*.avi
 TODO.txt

@@ -291,9 +291,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.on_exit()
 
     def on_exit(self):
-        # TODO: check for unsaved changes and active tasks.
-        if self.confirm("Exit?"):
-            QCoreApplication.exit(0)
+        if self.app.photo_rendering_tasks_count > 0 or self.app.video_rendering_tasks_count > 0:
+            if not self.confirm("There are unfinished tasks. Exiting now will cancel them. Exit anyway?"):
+                return
+        if len(self.app.frames) > 0:
+            if not self.confirm("Exiting will lose all frames. Exit anyway?"):
+                return
+        QCoreApplication.exit(0)
 
     def render_image(self):
         width = self.spin_box_image_resolution_1.value()
