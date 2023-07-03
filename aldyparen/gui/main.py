@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from PyQt5.QtCore import QPointF, QCoreApplication, QUrl
+from PyQt5.QtCore import QPointF, QCoreApplication, QUrl, QSettings
 from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
     QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog
@@ -152,7 +152,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.scene_work_frame = WorkFrameScene(self, app)
         self.view_work_frame.setScene(self.scene_work_frame)
 
-        self.work_dir = os.getcwd()
+        self.settings = QSettings("aldyparen", "aldyparen-py");
 
     def set_image(self, view, scene, image):
         image = QtGui.QImage(
@@ -313,7 +313,7 @@ class MainWindow(QtWidgets.QMainWindow):
         height = self.spin_box_video_resolution_2.value()
         fps = 16
         filters = "Video files (*.mp4 *.avi);;All files (*.*)"
-        file_name = QFileDialog.getSaveFileName(self, 'Choose video location', self.work_dir, filters)[0]
+        file_name = QFileDialog.getSaveFileName(self, 'Choose video location', self.work_dir(), filters)[0]
         if len(file_name) == 0:
             return
         prompt = "\n".join([
@@ -323,8 +323,10 @@ class MainWindow(QtWidgets.QMainWindow):
             f"Location: {file_name}",
             f"Duration: {len(self.app.frames)} frames."
         ])
-        if self.confirm(prompt):
-            self.app.render_video(width, height, fps, file_name)
+        if not self.confirm(prompt):
+            return
+        self.app.render_video(width, height, fps, file_name)
+        self.settings.setValue("work_dir", os.path.dirname(file_name))
 
     def open_docs(self):
         url = QUrl("https://github.com/fedimser/aldyparen-py")
@@ -339,11 +341,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_project(self):
         filters = "JSON files (*.json);;All files (*.*)"
-        file_name = QFileDialog.getOpenFileName(self, 'Open Aldyparen project', self.work_dir, filters)[0]
+        file_name = QFileDialog.getOpenFileName(self, 'Open Aldyparen project', self.work_dir(), filters)[0]
         if len(file_name) == 0:
             return
-        print("Calling app.load_project")
         self.app.load_project(file_name)
+        self.settings.setValue("work_dir", os.path.dirname(file_name))
 
     def save_project(self):
         if self.app.opened_file_name is not None:
@@ -353,9 +355,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def save_project_as(self):
         filters = "JSON files (*.json);;All files (*.*)"
-        file_name = QFileDialog.getSaveFileName(self, 'Save Aldyparen project', self.work_dir, filters)[0]
+        file_name = QFileDialog.getSaveFileName(self, 'Save Aldyparen project', self.work_dir(), filters)[0]
         if len(file_name) == 0:
             show_alert("File not selected - nothing was saved.")
             return
         self.app.opened_file_name = file_name
         self.app.save_project()
+        self.settings.setValue("work_dir", os.path.dirname(file_name))
+
+    def work_dir(self):
+        return self.settings.value("work_dir") or os.getcwd()
