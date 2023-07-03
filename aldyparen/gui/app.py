@@ -7,10 +7,10 @@ import time
 import numpy as np
 
 from .main import MainWindow
-from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtCore import QTimer, QThread, QThreadPool, QRunnable
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QTimer, QThreadPool, QRunnable
 from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette
-from ..painters import MandelbroidPainter, AxisPainter, ALL_PAINTERS
+from ..painters import MandelbroidPainter, ALL_PAINTERS
 from ..mixing import make_animation
 from dataclasses import replace
 from datetime import datetime

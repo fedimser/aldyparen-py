@@ -660,15 +660,6 @@
     <addaction name="separator"/>
     <addaction name="menu_exit"/>
    </widget>
-   <widget class="QMenu" name="menuFrame">
-    <property name="title">
-     <string>Frame</string>
-    </property>
-    <addaction name="actionAxes"/>
-    <addaction name="actionGrid"/>
-    <addaction name="actionTicks"/>
-    <addaction name="actionAnnotation"/>
-   </widget>
    <widget class="QMenu" name="menuVideo_edit">
     <property name="title">
      <string>Video edit</string>
@@ -682,28 +673,23 @@
     <addaction name="menu_video_remove_selected_frame"/>
     <addaction name="menu_video_selected_frame_to_work_area"/>
    </widget>
-   <widget class="QMenu" name="menuTransform">
-    <property name="title">
-     <string>Transform</string>
-    </property>
-   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionManual"/>
-    <addaction name="actionAbout"/>
+    <addaction name="menu_docs"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuFrame"/>
    <addaction name="menuVideo_edit"/>
-   <addaction name="menuTransform"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionManual">
+  <action name="menu_docs">
    <property name="text">
-    <string>Manual</string>
+    <string>Documentation</string>
+   </property>
+   <property name="shortcut">
+    <string>F1</string>
    </property>
   </action>
   <action name="actionAbout">

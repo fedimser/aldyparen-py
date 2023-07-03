@@ -2,7 +2,8 @@ import os
 
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from PyQt5.QtCore import QPointF, QCoreApplication
+from PyQt5.QtCore import QPointF, QCoreApplication, QUrl
+from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
     QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog
 from typing import Union
@@ -141,6 +142,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu_video_make_animation.triggered.connect(self.make_animation)
         self.menu_video_remove_selected_frame.triggered.connect(self.app.remove_selected_frame)
         self.menu_video_selected_frame_to_work_area.triggered.connect(self.app.clone_selected_frame)
+        self.menu_docs.triggered.connect(self.open_docs)
 
         self.scroll_bar_movie.sliderMoved.connect(self.on_movie_scroll)
         self.scroll_bar_movie.valueChanged.connect(self.on_movie_scroll)
@@ -319,3 +321,8 @@ class MainWindow(QtWidgets.QMainWindow):
         ])
         if self.confirm(prompt):
             self.app.render_video(width, height, fps, file_name)
+
+    def open_docs(self):
+        url = QUrl("https://github.com/fedimser/aldyparen-py")
+        QDesktopServices.openUrl(url)
+
