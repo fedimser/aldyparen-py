@@ -108,7 +108,14 @@ class Renderer:
     def render_meshgrid_mono(self, frame: Frame, mgrid_x: np.ndarray, mgrid_y: np.ndarray):
         """Renders monochrome frame for pixels with given coordinates"""
         if hasattr(frame.painter, "render_high_precision"):
-            return frame.painter.render_high_precision(self, frame.transform, mgrid_x, mgrid_y).reshape((-1,))
+            mgrid_shape = mgrid_x.shape
+            assert mgrid_y.shape == mgrid_shape
+            if len(mgrid_shape) > 1:
+                mgrid_x = mgrid_x.reshape((-1,))
+                mgrid_y = mgrid_y.reshape((-1,))
+            mgrid_x = mgrid_x.astype(np.int16)
+            mgrid_y = mgrid_y.astype(np.int16)
+            return frame.painter.render_high_precision(self, frame.transform, mgrid_x, mgrid_y).reshape(mgrid_shape)
         else:
             c = frame.transform.center
             upp = frame.transform.scale / self.width_pxl  # units per pixel.

@@ -303,6 +303,8 @@ class MainWindow(QtWidgets.QMainWindow):
         fps = 16
         filters = "Video files (*.mp4 *.avi);;All files (*.*)"
         file_name = QFileDialog.getSaveFileName(self, 'Choose video location', self.work_dir, filters)[0]
+        if len(file_name) == 0:
+            return
         prompt = "\n".join([
             "Confirm video render.",
             f"Resolution: {width}x{height}",

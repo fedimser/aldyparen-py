@@ -49,6 +49,10 @@ class MadnelbrotHighPrecisionPainter:
         return {"max_iter": self.max_iter, "tag": self.tag}
 
     def render_high_precision(self, renderer: Renderer, transform: Transform, mgrid_x, mgrid_y):
+        assert mgrid_x.dtype == np.int16
+        assert mgrid_y.dtype == np.int16
+        assert (mgrid_x.shape == mgrid_y.shape)
+        assert len(mgrid_x.shape) == 1
         # TODO: make this more universal.
         # TODO: support rotation.
         # TODO: account for the 1/2 error - can supply doubled mgrid, and different upp.
