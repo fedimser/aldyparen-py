@@ -1,6 +1,6 @@
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from PyQt5.QtCore import QPointF
+from PyQt5.QtCore import QPointF, QCoreApplication
 from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
     QPlainTextEdit, QLabel, QSpinBox, QScrollBar
 from typing import Union
@@ -122,6 +122,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_make_animation.clicked.connect(self.make_animation)
 
         # Menu items.
+        self.menu_new_project.triggered.connect(lambda: show_alert(""))
+        self.menu_open_project.triggered.connect(lambda: show_alert(""))
+        self.menu_save_project.triggered.connect(lambda: show_alert(""))
+        self.menu_save_project_as.triggered.connect(lambda: show_alert(""))
+        self.menu_render_photo.triggered.connect(lambda: show_alert(""))
+        self.menu_render_video.triggered.connect(lambda: show_alert(""))
+        self.menu_settings.triggered.connect(lambda: show_alert(""))
+        self.menu_exit.triggered.connect(self.on_exit)
         self.menu_video_clear.triggered.connect(self.clear_movie)
         self.menu_video_append.triggered.connect(self.app.append_movie_frame)
         self.menu_video_replace.triggered.connect(self.app.replace_movie_frame)
@@ -270,3 +278,12 @@ class MainWindow(QtWidgets.QMainWindow):
             sb.setEnabled(True)
             sb.setMaximum(mov_len - 1)
             sb.setValue(cur_idx)
+
+    def closeEvent(self, event):
+        event.ignore()
+        self.on_exit()
+
+    def on_exit(self):
+        # TODO: check for unsaved changes and active tasks.
+        if self.confirm("Exit?"):
+            QCoreApplication.exit(0)
