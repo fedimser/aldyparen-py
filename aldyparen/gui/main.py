@@ -259,7 +259,12 @@ class MainWindow(QtWidgets.QMainWindow):
             sb.setEnabled(False)
         else:
             assert 0 <= cur_idx < mov_len
-            image = self.app.movie_frame_renderer.render(self.app.frames[cur_idx])
+            frame = self.app.frames[cur_idx]
+            if hasattr(frame, "cached_movie_preview"):
+                image = frame.cached_movie_preview
+            else:
+                image = self.app.movie_frame_renderer.render(self.app.frames[cur_idx])
+                object.__setattr__(frame, "cached_movie_preview", image)
             self.set_movie_frame(image)
             self.label_frame_info.setText("Frame %d of %d" % (cur_idx + 1, mov_len))
             sb.setEnabled(True)
