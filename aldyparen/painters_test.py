@@ -15,8 +15,10 @@ def test_defaults():
         config2 = painter2.to_object()
         assert config1_json == json.dumps(config2)
 
+
 def test_mandelbroid_rejects_bad_functions():
     pass
+
 
 def test_mandelbroid_supports_all_functions():
     gen_function = '+'.join(func + '(c+z+1j)' for func in SUPPORTED_FUNCTIONS)
