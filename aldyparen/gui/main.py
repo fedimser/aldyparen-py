@@ -106,6 +106,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Initialize palette list.
         combo = self.combo_palette_type  # type: QComboBox
+        combo = self.combo_palette_type  # type: QComboBox
         combo.addItem("Grayscale")
         combo.addItem("Random")
         combo.addItem("Gradient")
@@ -152,7 +153,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.scene_work_frame = WorkFrameScene(self, app)
         self.view_work_frame.setScene(self.scene_work_frame)
 
-        self.settings = QSettings("aldyparen", "aldyparen-py");
+        self.settings = QSettings("aldyparen", "aldyparen-py")
+        self.update_title()
 
     def set_image(self, view, scene, image):
         image = QtGui.QImage(
@@ -285,6 +287,7 @@ class MainWindow(QtWidgets.QMainWindow):
             sb.setEnabled(True)
             sb.setMaximum(mov_len - 1)
             sb.setValue(cur_idx)
+        self.update_title()
 
     def closeEvent(self, event):
         event.ignore()
@@ -346,10 +349,12 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         self.app.load_project(file_name)
         self.settings.setValue("work_dir", os.path.dirname(file_name))
+        self.update_title()
 
     def save_project(self):
         if self.app.opened_file_name is not None:
             self.app.save_project()
+            self.update_title()
         else:
             self.save_project_as()
 
@@ -362,6 +367,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.app.opened_file_name = file_name
         self.app.save_project()
         self.settings.setValue("work_dir", os.path.dirname(file_name))
+        self.update_title()
 
     def work_dir(self):
         return self.settings.value("work_dir") or os.getcwd()
+
+    def update_title(self):
+        self.setWindowTitle(self.app.get_window_title())

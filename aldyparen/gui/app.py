@@ -25,6 +25,9 @@ class AldyparenApp:
 
         self.qt_app = QtWidgets.QApplication(sys.argv)
 
+        self.opened_file_name = None
+        self.have_unsaved_changes = False
+
         self.saved_painter_configs = dict()  # TODO: this better store actual painters.
         for painter_class in ALL_PAINTERS:
             painter_name = painter_class.__name__
@@ -46,8 +49,6 @@ class AldyparenApp:
 
         self.photo_rendering_tasks_count = 0
         self.video_rendering_tasks_count = 0
-        self.opened_file_name = None
-        self.have_unsaved_changes = False
 
     def run(self):
         self.main_window.show()
@@ -128,17 +129,20 @@ class AldyparenApp:
     def append_movie_frame(self):
         self.frames.append(self.work_frame)
         self.selected_frame_idx = len(self.frames) - 1
+        self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
 
     def replace_movie_frame(self):
         if len(self.frames) == 0:
             return
         self.frames[self.selected_frame_idx] = self.work_frame
+        self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
 
     def remove_last_frames(self, count):
         count = min(count, len(self.frames))
         self.frames = self.frames[:-count]
+        self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
 
     def remove_selected_frame(self):
@@ -148,12 +152,14 @@ class AldyparenApp:
         self.frames = self.frames[:cur_idx] + self.frames[cur_idx + 1:]
         if cur_idx >= len(self.frames):
             self.selected_frame_idx = len(self.frames) - 1
+        self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
 
     def clone_selected_frame(self):
         if len(self.frames) == 0:
             return
         self.work_frame = self.frames[self.selected_frame_idx]
+        self.have_unsaved_changes = True
         self.on_work_frame_changed()
 
     def make_animation(self, length: int):
@@ -172,7 +178,9 @@ class AldyparenApp:
         assert anim_frames[-1] == end_frame
         self.frames = self.frames[0:cur_idx] + anim_frames + self.frames[cur_idx + 1:]
         self.selected_frame_idx += length
+        self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
+
 
     def render_image(self, width, height):
         dir = os.path.join(os.getcwd(), "images")
@@ -240,6 +248,14 @@ class AldyparenApp:
         self.have_unsaved_changes = False
         self.main_window.on_movie_updated()
         self.opened_file_name = None
+
+    def get_window_title(self):
+        title = "Aldyparen " + VERSION
+        if self.opened_file_name is not None:
+            title += " - " + os.path.basename(self.opened_file_name)
+        if self.have_unsaved_changes:
+            title += "*"
+        return title
 
 
 # Maybe this can be merged with StaticRenderer?
