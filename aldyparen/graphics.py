@@ -65,7 +65,7 @@ class ColorPalette:
 
     @staticmethod
     def random(size=256):
-        return ColorPalette(np.random.randint(0, 256, (size, 3), dtype=np.ubyte))
+        return ColorPalette(np.random.randint(0, 256, (size, 3), dtype=np.uint8))
 
     @staticmethod
     def grayscale(size=256):
@@ -76,11 +76,13 @@ class ColorPalette:
         return '#{:02X}{:02X}{:02X}'.format(color[0], color[1], color[2])
 
     def serialize(self) -> str:
-        return base64.b64encode(self.colors)
+        return base64.b64encode(self.colors).decode("ascii")
 
     @staticmethod
     def deserialize(data: str) -> 'ColorPalette':
-        colors = np.frombuffer(base64.decodebytes(data), dtype=np.ubyte).reshape((-1, 3))
+        colors = np.frombuffer(base64.decodebytes(data.encode("ascii")), dtype=np.uint8).reshape((-1, 3))
+        # TODO: avoid this copy by accepting read-only type in _numba_remap signature.
+        colors = np.array(colors)
         return ColorPalette(colors)
 
     def __eq__(self, other: 'ColorPalette'):

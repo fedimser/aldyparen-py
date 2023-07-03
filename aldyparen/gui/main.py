@@ -126,10 +126,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_make_animation.clicked.connect(self.make_animation)
 
         # Menu items.
-        self.menu_new_project.triggered.connect(lambda: show_alert("Not implemented"))
-        self.menu_open_project.triggered.connect(lambda: show_alert("Not implemented"))
-        self.menu_save_project.triggered.connect(lambda: show_alert("Not implemented"))
-        self.menu_save_project_as.triggered.connect(lambda: show_alert("Not implemented"))
+        self.menu_new_project.triggered.connect(self.new_project)
+        self.menu_open_project.triggered.connect(self.open_project)
+        self.menu_save_project.triggered.connect(self.save_project)
+        self.menu_save_project_as.triggered.connect(self.save_project_as)
         self.menu_render_photo.triggered.connect(self.render_image)
         self.menu_render_video.triggered.connect(self.render_video)
         self.menu_settings.triggered.connect(lambda: show_alert("Not implemented"))
@@ -294,8 +294,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.app.photo_rendering_tasks_count > 0 or self.app.video_rendering_tasks_count > 0:
             if not self.confirm("There are unfinished tasks. Exiting now will cancel them. Exit anyway?"):
                 return
-        if len(self.app.frames) > 0:
-            if not self.confirm("Exiting will lose all frames. Exit anyway?"):
+        if self.app.have_unsaved_changes:
+            if not self.confirm("There are unsaved changes. Exit anyway?"):
                 return
         QCoreApplication.exit(0)
 
@@ -330,3 +330,32 @@ class MainWindow(QtWidgets.QMainWindow):
         url = QUrl("https://github.com/fedimser/aldyparen-py")
         QDesktopServices.openUrl(url)
 
+    def new_project(self):
+        if self.app.have_unsaved_changes:
+            if not self.confirm("There are unsaved changes. Create new project anyway?"):
+                return
+        self.app.new_project()
+
+
+    def open_project(self):
+        filters = "JSON files (*.json);;All files (*.*)"
+        file_name = QFileDialog.getOpenFileName(self, 'Open Aldyparen project', self.work_dir, filters)[0]
+        if len(file_name) == 0:
+            return
+        print("Calling app.load_project")
+        self.app.load_project(file_name)
+
+    def save_project(self):
+        if self.app.opened_file_name is not None:
+            self.app.save_project()
+        else:
+            self.save_project_as()
+
+    def save_project_as(self):
+        filters = "JSON files (*.json);;All files (*.*)"
+        file_name = QFileDialog.getSaveFileName(self, 'Save Aldyparen project', self.work_dir, filters)[0]
+        if len(file_name) == 0:
+            show_alert("File not selected - nothing was saved.")
+            return
+        self.app.opened_file_name = file_name
+        self.app.save_project()

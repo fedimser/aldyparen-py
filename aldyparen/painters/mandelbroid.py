@@ -12,20 +12,8 @@ class MandelbroidPainter:
         self.gen_function = gen_function
         self.max_iter = max_iter
         self.radius = radius
-        gen_function_prepared = prepare_function(gen_function, variables=['c', 'z'])
-
-        numba_namespace = {"numba": numba, "np": np}
-        source = "\n".join([
-            f'@numba.vectorize("u4(c16)", target="parallel")',
-            f'def painter__(c):',
-            f'  z = 0',
-            f'  for i in range({max_iter}):',
-            f'    z = {gen_function_prepared}',
-            f'    if np.abs(z) > {radius}: return i',
-            f'  return {max_iter}',
-        ])
-        exec(source, numba_namespace)
-        self.paint_func = numba_namespace["painter__"]
+        self.gen_function_prepared = prepare_function(gen_function, variables=['c', 'z'])
+        self.paint_func = None
 
     def to_object(self):
         return {"gen_function": self.gen_function,
@@ -33,6 +21,20 @@ class MandelbroidPainter:
                 "max_iter": self.max_iter}
 
     def paint(self, points):
+        if self.paint_func is None:
+            numba_namespace = {"numba": numba, "np": np}
+            source = "\n".join([
+                f'@numba.vectorize("u4(c16)", target="parallel")',
+                f'def painter__(c):',
+                f'  z = 0',
+                f'  for i in range({self.max_iter}):',
+                f'    z = {self.gen_function_prepared}',
+                f'    if np.abs(z) > {self.radius}: return i',
+                f'  return {self.max_iter}',
+            ])
+            exec(source, numba_namespace)
+            self.paint_func = numba_namespace["painter__"]
+
         warnings.filterwarnings("ignore", message="overflow")
         try:
             return self.paint_func(points)

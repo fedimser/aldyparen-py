@@ -46,6 +46,8 @@ class AldyparenApp:
 
         self.photo_rendering_tasks_count = 0
         self.video_rendering_tasks_count = 0
+        self.opened_file_name = None
+        self.have_unsaved_changes = False
 
     def run(self):
         self.main_window.show()
@@ -190,7 +192,8 @@ class AldyparenApp:
         QThreadPool.globalInstance().start(thread)
         print(f"ImageRenderThread started")
 
-    def serialize_current_project(self) -> str:
+    def save_project(self):
+        assert self.opened_file_name is not None
         data = {
             "saved_timestamp": datetime.now().isoformat(),
             "version": VERSION,
@@ -198,15 +201,38 @@ class AldyparenApp:
             "frames": [f.serialize() for f in self.frames],
             "selected_frame_idx": self.selected_frame_idx,
         }
-        return json.dumps(data)
+        with open(self.opened_file_name, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+        self.have_unsaved_changes = False
 
-    def load_project(self, project_json: str):
-        data = json.loads(project_json)
+    def load_project(self, file_name: str):
+        print("Start loading project...")
+        time_start = time.time()
+        if not os.path.exists(file_name):
+            raise ValueError(f"File doesn't exist: {file_name}")
+        with open(file_name, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        print("Read json OK")
         self.work_frame = Frame.deserialize(data["work_frame"])
-        self.frames = [Frame.deserialize(f) for f in data["frames"]]
+        print("Deserialized work frame")
+        self.frames = []
+        for f in data["frames"]:
+            self.frames.append(Frame.deserialize(f))
+            print("Deserialized frames %d of %d" % (len(self.frames), len(data["frames"])))
         self.selected_frame_idx = data["selected_frame_idx"]
+        self.opened_file_name = file_name
+        self.have_unsaved_changes = False
         self.on_work_frame_changed()
         self.main_window.on_movie_updated()
+        print(f"Project loaded, time={time.time() - time_start}")
+
+    def new_project(self):
+        # Do not reset work frame.
+        self.frames = []
+        self.selected_frame_idx = -1
+        self.have_unsaved_changes = False
+        self.main_window.on_movie_updated()
+        self.opened_file_name = None
 
 
 # Maybe this can be merged with StaticRenderer?
