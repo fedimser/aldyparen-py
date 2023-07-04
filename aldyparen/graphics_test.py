@@ -35,7 +35,7 @@ def test_renders_mandelbroids():
 
 def test_renders_sierpinski_carpet():
     renderer = StaticRenderer(200, 200)
-    transform = Transform(0.5 + 0.5j, 1, 0.0)
+    transform = Transform(np.complex128(0.5 + 0.5j), 1, 0.0)
     palette = ColorPalette.gradient('black', 'white', size=2)
     frame = Frame(SierpinskiCarpetPainter(depth=4), transform, palette)
     assert_picture(renderer.render(frame), "sierpinski_carpet")
@@ -58,5 +58,11 @@ def test_serialization():
         Frame(MandelbroidPainter(gen_function="z**3+sin(z)+c"), Transform(2 + 3j, 10, 3.1), ColorPalette.random()))
     _verify_serialization(
         Frame(MadnelbrotHighPrecisionPainter(), Transform(2j, 1e-3, -6), ColorPalette.grayscale(20)))
+
+
+def test_transform_to_string():
+    transform = Transform(np.complex128(1 + 0.05j), 1e-3, np.pi / 4)
+    print(str(transform))
+    assert str(transform) == "c=(1.00000e+00 5.00000e-02) s=1.00e-03 r=45.0°"
 
 # TODO: add test for cascade rendering with InteractiveRenderer.

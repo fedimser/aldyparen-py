@@ -1,5 +1,7 @@
 import re
 
+import numpy as np
+
 SUPPORTED_FUNCTIONS = {
     "exp", "log", "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh", "arcsin", "arccos", "arctan", "real", "imag",
     "abs", "angle"
@@ -20,5 +22,5 @@ def prepare_function(function, variables=[]):
             result += token
         else:
             raise ValueError(f"Unexpected token: {token}")
-    eval(result, {"c": 0, "z": 0})
+    eval(result, {"np": np, "c": 1, "z": 1})
     return result

@@ -108,7 +108,9 @@ class Transform:
         return Transform(pole - (pole - self.center) * scale_factor, self.scale * scale_factor, self.rotation)
 
     def __str__(self):
-        return f"{self.center} {self.scale} {self.rotation}"
+        rot_deg = (self.rotation / np.pi * 180) % 360
+        return "c=(%.5e %.5e) s=%.2e r=%.1f°" % (
+            self.center.real, self.center.imag, self.scale, rot_deg)
 
     def serialize(self) -> List[float]:
         return [self.center.real, self.center.imag, self.scale, self.rotation]
