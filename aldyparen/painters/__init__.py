@@ -24,7 +24,7 @@ class Painter:
     @staticmethod
     def deserialize(class_name: str, data: dict) -> 'Painter':
         assert class_name in PAINTERS_INDEX
-        painter_class = PAINTERS_INDEX[class_name]
+        painter_class = ALL_PAINTERS[PAINTERS_INDEX[class_name]]
         return painter_class(**data)
 
 
@@ -78,4 +78,4 @@ class SierpinskiCarpetPainter(Painter):
 
 # All supported painters.
 ALL_PAINTERS = [MandelbroidPainter, MadnelbrotHighPrecisionPainter, AxisPainter, SierpinskiCarpetPainter]
-PAINTERS_INDEX = {p.__name__: p for p in ALL_PAINTERS}
+PAINTERS_INDEX = {ALL_PAINTERS[i].__name__: i for i in range(len(ALL_PAINTERS))}

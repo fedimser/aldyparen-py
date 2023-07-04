@@ -17,8 +17,8 @@ class AldyparenSettings:
         # Settings not settable in UI.
         self.work_view_width = _load_int("work_view_width") or 480
         self.work_view_height = _load_int("work_view_height") or 270
-        self.movie_view_width = _load_int("movie_view_width") or 240
-        self.movie_view_height = _load_int("movie_view_height") or 135
+        self.movie_view_width = _load_int("movie_view_width") or 160
+        self.movie_view_height = _load_int("movie_view_height") or 90
 
         # Settings settable in UI.
         self.app.main_window.spin_box_image_resolution_1.setValue(_load_int("image_width") or 3840)

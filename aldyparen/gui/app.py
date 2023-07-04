@@ -15,7 +15,7 @@ from .main import MainWindow
 from .settings import AldyparenSettings
 from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette
 from ..mixing import make_animation
-from ..painters import MandelbroidPainter, ALL_PAINTERS
+from ..painters import MandelbroidPainter, ALL_PAINTERS, PAINTERS_INDEX
 
 VERSION = "3.0"
 
@@ -26,6 +26,7 @@ class AldyparenApp:
 
         self.opened_file_name = None
         self.have_unsaved_changes = False
+        self.is_loading_project = False
 
         self.saved_painter_configs = dict()  # TODO: this better store actual painters.
         for painter_class in ALL_PAINTERS:
@@ -67,6 +68,8 @@ class AldyparenApp:
 
     def select_painter_type(self, idx):
         painter_class = ALL_PAINTERS[idx]
+        if self.is_loading_project:
+            return
         self.selected_painter_class = painter_class
         config = self.saved_painter_configs[painter_class.__name__]
         self.main_window.set_painter_config(json.dumps(config))
@@ -221,15 +224,20 @@ class AldyparenApp:
         self.have_unsaved_changes = False
 
     def load_project(self, file_name: str):
-        print("Start loading project...")
-        time_start = time.time()
+        self.is_loading_project = True
         if not os.path.exists(file_name):
             raise ValueError(f"File doesn't exist: {file_name}")
         with open(file_name, "r", encoding="utf-8") as f:
             data = json.load(f)
-        print("Read json OK")
+
+        # Load work frame to UI.
         self.work_frame = Frame.deserialize(data["work_frame"])
-        print("Deserialized work frame")
+        painter_idx = PAINTERS_INDEX[self.work_frame.painter.__class__.__name__]
+        self.main_window.combo_painter_type.setCurrentIndex(painter_idx)
+        self.main_window.set_painter_config(json.dumps(self.work_frame.painter.to_object()))
+        self.on_work_frame_changed()
+
+        # Load movie to UI.
         self.frames = []
         prev = None
         for frame_json in data["frames"]:
@@ -239,9 +247,8 @@ class AldyparenApp:
         self.selected_frame_idx = data["selected_frame_idx"]
         self.opened_file_name = file_name
         self.have_unsaved_changes = False
-        self.on_work_frame_changed()
         self.main_window.on_movie_updated()
-        print(f"Project loaded, time={time.time() - time_start}")
+        self.is_loading_project = False
 
     def new_project(self):
         # Do not reset work frame.

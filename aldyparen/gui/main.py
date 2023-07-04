@@ -184,6 +184,8 @@ class MainWindow(QtWidgets.QMainWindow):
         edit.setPlainText(text)
 
     def on_config_text_changed(self):
+        if self.app.is_loading_project:
+            return
         edit = self.edit_painter_config  # type: QPlainTextEdit
         self.app.set_painter_config(edit.toPlainText())
 
