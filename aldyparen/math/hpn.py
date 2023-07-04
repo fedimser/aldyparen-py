@@ -1,13 +1,14 @@
 # High precision computing.
 
-import numpy as np
-import numba
 import re
+
+import numba
+import numpy as np
 
 GROUP_COUNT = 10  # 171
 DIG_GROUP_LENGTH = 8
 DIG_RANGE = 10 ** DIG_GROUP_LENGTH
-NUMBER_PATTERN = re.compile("^([-]?\d+)([.](\d*))?(e([-]?\d+))?$")
+NUMBER_PATTERN = re.compile(r"^([-]?\d+)([.](\d*))?(e([-]?\d+))?$")
 
 
 # Contract.
@@ -29,6 +30,7 @@ def hpn_normalize(x):
         x[i] %= DIG_RANGE
     return x
 
+
 """
 @numba.jit("i8[:,:](i8[:,:])", parallel=True)
 def hpn_normalize_vec(x):
@@ -37,6 +39,7 @@ def hpn_normalize_vec(x):
         x[:, i] %= DIG_RANGE
     return x
 """
+
 
 def hpn_from_str(s):
     match = NUMBER_PATTERN.match(s)
@@ -68,7 +71,7 @@ def hpn_from_str(s):
             result[shift_right:] = result[0:-shift_right]
             result[:shift_right] = 0
         elif shift_left > 0:
-            result *= 10**(DIG_GROUP_LENGTH*shift_left)
+            result *= 10 ** (DIG_GROUP_LENGTH * shift_left)
 
     hpn_normalize_in_place(result)
     return result
@@ -121,6 +124,7 @@ def hpn_mul(x, y):
         ans[i:] += x[i] * y[:GROUP_COUNT - i]
     return ans
 
+
 """
 @numba.jit("i8[:,:](i8[:,:],i8[:,:])", parallel=True)
 def hpn_mul_vec(x, y):
@@ -131,10 +135,12 @@ def hpn_mul_vec(x, y):
     return ans
 """
 
+
 @numba.jit("i8[:](i8[:])")
 def hpn_square(x):
     ans = hpn_mul(x, x)
     return hpn_normalize(ans)
+
 
 """
 @numba.jit("i8[:,:](i8[:,:])")

@@ -1,12 +1,12 @@
 import os
+from typing import Union
 
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from PyQt5.QtCore import QPointF, QCoreApplication, QUrl, QSettings
+from PyQt5.QtCore import QPointF, QCoreApplication, QUrl
 from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
     QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog
-from typing import Union
 
 from .. import ColorPalette
 from ..painters import ALL_PAINTERS
@@ -85,8 +85,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
             upsp = self.units_per_screen_pixel()
             x = x - 0.5 * self.width()
             y = -(y - 0.5 * self.height())
-            self.cursor_math_pos = self.app.work_frame.transform.center + \
-                                   np.complex128(x + 1j * y) * upsp
+            self.cursor_math_pos = self.app.work_frame.transform.center + np.complex128(x + 1j * y) * upsp
         return self.cursor_math_pos
 
 

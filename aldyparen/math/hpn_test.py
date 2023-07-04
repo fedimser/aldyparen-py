@@ -22,7 +22,10 @@ def test_arithmetic():
     numbers_hpn = [hpn_from_str(x) for x in ALL_TEST_NUMBERS]
     numbers_np = [np.double(x) for x in ALL_TEST_NUMBERS]
     n = len(ALL_TEST_NUMBERS)
-    to_np = lambda x: np.double(hpn_to_str(x))
+
+    def to_np(x):
+        return np.double(hpn_to_str(x))
+
     for i in range(n):
         x = numbers_hpn[i]
         for j in range(n):
@@ -31,6 +34,7 @@ def test_arithmetic():
             assert np.allclose(to_np(x - y), numbers_np[i] - numbers_np[j])
             if abs(x[0]) < 1e5 and abs(y[0]) < 1e5:
                 assert np.allclose(to_np(hpn_mul(x, y)), numbers_np[i] * numbers_np[j])
+
 
 """
 def test_vector_mul():

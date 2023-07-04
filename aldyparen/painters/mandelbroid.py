@@ -2,7 +2,6 @@ import warnings
 
 import numba
 import numpy as np
-import re
 
 from aldyparen.util import prepare_function
 

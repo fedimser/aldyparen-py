@@ -1,9 +1,11 @@
-from aldyparen.graphics import Frame, ColorPalette, Transform
-from typing import List
-import numpy as np
-from aldyparen.painters import MandelbroidPainter, Painter
-from tokenize import tokenize, untokenize, NUMBER
 from io import BytesIO
+from tokenize import tokenize, untokenize, NUMBER
+from typing import List
+
+import numpy as np
+
+from aldyparen.graphics import Frame, ColorPalette, Transform
+from aldyparen.painters import MandelbroidPainter, Painter
 
 
 def make_animation(frame1: Frame, frame2: Frame, length: int) -> List[Frame]:

@@ -1,21 +1,21 @@
 import copy
+import json
 import os
 import sys
-import json
 import time
-
-import numpy as np
-
-from .main import MainWindow
-from .settings import AldyparenSettings
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import QTimer, QThreadPool, QRunnable
-from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette
-from ..painters import MandelbroidPainter, ALL_PAINTERS
-from ..mixing import make_animation
 from dataclasses import replace
 from datetime import datetime
 from typing import List
+
+import numpy as np
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QTimer, QThreadPool, QRunnable
+
+from .main import MainWindow
+from .settings import AldyparenSettings
+from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette
+from ..mixing import make_animation
+from ..painters import MandelbroidPainter, ALL_PAINTERS
 
 VERSION = "3.0"
 

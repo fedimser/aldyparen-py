@@ -1,7 +1,8 @@
+import numpy as np
+
+from aldyparen.graphics import Frame, Transform, ColorPalette
 from aldyparen.mixing import mix_functions, make_animation
 from aldyparen.painters import MandelbroidPainter
-from aldyparen.graphics import Frame, Transform, ColorPalette
-import numpy as np
 
 
 def test_mix_functions():

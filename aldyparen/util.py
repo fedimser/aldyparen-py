@@ -5,6 +5,7 @@ SUPPORTED_FUNCTIONS = {
     "abs", "angle"
 }
 
+
 def prepare_function(function, variables=[]):
     """Validates and prepares function for evaluation with numpy."""
     assert function.isascii(), "Bad character"

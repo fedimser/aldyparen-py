@@ -281,8 +281,8 @@ class InteractiveRenderer(Renderer):
                 pic = small_pic.repeat(self.downsample_factor, axis=0).repeat(self.downsample_factor, axis=1)
                 pic = pic[:self.height_pxl, :self.width_pxl]
                 assert pic.shape == (self.height_pxl, self.width_pxl)
-                l = self.chunks_rendered * self.chunk_size
-                _rearrange_points(self.mono_pic[:l], self.mgrid_x[:l], self.mgrid_y[:l], pic)
+                length = self.chunks_rendered * self.chunk_size
+                _rearrange_points(self.mono_pic[:length], self.mgrid_x[:length], self.mgrid_y[:length], pic)
 
         pic = self.frame_rendered.palette.remap(pic)
         self.ui_callback(pic)

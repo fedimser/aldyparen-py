@@ -1,8 +1,5 @@
 # Mandelbrot set with high precision.
 
-import numpy as np
-import numba
-
 from aldyparen import Renderer, Transform
 from aldyparen.math.hpn import *
 
@@ -43,7 +40,7 @@ def mandelbrot_high_precision_numba(center_x, center_y, mgrid_x, mgrid_y, w, h, 
 class MadnelbrotHighPrecisionPainter:
     def __init__(self, max_iter=10, tag="abc"):
         self.max_iter = max_iter
-        self.tag =tag
+        self.tag = tag
 
     def to_object(self):
         return {"max_iter": self.max_iter, "tag": self.tag}

@@ -1,5 +1,6 @@
-from PyQt5.QtCore import QSettings
 import os
+
+from PyQt5.QtCore import QSettings
 
 
 class AldyparenSettings:
