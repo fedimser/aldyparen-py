@@ -20,4 +20,5 @@ def prepare_function(function, variables=[]):
             result += token
         else:
             raise ValueError(f"Unexpected token: {token}")
+    eval(result, {"c": 0, "z": 0})
     return result

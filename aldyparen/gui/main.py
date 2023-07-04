@@ -152,8 +152,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.scene_work_frame = WorkFrameScene(self, app)
         self.view_work_frame.setScene(self.scene_work_frame)
 
-        self.update_title()
-
     def set_image(self, view, scene, image):
         image = QtGui.QImage(
             image, image.shape[1], image.shape[0], image.shape[1] * 3, QtGui.QImage.Format_RGB888)
@@ -281,7 +279,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 image = self.app.movie_frame_renderer.render(self.app.frames[cur_idx])
                 object.__setattr__(frame, "cached_movie_preview", image)
             self.set_movie_frame(image)
-            self.label_frame_info.setText("Frame %d of %d" % (cur_idx + 1, mov_len))
+            self.label_frame_info.setText(self.app.get_selected_frame_info())
             sb.setEnabled(True)
             sb.setMaximum(mov_len - 1)
             sb.setValue(cur_idx)

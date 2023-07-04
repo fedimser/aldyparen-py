@@ -123,14 +123,17 @@
      <widget class="QLabel" name="label_frame_info">
       <property name="geometry">
        <rect>
-        <x>0</x>
+        <x>10</x>
         <y>10</y>
-        <width>351</width>
-        <height>17</height>
+        <width>461</width>
+        <height>221</height>
        </rect>
       </property>
       <property name="text">
        <string>TextLabel</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
       </property>
      </widget>
     </widget>
@@ -157,7 +160,7 @@
         <x>130</x>
         <y>10</y>
         <width>61</width>
-        <height>26</height>
+        <height>21</height>
        </rect>
       </property>
       <property name="minimum">
@@ -176,7 +179,7 @@
         <x>210</x>
         <y>10</y>
         <width>89</width>
-        <height>25</height>
+        <height>21</height>
        </rect>
       </property>
       <property name="text">
@@ -417,7 +420,7 @@
      <widget class="QPushButton" name="button_force_update">
       <property name="geometry">
        <rect>
-        <x>0</x>
+        <x>10</x>
         <y>40</y>
         <width>121</width>
         <height>25</height>

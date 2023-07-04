@@ -56,6 +56,8 @@ class AldyparenApp:
     def run(self):
         self.main_window.show()
         self.reset_painter_config()
+        self.main_window.update_title()
+        self.main_window.on_movie_updated()
         self.timer.start(25)
         self.qt_app.exec()
 
@@ -256,6 +258,15 @@ class AldyparenApp:
         if self.have_unsaved_changes:
             title += "*"
         return title
+
+    def get_selected_frame_info(self):
+        cur_frame = self.frames[self.selected_frame_idx]
+        return "\n".join([
+            "Frame %d of %d" % (self.selected_frame_idx + 1, len(self.frames)),
+            cur_frame.painter.__class__.__name__,
+            json.dumps(cur_frame.painter.to_object()),
+            "Transform: " + str(cur_frame.transform)
+        ])
 
 
 # Maybe this can be merged with StaticRenderer?
