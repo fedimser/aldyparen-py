@@ -8,7 +8,6 @@ import numba
 import numpy as np
 from PyQt5.QtCore import QThread
 from matplotlib import pyplot as plt
-from moviepy.editor import concatenate, ImageClip
 
 
 @numba.jit("u1[:,:,:](u4[:,:],u1[:,:])", parallel=True, nogil=True)
@@ -169,7 +168,7 @@ class Renderer:
         self.width_pxl = width_pxl
         self.height_pxl = height_pxl
 
-    def render_meshgrid_mono(self, frame: Frame, mgrid_x: np.ndarray, mgrid_y: np.ndarray):
+    def render_meshgrid_mono(self, frame: Frame, mgrid_x: np.ndarray, mgrid_y: np.ndarray) -> np.ndarray:
         """Renders monochrome frame for pixels with given coordinates"""
         if hasattr(frame.painter, "render_high_precision"):
             mgrid_shape = mgrid_x.shape
@@ -207,14 +206,6 @@ class StaticRenderer(Renderer):
     def render_picture(self, frame, file_name):
         pic = self.render(frame)
         plt.imsave(file_name, pic)
-
-    def render_video(self, frames, file_name, fps=16):
-        clips = []
-        for frame in frames:
-            clips.append(ImageClip(self.render(frame)).set_duration(1.0 / fps))
-
-        video = concatenate(clips, method="compose")
-        video.write_videofile(file_name, fps=fps)
 
 
 @numba.jit("(u4[:],i2[:],i2[:],u4[:,:])", parallel=True, nogil=True)

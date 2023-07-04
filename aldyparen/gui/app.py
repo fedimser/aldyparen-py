@@ -15,6 +15,7 @@ from .settings import AldyparenSettings
 from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette
 from ..mixing import make_animation
 from ..painters import MandelbroidPainter, ALL_PAINTERS, PAINTERS_INDEX
+from ..video import VideoRenderer
 
 VERSION = "3.0"
 
@@ -53,6 +54,7 @@ class AldyparenApp:
 
         self.photo_rendering_tasks_count = 0
         self.video_rendering_tasks_count = 0
+        self.active_video_renderer = None  # type: VideoRenderer | None
 
     def run(self):
         self.main_window.show()
@@ -119,7 +121,10 @@ class AldyparenApp:
         if self.photo_rendering_tasks_count > 0:
             status += f" 📷({self.photo_rendering_tasks_count})"
         if self.video_rendering_tasks_count > 0:
-            status += f" 🎥({self.video_rendering_tasks_count})"
+            assert self.active_video_renderer is not None
+            status += f" 🎥({self.active_video_renderer.status_string})"
+        else:
+            self.active_video_renderer = None
         self.main_window.show_status(status)
         pos = self.main_window.scene_work_frame.cursor_math_pos
         pos_text = "" if pos is None else "Cursor position: %.4g;%.4g" % (np.real(pos), np.imag(pos))
@@ -204,7 +209,8 @@ class AldyparenApp:
         QThreadPool.globalInstance().start(thread)
 
     def render_video(self, width, height, fps, file_name):
-        thread = VideoRenderThread(self, self.frames, StaticRenderer(width, height), file_name, fps=fps)
+        self.active_video_renderer = VideoRenderer(width, height, fps)
+        thread = VideoRenderThread(self, self.frames, self.active_video_renderer, file_name)
         QThreadPool.globalInstance().start(thread)
 
     def save_project(self):

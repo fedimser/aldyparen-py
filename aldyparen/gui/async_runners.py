@@ -5,6 +5,7 @@ import numpy as np
 from PyQt5.QtCore import QRunnable, QThreadPool
 
 from ..graphics import Frame, StaticRenderer
+from ..video import VideoRenderer
 
 
 def render_movie_preview_async(app: 'AldyparenApp', frame: Frame) -> np.ndarray | str:
@@ -52,16 +53,14 @@ class ImageRenderThread(QRunnable):
 
 class VideoRenderThread(QRunnable):
 
-    def __init__(self, app: 'AldyparenApp', frames: List[Frame], renderer: StaticRenderer, file_name: str,
-                 fps: int = 16):
+    def __init__(self, app: 'AldyparenApp', frames: List[Frame], renderer: VideoRenderer, file_name: str):
         super().__init__()
         self.app = app
         self.frames = copy.copy(frames)
         self.renderer = renderer
         self.file_name = file_name
-        self.fps = fps
 
     def run(self):
         self.app.video_rendering_tasks_count += 1
-        self.renderer.render_video(frames=self.frames, file_name=self.file_name, fps=self.fps)
+        self.renderer.render_video(self.frames, self.file_name)
         self.app.video_rendering_tasks_count -= 1
