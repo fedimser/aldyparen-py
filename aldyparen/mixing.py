@@ -11,7 +11,6 @@ def make_animation(frame1: Frame, frame2: Frame, length: int) -> List[Frame]:
     Returns list of `length+1` frames, where first is frame1, last is frame2.
     """
     assert frame1.painter.__class__ == frame2.painter.__class__
-    assert frame1.palette.colors.shape == frame2.palette.colors.shape
     return [frame1] + [mix_frames(frame1, frame2, i / length) for i in range(1, length)] + [frame2]
 
 
@@ -45,9 +44,22 @@ def mix_transforms(x: Transform, y: Transform, w: float) -> Transform:
     )
 
 
+def extend_palette(x: np.ndarray, new_len: int) -> np.ndarray:
+    assert new_len > x.shape[0]
+    x = np.tile(x, (new_len // x.shape[0] + 1, 1))
+    return x[:new_len, :]
+
+
 def mix_palettes(x: ColorPalette, y: ColorPalette, w: float) -> ColorPalette:
+    c1 = x.colors
+    c2 = y.colors
+    if c1.shape[0] < c2.shape[0]:
+        c1 = extend_palette(c1, c2.shape[0])
+    elif c1.shape[0] > c2.shape[0]:
+        c2 = extend_palette(c2, c1.shape[0])
+    assert c1.shape == c2.shape
     return ColorPalette(
-        colors=np.array(np.round((1 - w) * x.colors + w * y.colors), dtype=np.uint8))
+        colors=np.array(np.round((1 - w) * c1 + w * c2), dtype=np.uint8))
 
 
 def mix_mandelbroid(p1: MandelbroidPainter, p2: MandelbroidPainter, w: float) -> MandelbroidPainter:

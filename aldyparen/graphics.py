@@ -39,6 +39,9 @@ def _to_numpy_color(color) -> np.ndarray:
 class ColorPalette:
     colors: np.ndarray
 
+    def __post_init__(self):
+        assert self.colors.shape == (self.colors.shape[0], 3)
+
     def remap(self, pic):
         return _numba_remap(pic, self.colors)
 

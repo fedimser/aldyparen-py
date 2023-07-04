@@ -170,8 +170,6 @@ class AldyparenApp:
         end_frame = self.work_frame
         if begin_frame.painter.__class__ != end_frame.painter.__class__:
             raise ValueError("Begin and frame use painters of different kinds.")
-        if begin_frame.palette.colors.shape != end_frame.palette.colors.shape:
-            raise ValueError("Begin and frame have palettes of different size.")
         anim_frames = make_animation(begin_frame, end_frame, length)
         assert len(anim_frames) == length + 1
         assert anim_frames[0] == begin_frame

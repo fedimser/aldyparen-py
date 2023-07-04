@@ -16,8 +16,8 @@ def test_make_animation():
     p2 = MandelbroidPainter(gen_function="z**10+c", max_iter=100, radius=20)
     t1 = Transform(0, 1, 0)
     t2 = Transform(2 + 4j, 25, 2)
-    palette1 = ColorPalette.default()
-    palette2 = ColorPalette.default()
+    palette1 = ColorPalette(colors=np.array([[2, 4, 6], [8, 10, 12], [14, 16, 18]], dtype=np.uint8))
+    palette2 = ColorPalette(colors=np.ones((5, 3), dtype=np.uint8) * 10)
     frame1 = Frame(p1, t1, palette1)
     frame2 = Frame(p2, t2, palette2)
 
@@ -31,4 +31,6 @@ def test_make_animation():
     assert mid_painter.max_iter == 75
     assert np.allclose(mid_painter.radius, 15)
     assert mid_painter.gen_function == "z**6.0+c"
-    # TODO: assert palette.
+    mid_colors = mid_frame.palette.colors
+    assert mid_colors.shape == (5, 3)
+    np.testing.assert_equal(mid_colors, [[6, 7, 8], [9, 10, 11], [12, 13, 14], [6, 7, 8], [9, 10, 11]])
