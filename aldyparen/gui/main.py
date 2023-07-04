@@ -119,7 +119,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_reset_transform.clicked.connect(
             lambda: self.app.reset_transform())
         self.button_reset_painter_config.clicked.connect(
-            lambda: self.confirm_then("Reset painter config?", self.app.reset_config))
+            lambda: self.confirm_then("Reset painter config?", self.app.reset_painter_config))
         self.button_generate_palette.clicked.connect(self.on_generate_palette_click)
         self.button_force_update.clicked.connect(self.on_force_update_clicked)
         self.button_render_photo.clicked.connect(self.render_image)
@@ -153,7 +153,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.scene_work_frame = WorkFrameScene(self, app)
         self.view_work_frame.setScene(self.scene_work_frame)
 
-        self.settings = QSettings("aldyparen", "aldyparen-py")
         self.update_title()
 
     def set_image(self, view, scene, image):
@@ -238,7 +237,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_force_update_clicked(self):
         downsample_factor = self.spin_box_downsampling.value()
-        self.app.reset_work_frame(downsample_factor=downsample_factor)
+        self.app.reset_work_frame()
 
     def make_animation(self):
         if len(self.app.frames) == 0:
@@ -300,6 +299,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.app.have_unsaved_changes:
             if not self.confirm("There are unsaved changes. Exit anyway?"):
                 return
+        self.app.settings.save()
         QCoreApplication.exit(0)
 
     def render_image(self):
@@ -314,9 +314,9 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         width = self.spin_box_video_resolution_1.value()
         height = self.spin_box_video_resolution_2.value()
-        fps = 16
+        fps = self.app.settings.get_video_fps()
         filters = "Video files (*.mp4 *.avi);;All files (*.*)"
-        file_name = QFileDialog.getSaveFileName(self, 'Choose video location', self.work_dir(), filters)[0]
+        file_name = QFileDialog.getSaveFileName(self, 'Choose video location', self.app.settings.work_dir, filters)[0]
         if len(file_name) == 0:
             return
         prompt = "\n".join([
@@ -329,7 +329,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.confirm(prompt):
             return
         self.app.render_video(width, height, fps, file_name)
-        self.settings.setValue("work_dir", os.path.dirname(file_name))
+        self.app.settings.work_dir = os.path.dirname(file_name)
 
     def open_docs(self):
         url = QUrl("https://github.com/fedimser/aldyparen-py")
@@ -341,14 +341,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
         self.app.new_project()
 
-
     def open_project(self):
         filters = "JSON files (*.json);;All files (*.*)"
-        file_name = QFileDialog.getOpenFileName(self, 'Open Aldyparen project', self.work_dir(), filters)[0]
+        file_name = QFileDialog.getOpenFileName(self, 'Open Aldyparen project', self.app.settings.work_dir, filters)[0]
         if len(file_name) == 0:
             return
         self.app.load_project(file_name)
-        self.settings.setValue("work_dir", os.path.dirname(file_name))
+        self.app.settings.work_dir = os.path.dirname(file_name)
         self.update_title()
 
     def save_project(self):
@@ -360,17 +359,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def save_project_as(self):
         filters = "JSON files (*.json);;All files (*.*)"
-        file_name = QFileDialog.getSaveFileName(self, 'Save Aldyparen project', self.work_dir(), filters)[0]
+        file_name = QFileDialog.getSaveFileName(self, 'Save Aldyparen project', self.app.settings.work_dir, filters)[0]
         if len(file_name) == 0:
             show_alert("File not selected - nothing was saved.")
             return
         self.app.opened_file_name = file_name
         self.app.save_project()
-        self.settings.setValue("work_dir", os.path.dirname(file_name))
+        self.app.settings.work_dir = os.path.dirname(file_name)
         self.update_title()
-
-    def work_dir(self):
-        return self.settings.value("work_dir") or os.getcwd()
 
     def update_title(self):
         self.setWindowTitle(self.app.get_window_title())

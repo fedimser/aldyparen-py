@@ -7,6 +7,7 @@ import time
 import numpy as np
 
 from .main import MainWindow
+from .settings import AldyparenSettings
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer, QThreadPool, QRunnable
 from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette
@@ -21,8 +22,6 @@ VERSION = "3.0"
 
 class AldyparenApp:
     def __init__(self):
-        # self.preview_renderer = StaticRenderer(480, 270)
-
         self.qt_app = QtWidgets.QApplication(sys.argv)
 
         self.opened_file_name = None
@@ -38,8 +37,12 @@ class AldyparenApp:
         self.work_frame = Frame(default_painter, self.default_transform, ColorPalette.default())
 
         self.main_window = MainWindow(self)
-        self.work_frame_renderer = InteractiveRenderer(480, 270, self.main_window.set_work_frame)
-        self.movie_frame_renderer = StaticRenderer(240, 135)
+        self.settings = AldyparenSettings(self)
+        self.work_frame_renderer = InteractiveRenderer(self.settings.work_view_width,
+                                                       self.settings.work_view_height,
+                                                       self.main_window.set_work_frame,
+                                                       downsample_factor=self.settings.get_downsample_factor())
+        self.movie_frame_renderer = StaticRenderer(self.settings.movie_view_width, self.settings.movie_view_height)
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.tick)
@@ -52,7 +55,7 @@ class AldyparenApp:
 
     def run(self):
         self.main_window.show()
-        self.reset_config()
+        self.reset_painter_config()
         self.timer.start(25)
         self.qt_app.exec()
 
@@ -90,16 +93,16 @@ class AldyparenApp:
     def reset_transform(self):
         self.update_work_frame_transform(self.default_transform)
 
-    def reset_config(self):
+    def reset_painter_config(self):
         self.work_frame = replace(self.work_frame, painter=self.selected_painter_class())
         config = self.work_frame.painter.to_object()
         self.main_window.set_painter_config(json.dumps(config))
 
     # TODO: default downsample factor should be in settings.
-    def reset_work_frame(self, downsample_factor=3):
+    def reset_work_frame(self):
         self.work_frame_renderer.renderer_thread.quit()
         self.work_frame_renderer = InteractiveRenderer(480, 270, self.main_window.set_work_frame,
-                                                       downsample_factor=downsample_factor)
+                                                       downsample_factor=self.settings.get_downsample_factor())
         self.on_work_frame_changed()
 
     def tick(self):
@@ -178,7 +181,6 @@ class AldyparenApp:
         self.selected_frame_idx += length
         self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
-
 
     def render_image(self, width, height):
         dir = os.path.join(os.getcwd(), "images")
