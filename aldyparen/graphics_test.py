@@ -33,6 +33,17 @@ def test_renders_mandelbroids():
         assert_picture(renderer.render(frame), f"mandelbroid_{i}")
 
 
+def test_renders_mandelbrot_high_precision():
+    renderer = StaticRenderer(100, 100)
+    palette = ColorPalette.gradient('white', 'black', size=10)
+    p = MadnelbrotHighPrecisionPainter(max_iter=100)
+    frame1 = Frame(p, Transform(0,4,0), palette)
+    assert_picture(renderer.render(frame1), f"mandelbrot_hp")
+    center = np.complex128(-1.99977406013629035931 - 0.00000000329004032147j)
+    frame2 = Frame(p, Transform(center, 1e-6, 0.0), palette)
+    assert_picture(renderer.render(frame2), f"mandelbrot_hp_zoom")
+
+
 def test_renders_sierpinski_carpet():
     renderer = StaticRenderer(200, 200)
     transform = Transform(np.complex128(0.5 + 0.5j), 1, 0.0)
