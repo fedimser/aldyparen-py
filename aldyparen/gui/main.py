@@ -8,6 +8,7 @@ from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
     QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog
 
+from .async_runners import render_movie_preview_async
 from .. import ColorPalette
 from ..painters import ALL_PAINTERS
 
@@ -153,6 +154,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_work_frame.setScene(self.scene_work_frame)
 
     def set_image(self, view, scene, image):
+        if type(image) == str:
+            scene.clear()
+            scene.addText(image)
+            return
         image = QtGui.QImage(
             image, image.shape[1], image.shape[0], image.shape[1] * 3, QtGui.QImage.Format_RGB888)
         pix = QtGui.QPixmap(image)
@@ -274,13 +279,7 @@ class MainWindow(QtWidgets.QMainWindow):
             sb.setEnabled(False)
         else:
             assert 0 <= cur_idx < mov_len
-            frame = self.app.frames[cur_idx]
-            if hasattr(frame, "cached_movie_preview"):
-                image = frame.cached_movie_preview
-            else:
-                image = self.app.movie_frame_renderer.render(self.app.frames[cur_idx])
-                object.__setattr__(frame, "cached_movie_preview", image)
-            self.set_movie_frame(image)
+            self.set_movie_frame(render_movie_preview_async(self.app, self.app.frames[cur_idx]))
             self.label_frame_info.setText(self.app.get_selected_frame_info())
             sb.setEnabled(True)
             sb.setMaximum(mov_len - 1)

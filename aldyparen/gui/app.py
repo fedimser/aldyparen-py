@@ -27,6 +27,7 @@ class AldyparenApp:
         self.opened_file_name = None
         self.have_unsaved_changes = False
         self.is_loading_project = False
+        self.need_update_movie_in_tick = False
 
         self.saved_painter_configs = dict()  # TODO: this better store actual painters.
         for painter_class in ALL_PAINTERS:
@@ -125,6 +126,10 @@ class AldyparenApp:
         pos_text = "" if pos is None else "Cursor position: %.4g;%.4g" % (np.real(pos), np.imag(pos))
         self.main_window.label_cursor_position.setText(pos_text)
         self.main_window.label_transform_info.setText(str(self.work_frame.transform))
+
+        if self.need_update_movie_in_tick:
+            self.need_update_movie_in_tick = False
+            self.main_window.on_movie_updated()
 
     def update_work_frame_transform(self, new_transform: Transform):
         self.work_frame = replace(self.work_frame, transform=new_transform)
