@@ -3,7 +3,7 @@ from typing import Union
 
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from PyQt5.QtCore import QPointF, QCoreApplication, QUrl
+from PyQt5.QtCore import QPointF, QCoreApplication, QUrl, QThreadPool
 from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
     QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog
@@ -310,6 +310,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if frames_count == 0:
             show_alert("Movie is empty, can't render.")
             return
+        if self.app.photo_rendering_tasks_count > 0:
+            print("One video is already being rendered.")
         width = self.spin_box_video_resolution_1.value()
         height = self.spin_box_video_resolution_2.value()
         fps = self.app.settings.get_video_fps()

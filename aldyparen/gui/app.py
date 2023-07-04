@@ -1,16 +1,15 @@
-import copy
 import json
 import os
 import sys
-import time
 from dataclasses import replace
 from datetime import datetime
 from typing import List
 
 import numpy as np
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QTimer, QThreadPool, QRunnable
+from PyQt5.QtCore import QTimer, QThreadPool
 
+from .async_runners import ImageRenderThread, VideoRenderThread
 from .main import MainWindow
 from .settings import AldyparenSettings
 from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette
@@ -205,10 +204,8 @@ class AldyparenApp:
         QThreadPool.globalInstance().start(thread)
 
     def render_video(self, width, height, fps, file_name):
-        print(f"Preparing to render video")
         thread = VideoRenderThread(self, self.frames, StaticRenderer(width, height), file_name, fps=fps)
         QThreadPool.globalInstance().start(thread)
-        print(f"ImageRenderThread started")
 
     def save_project(self):
         assert self.opened_file_name is not None
@@ -279,41 +276,3 @@ class AldyparenApp:
             json.dumps(cur_frame.painter.to_object()),
             "Transform: " + str(cur_frame.transform)
         ])
-
-
-# Maybe this can be merged with StaticRenderer?
-class ImageRenderThread(QRunnable):
-
-    def __init__(self, app: AldyparenApp, frame: Frame, renderer: StaticRenderer, file_name: str, ):
-        super().__init__()
-        self.app = app
-        self.frame = frame
-        self.renderer = renderer
-        self.file_name = file_name
-
-    def run(self):
-        self.app.photo_rendering_tasks_count += 1
-        print(f"Start rendering photo")
-        time_start = time.time()
-        self.renderer.render_picture(self.frame, self.file_name)
-        print(f"Rendered f{self.file_name}, time={time.time() - time_start}")
-        self.app.photo_rendering_tasks_count -= 1
-
-
-class VideoRenderThread(QRunnable):
-
-    def __init__(self, app: AldyparenApp, frames: List[Frame], renderer: StaticRenderer, file_name: str, fps: int = 16):
-        super().__init__()
-        self.app = app
-        self.frames = copy.copy(frames)
-        self.renderer = renderer
-        self.file_name = file_name
-        self.fps = fps
-
-    def run(self):
-        self.app.video_rendering_tasks_count += 1
-        print(f"Start rendering video")
-        time_start = time.time()
-        self.renderer.render_video(frames=self.frames, file_name=self.file_name, fps=self.fps)
-        print(f"Rendered f{self.file_name}, time={time.time() - time_start}")
-        self.app.video_rendering_tasks_count -= 1
