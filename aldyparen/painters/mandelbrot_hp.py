@@ -24,8 +24,8 @@ def count_iters(x0, y0, max_iter):
 
 # No rotation, so far.
 
-@numba.jit("u4[:](i8[:],i8[:],i2[:],i2[:],i2,i2,i8[:],i4)", nogil=True)
-def mandelbrot_high_precision_numba(center_x, center_y, mgrid_x, mgrid_y, w, h, upp, max_iter):
+@numba.jit("u4[:](i8[:],i8[:],i2[:],i2[:],i8[:],i4)", nogil=True)
+def mandelbrot_high_precision_numba(center_x, center_y, mgrid_x, mgrid_y, upp, max_iter):
     n = len(mgrid_x)
     assert len(mgrid_y) == n
     ans = np.empty((n,), dtype=np.uint32)
@@ -61,5 +61,5 @@ class MadnelbrotHighPrecisionPainter:
 
         w = renderer.width_pxl
         h = renderer.height_pxl
-        return mandelbrot_high_precision_numba(center_x, center_y, mgrid_x - w // 2, mgrid_y - h // 2, w, h, upp,
+        return mandelbrot_high_precision_numba(center_x, center_y, mgrid_x - w // 2, mgrid_y - h // 2, upp,
                                                self.max_iter)
