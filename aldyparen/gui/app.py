@@ -173,6 +173,7 @@ class AldyparenApp:
     def remove_last_frames(self, count):
         count = min(count, len(self.frames))
         self.frames = self.frames[:-count]
+        self.selected_frame_idx = len(self.frames) - 1
         self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
 

@@ -47,6 +47,7 @@ Aldyparen (Algebraic Dynamic Parametric Renderer) is a program for rendering cer
 * Add instructions for building from source.
 * Build as standalone app, see https://build-system.fman.io/pyqt5-tutorial
 * Generate few movies, save them as example JSONs, and publish rendered videos.
+* Add tests for the app (loading from file, rendering to file).
 
 ## Development notes
 
