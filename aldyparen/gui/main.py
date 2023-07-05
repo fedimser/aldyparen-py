@@ -318,7 +318,8 @@ class MainWindow(QtWidgets.QMainWindow):
             show_alert("Movie is empty, can't render.")
             return
         if self.app.photo_rendering_tasks_count > 0:
-            print("One video is already being rendered.")
+            show_alert("Movie is empty, can't render.")
+            return
         width = self.spin_box_video_resolution_1.value()
         height = self.spin_box_video_resolution_2.value()
         fps = self.app.settings.get_video_fps()
