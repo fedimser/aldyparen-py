@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 from PyQt5.QtCore import QRunnable, QThreadPool
 
-from ..graphics import Frame, StaticRenderer
+from ..graphics import Frame, ChunkingRenderer
 from ..video import VideoRenderer
 
 
@@ -16,12 +16,13 @@ def render_movie_preview_async(app: 'AldyparenApp', frame: Frame) -> np.ndarray 
             return frame.cached_movie_preview
     else:
         object.__setattr__(frame, "cached_movie_preview", "wait")
-        thread = MoviePreviewRenderThread(app, frame)
-        QThreadPool.globalInstance().start(thread)
+        task = MoviePreviewRenderRunnable(app, frame)
+        task.setAutoDelete(True)
+        QThreadPool.globalInstance().start(task)
         return "Rendering..."
 
 
-class MoviePreviewRenderThread(QRunnable):
+class MoviePreviewRenderRunnable(QRunnable):
     """Renders frame preview in a separate thread, caches it in Frame object and displays."""
 
     def __init__(self, app: 'AldyparenApp', frame: Frame):
@@ -36,9 +37,9 @@ class MoviePreviewRenderThread(QRunnable):
             self.app.need_update_movie_in_tick = True
 
 
-class ImageRenderThread(QRunnable):
+class ImageRenderRunnable(QRunnable):
 
-    def __init__(self, app: 'AldyparenApp', frame: Frame, renderer: StaticRenderer, file_name: str, ):
+    def __init__(self, app: 'AldyparenApp', frame: Frame, renderer: ChunkingRenderer, file_name: str):
         super().__init__()
         self.app = app
         self.frame = frame
@@ -51,7 +52,16 @@ class ImageRenderThread(QRunnable):
         self.app.photo_rendering_tasks_count -= 1
 
 
-class VideoRenderThread(QRunnable):
+def render_video_async(app: 'AldyparenApp', width: int, height: int, fps: int, file_name: str):
+    renderer = VideoRenderer(width, height, fps, is_aborted=lambda: app.is_exiting)
+    thread = VideoRenderRunnable(app, app.frames, renderer, file_name)
+    thread.setAutoDelete(True)
+    app.active_video_renderer = renderer
+    app.video_rendering_tasks_count += 1
+    QThreadPool.globalInstance().start(thread)
+
+
+class VideoRenderRunnable(QRunnable):
 
     def __init__(self, app: 'AldyparenApp', frames: List[Frame], renderer: VideoRenderer, file_name: str):
         super().__init__()
@@ -61,6 +71,5 @@ class VideoRenderThread(QRunnable):
         self.file_name = file_name
 
     def run(self):
-        self.app.video_rendering_tasks_count += 1
         self.renderer.render_video(self.frames, self.file_name)
         self.app.video_rendering_tasks_count -= 1

@@ -168,17 +168,19 @@ class Renderer:
         self.width_pxl = width_pxl
         self.height_pxl = height_pxl
 
-    def render_meshgrid_mono(self, frame: Frame, mgrid_x: np.ndarray, mgrid_y: np.ndarray) -> np.ndarray:
+    def render_meshgrid_mono(self, frame: Frame, mgrid_x: np.ndarray, mgrid_y: np.ndarray, ans: np.ndarray):
         """Renders monochrome frame for pixels with given coordinates"""
+        assert ans.shape == mgrid_x.shape
         if hasattr(frame.painter, "render_high_precision"):
             mgrid_shape = mgrid_x.shape
             assert mgrid_y.shape == mgrid_shape
             if len(mgrid_shape) > 1:
                 mgrid_x = mgrid_x.reshape((-1,))
                 mgrid_y = mgrid_y.reshape((-1,))
+                ans = ans.reshape((-1,))
             mgrid_x = mgrid_x.astype(np.int16)
             mgrid_y = mgrid_y.astype(np.int16)
-            return frame.painter.render_high_precision(self, frame.transform, mgrid_x, mgrid_y).reshape(mgrid_shape)
+            frame.painter.render_high_precision(self, frame.transform, mgrid_x, mgrid_y, ans)
         else:
             c = frame.transform.center
             upp = frame.transform.scale / self.width_pxl  # units per pixel.
@@ -191,7 +193,7 @@ class Renderer:
             k_x = upp * x_rot
             k_y = upp * y_rot
             points = p_0 + mgrid_x * k_x - mgrid_y * k_y
-            return frame.painter.paint(points)
+            ans[:] = frame.painter.paint(points)
 
 
 class StaticRenderer(Renderer):
@@ -200,8 +202,32 @@ class StaticRenderer(Renderer):
         self.mgrid_y, self.mgrid_x = np.mgrid[0:height_pxl, 0:width_pxl]
 
     def render(self, frame):
-        pic = self.render_meshgrid_mono(frame, self.mgrid_x, self.mgrid_y)
+        pic = np.empty((self.height_pxl, self.width_pxl), dtype=np.uint32)
+        self.render_meshgrid_mono(frame, self.mgrid_x, self.mgrid_y, pic)
         return frame.palette.remap(pic)
+
+
+class ChunkingRenderer(Renderer):
+    """Renders picture in chunks of `chunk_size` pixels. Can be aborted between chunks."""
+
+    def __init__(self, width_pxl, height_pxl, chunk_size=100000, is_aborted: Callable[[], bool] = lambda: False):
+        super().__init__(width_pxl, height_pxl)
+        self.chunk_size = chunk_size
+        self.chunks_count = int(np.ceil((width_pxl * height_pxl) / self.chunk_size))
+        mgrid_y, mgrid_x = np.mgrid[0:height_pxl, 0:width_pxl]
+        self.mgrid_x = mgrid_x.reshape((-1,))
+        self.mgrid_y = mgrid_y.reshape((-1,))
+        self.is_aborted = is_aborted
+
+    def render(self, frame: Frame) -> np.ndarray:
+        pic = np.empty((self.width_pxl * self.height_pxl), dtype=np.uint32)
+        cs = self.chunk_size
+        for i in range(self.chunks_count):
+            if self.is_aborted():
+                break
+            st = i * cs
+            self.render_meshgrid_mono(frame, self.mgrid_x[st: st + cs], self.mgrid_y[st:st + cs], pic[st: st + cs])
+        return frame.palette.remap(pic.reshape(self.height_pxl, self.width_pxl))
 
     def render_picture(self, frame, file_name):
         pic = self.render(frame)
@@ -210,7 +236,7 @@ class StaticRenderer(Renderer):
 
 @numba.jit("(u4[:],i2[:],i2[:],u4[:,:])", parallel=True, nogil=True)
 def _rearrange_points(points, x, y, output):
-    for i in range(len(points)):
+    for i in numba.prange(len(points)):
         output[y[i]][x[i]] = points[i]
 
 
@@ -227,7 +253,6 @@ class InteractiveRenderer(Renderer):
         self.mono_pic = np.empty((width_pxl * height_pxl,), dtype=np.uint32)
         self.last_ui_update_time = 0
         self.need_immediate_update = False
-        print(f"Created renderer with ds={downsample_factor}")
 
         # Prepare meshgrid such that first chunk is "mini" image.
         mgx = [[], []]
@@ -264,7 +289,6 @@ class InteractiveRenderer(Renderer):
             return self.empty_pic
         elif self.chunks_rendered == self.chunks_count:
             pic = np.empty((self.height_pxl, self.width_pxl), dtype=np.uint32)
-            t0 = time.time()
             _rearrange_points(self.mono_pic, self.mgrid_x, self.mgrid_y, pic)
         else:
             small_pic = self.mono_pic[0:self.chunk_size].reshape((self.height_mini, self.width_mini))
@@ -292,6 +316,9 @@ class InteractiveRenderer(Renderer):
             self.frame_rendered = frame
         self.tick()
 
+    def halt(self):
+        self.renderer_thread.requestInterruption()
+
 
 class RenderLoop(QThread):
 
@@ -303,15 +330,18 @@ class RenderLoop(QThread):
     def run(self):
         cs = self.renderer.chunk_size
         while True:
+            if self.isInterruptionRequested():
+                return
             if self.renderer.frame_to_display is None:
                 self.is_idle = True
                 time.sleep(0.01)
                 continue
             if not (self.renderer.frame_to_display is self.renderer.frame_rendered):
                 self.is_idle = False
-                self.renderer.mono_pic[:cs] = self.renderer.render_meshgrid_mono(self.renderer.frame_to_display,
-                                                                                 self.renderer.mgrid_x[:cs],
-                                                                                 self.renderer.mgrid_y[:cs])
+                self.renderer.render_meshgrid_mono(self.renderer.frame_to_display,
+                                                   self.renderer.mgrid_x[:cs],
+                                                   self.renderer.mgrid_y[:cs],
+                                                   self.renderer.mono_pic[:cs])
                 self.renderer.frame_rendered = self.renderer.frame_to_display
                 self.renderer.chunks_rendered = 1
                 self.renderer.need_immediate_update = True
@@ -323,9 +353,10 @@ class RenderLoop(QThread):
                 continue
 
             cr = self.renderer.chunks_rendered * self.renderer.chunk_size
-            self.renderer.mono_pic[cr: cr + cs] = self.renderer.render_meshgrid_mono(self.renderer.frame_rendered,
-                                                                                     self.renderer.mgrid_x[cr:cr + cs],
-                                                                                     self.renderer.mgrid_y[cr:cr + cs])
+            self.renderer.render_meshgrid_mono(self.renderer.frame_rendered,
+                                               self.renderer.mgrid_x[cr:cr + cs],
+                                               self.renderer.mgrid_y[cr:cr + cs],
+                                               self.renderer.mono_pic[cr: cr + cs])
             self.renderer.chunks_rendered += 1
         assert self.renderer.chunks_rendered == self.renderer.chunks_count
         self.renderer.need_immediate_update = True

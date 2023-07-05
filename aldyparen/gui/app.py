@@ -9,10 +9,10 @@ import numpy as np
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer, QThreadPool
 
-from .async_runners import ImageRenderThread, VideoRenderThread
+from .async_runners import ImageRenderRunnable
 from .main import MainWindow
 from .settings import AldyparenSettings
-from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette
+from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette, ChunkingRenderer
 from ..mixing import make_animation
 from ..painters import MandelbroidPainter, ALL_PAINTERS, PAINTERS_INDEX
 from ..video import VideoRenderer
@@ -27,6 +27,7 @@ class AldyparenApp:
         self.opened_file_name = None
         self.have_unsaved_changes = False
         self.is_loading_project = False
+        self.is_exiting = False
         self.need_update_movie_in_tick = False
 
         self.saved_painter_configs = dict()  # TODO: this better store actual painters.
@@ -107,7 +108,7 @@ class AldyparenApp:
 
     # TODO: default downsample factor should be in settings.
     def reset_work_frame(self):
-        self.work_frame_renderer.renderer_thread.quit()
+        self.work_frame_renderer.halt()
         self.work_frame_renderer = InteractiveRenderer(480, 270, self.main_window.set_work_frame,
                                                        downsample_factor=self.settings.get_downsample_factor())
         self.on_work_frame_changed()
@@ -205,13 +206,10 @@ class AldyparenApp:
             file_name += "[" + self.work_frame.painter.gen_function + "]"
         file_name += ".bmp"
         file_name = os.path.join(dir, file_name)
-        thread = ImageRenderThread(self, self.work_frame, StaticRenderer(width, height), file_name)
-        QThreadPool.globalInstance().start(thread)
-
-    def render_video(self, width, height, fps, file_name):
-        self.active_video_renderer = VideoRenderer(width, height, fps)
-        thread = VideoRenderThread(self, self.frames, self.active_video_renderer, file_name)
-        QThreadPool.globalInstance().start(thread)
+        renderer = ChunkingRenderer(width, height, is_aborted=lambda: self.is_exiting)
+        task = ImageRenderRunnable(self, self.work_frame, renderer, file_name)
+        task.setAutoDelete(True)
+        QThreadPool.globalInstance().start(task)
 
     def save_project(self):
         assert self.opened_file_name is not None

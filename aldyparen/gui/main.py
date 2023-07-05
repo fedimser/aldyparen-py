@@ -8,7 +8,7 @@ from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
     QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog
 
-from .async_runners import render_movie_preview_async
+from .async_runners import render_movie_preview_async, render_video_async
 from .. import ColorPalette
 from ..painters import ALL_PAINTERS
 
@@ -240,7 +240,6 @@ class MainWindow(QtWidgets.QMainWindow):
             raise ValueError(f"Unrecognized palette type: {palette_type}")
 
     def on_force_update_clicked(self):
-        downsample_factor = self.spin_box_downsampling.value()
         self.app.reset_work_frame()
 
     def make_animation(self):
@@ -292,12 +291,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_exit(self):
         if self.app.photo_rendering_tasks_count > 0 or self.app.video_rendering_tasks_count > 0:
-            if not self.confirm("There are unfinished tasks. Exiting now will cancel them. Exit anyway?"):
+            if not self.confirm("There are unfinished tasks. Exiting now may cancel them. Exit anyway?"):
                 return
         if self.app.have_unsaved_changes:
             if not self.confirm("There are unsaved changes. Exit anyway?"):
                 return
+
+        self.app.is_exiting = True
+        self.work_frame_renderer.halt()
+        QThreadPool.globalInstance().clear()  # Cancels not yet started tasks.
         self.app.settings.save()
+        if not QThreadPool.globalInstance().waitForDone(msecs=500):
+            show_alert("Please wait for active tasks to be finished or stopped.")
+        QThreadPool.globalInstance().waitForDone()
+
         QCoreApplication.exit(0)
 
     def render_image(self):
@@ -328,7 +335,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ])
         if not self.confirm(prompt):
             return
-        self.app.render_video(width, height, fps, file_name)
+        render_video_async(self.app, width, height, fps, file_name)
         self.app.settings.work_dir = os.path.dirname(file_name)
 
     def open_docs(self):
