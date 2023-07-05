@@ -106,7 +106,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Initialize palette list.
         combo = self.combo_palette_type  # type: QComboBox
-        combo = self.combo_palette_type  # type: QComboBox
         combo.addItem("Grayscale")
         combo.addItem("Random")
         combo.addItem("Gradient")
@@ -152,6 +151,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_movie.setScene(self.scene_movie)
         self.scene_work_frame = WorkFrameScene(self, app)
         self.view_work_frame.setScene(self.scene_work_frame)
+        self.scene_palette_preview = QtWidgets.QGraphicsScene(self)
+        self.view_palette_preview.setScene(self.scene_palette_preview)
 
     def set_image(self, view, scene, image):
         if type(image) == str:
@@ -219,6 +220,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except ValueError as err:
             show_alert(str(err))
             return
+        self.set_palette_preview(palette)
         self.app.update_work_frame_palette(palette)
 
     def generate_palette(self) -> ColorPalette:
@@ -298,7 +300,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
 
         self.app.is_exiting = True
-        self.work_frame_renderer.halt()
+        self.app.work_frame_renderer.halt()
         QThreadPool.globalInstance().clear()  # Cancels not yet started tasks.
         self.app.settings.save()
         if not QThreadPool.globalInstance().waitForDone(msecs=500):
@@ -378,3 +380,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def update_title(self):
         self.setWindowTitle(self.app.get_window_title())
+
+    def set_palette_preview(self, palette: ColorPalette):
+        colors_num = palette.colors.shape[0]
+        self.label_current_pelette_colors_num.setText("%d colors" % colors_num)
+
+        w = self.view_palette_preview.width()
+        h = self.view_palette_preview.height()
+        row = np.zeros((1, w, 3), dtype=np.uint8)
+        for i in range(w):
+            j = (i * colors_num) // w
+            row[0, i, :] = palette.colors[j, :]
+        image = np.tile(row, (h, 1, 1))
+        print(image.shape)
+        self.set_image(self.view_palette_preview, self.scene_palette_preview, image)
