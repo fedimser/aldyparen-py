@@ -46,7 +46,7 @@ def test_renders_mandelbrot_high_precision():
 
 
 def test_renders_julia_set():
-    renderer = StaticRenderer(400, 400)
+    renderer = StaticRenderer(200, 200)
     transform = Transform(np.complex128(0), 3, 0.0)
     # Newton fractal for P(z)=z^3-1.
     frame = Frame(JuliaPainter(func="z-(z**3-1)/(3*z**2)"), transform, ColorPalette.default())
