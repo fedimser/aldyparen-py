@@ -64,7 +64,7 @@ class AldyparenApp:
         self.reset_painter_config()
         self.main_window.update_title()
         self.main_window.on_movie_updated()
-        self.main_window.set_palette_preview(self.work_frame.palette)
+        self.main_window.show_palette_preview(self.work_frame.palette)
         self.timer.start(25)
         self.qt_app.exec()
 
@@ -252,7 +252,7 @@ class AldyparenApp:
         painter_idx = PAINTERS_INDEX[self.work_frame.painter.__class__.__name__]
         self.main_window.combo_painter_type.setCurrentIndex(painter_idx)
         self.main_window.set_painter_config(json.dumps(self.work_frame.painter.to_object()))
-        self.main_window.set_palette_preview(self.work_frame.palette)
+        self.main_window.show_palette_preview(self.work_frame.palette)
         self.on_work_frame_changed()
 
         # Load movie to UI.

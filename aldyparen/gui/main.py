@@ -220,7 +220,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except ValueError as err:
             show_alert(str(err))
             return
-        self.set_palette_preview(palette)
+        self.show_palette_preview(palette)
         self.app.update_work_frame_palette(palette)
 
     def generate_palette(self) -> ColorPalette:
@@ -381,7 +381,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def update_title(self):
         self.setWindowTitle(self.app.get_window_title())
 
-    def set_palette_preview(self, palette: ColorPalette):
+    def show_palette_preview(self, palette: ColorPalette):
         colors_num = palette.colors.shape[0]
         self.label_current_pelette_colors_num.setText("%d colors" % colors_num)
 
@@ -392,5 +392,4 @@ class MainWindow(QtWidgets.QMainWindow):
             j = (i * colors_num) // w
             row[0, i, :] = palette.colors[j, :]
         image = np.tile(row, (h, 1, 1))
-        print(image.shape)
         self.set_image(self.view_palette_preview, self.scene_palette_preview, image)

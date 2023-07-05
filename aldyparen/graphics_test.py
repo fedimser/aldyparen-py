@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from aldyparen.graphics import Frame, StaticRenderer, Transform, ColorPalette, InteractiveRenderer, ChunkingRenderer
-from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter, MadnelbrotHighPrecisionPainter
+from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter, MadnelbrotHighPrecisionPainter, JuliaPainter
 
 GOLDEN_DIR = os.path.join(os.getcwd(), "goldens")
 
@@ -43,6 +43,19 @@ def test_renders_mandelbrot_high_precision():
     center = np.complex128(-1.99977406013629035931 - 0.00000000329004032147j)
     frame2 = Frame(p, Transform(center, 1e-6, 0.0), palette)
     assert_picture(renderer.render(frame2), f"mandelbrot_hp_zoom")
+
+
+def test_renders_julia_set():
+    renderer = StaticRenderer(400, 400)
+    transform = Transform(np.complex128(0), 3, 0.0)
+    # Newton fractal for P(z)=z^3-1.
+    frame = Frame(JuliaPainter(func="z-(z**3-1)/(3*z**2)"), transform, ColorPalette.default())
+    assert_picture(renderer.render(frame), "newton_z3m1")
+
+    # Newton fractal for P(z)=(z-1)(z-2)(z-3).
+    frame = Frame(JuliaPainter(func="z-(z**3-6*z**2+11*z-6)/(3*z**2-12*z+11)"), Transform(2, 5, 0),
+                  ColorPalette.default())
+    assert_picture(renderer.render(frame), "newton_poly3")
 
 
 def test_renders_sierpinski_carpet():

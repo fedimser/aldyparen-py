@@ -19,7 +19,7 @@ class MandelbroidPainter:
                 "radius": self.radius,
                 "max_iter": self.max_iter}
 
-    def paint(self, points):
+    def paint(self, points, ans):
         if self.paint_func is None:
             numba_namespace = {"numba": numba, "np": np}
             source = "\n".join([
@@ -36,7 +36,7 @@ class MandelbroidPainter:
 
         warnings.filterwarnings("ignore", message="overflow")
         try:
-            return self.paint_func(points)
+            ans[:] = self.paint_func(points)
         except Exception as e:
             print(f"Error in mandelbroid painter: {e}")
-            return np.zeros_like(points, dtype=np.uint32)
+            ans[:] = np.zeros_like(points, dtype=np.uint32)

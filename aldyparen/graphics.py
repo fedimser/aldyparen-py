@@ -62,8 +62,17 @@ class ColorPalette:
         return ColorPalette(colors)
 
     @staticmethod
+    def categorical(colors_html):
+        size = len(colors_html)
+        colors = np.empty((size, 3), dtype=np.uint8)
+        for i in range(size):
+            colors[i, :] = _to_numpy_color(colors_html[i])
+        return ColorPalette(colors)
+
+    @staticmethod
     def default():
-        return ColorPalette.gradient_plus_one('black', 'yellow', 'black', size=101)
+        return ColorPalette.categorical(
+            ['white', 'yellow', 'purple', 'orange', 'lightblue', 'red', 'gray', 'green', 'black'])
 
     @staticmethod
     def random(size=256):
@@ -170,16 +179,17 @@ class Renderer:
 
     def render_meshgrid_mono(self, frame: Frame, mgrid_x: np.ndarray, mgrid_y: np.ndarray, ans: np.ndarray):
         """Renders monochrome frame for pixels with given coordinates"""
-        assert ans.shape == mgrid_x.shape
-        if hasattr(frame.painter, "render_high_precision"):
-            mgrid_shape = mgrid_x.shape
-            assert mgrid_y.shape == mgrid_shape
-            if len(mgrid_shape) > 1:
-                mgrid_x = mgrid_x.reshape((-1,))
-                mgrid_y = mgrid_y.reshape((-1,))
-                ans = ans.reshape((-1,))
+        assert ans.shape == mgrid_x.shape == mgrid_y.shape
+        if len(mgrid_x.shape) > 1:
+            mgrid_x = mgrid_x.reshape((-1,))
+            mgrid_y = mgrid_y.reshape((-1,))
+            ans = ans.reshape((-1,))
+        if mgrid_x.dtype != np.int16:
             mgrid_x = mgrid_x.astype(np.int16)
+        if mgrid_y.dtype != np.int16:
             mgrid_y = mgrid_y.astype(np.int16)
+
+        if hasattr(frame.painter, "render_high_precision"):
             frame.painter.render_high_precision(self, frame.transform, mgrid_x, mgrid_y, ans)
         else:
             c = frame.transform.center
@@ -193,7 +203,7 @@ class Renderer:
             k_x = upp * x_rot
             k_y = upp * y_rot
             points = p_0 + mgrid_x * k_x - mgrid_y * k_y
-            ans[:] = frame.painter.paint(points)
+            frame.painter.paint(points, ans)
 
 
 class StaticRenderer(Renderer):
