@@ -22,7 +22,7 @@ as high-resolution images or videos.
     * For example, it can transform function `z^2` to `z^3` through `z^2.5`.
   * Can be exported (rendered) to a video file in MP4 format.
 * "Painters" - abstract framework allowing exploring and rendering different things:
-  * `MandelbroidPainter` - generalization of [Mandelbrot set]() for arbitrary function.
+  * `MandelbroidPainter` - generalization of [Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set) for arbitrary function.
      * Basically replaced `z^2+c` with arbitrary `f(z,c)`.
   * `MadnelbrotHighPrecisionPainter` - high-precision Mandelbrot set renderer. Uses arbitrary-precision arithmetic.
     * Will render Mandelbrot set correctly at very high zoom, where standard complex128 arithmetic 
@@ -32,8 +32,9 @@ as high-resolution images or videos.
       sped up with Numba.
     * I originally intended this for rendering video of deep zooms,
       but there is much better specialized software for that.
-  * `JuliaPainter` - displays [Julia set]. 
-    * Can be used to show Newton fractal (pass `func = z - P(z)/P'(z)`).
+  * `JuliaPainter` - displays [Julia set](https://en.wikipedia.org/wiki/Julia_set). 
+    * Can be used to show [Newton fractal](https://en.wikipedia.org/wiki/Newton_fractal)
+      (pass `func = z - P(z)/P'(z)`).
   * `SierpinskiCarpetPainter` - renders [Sierpinski carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet), 
     as an example of non-algebraic fractal.
 * Configurable color palette.
