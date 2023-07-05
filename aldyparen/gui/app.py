@@ -129,6 +129,8 @@ class AldyparenApp:
             status += f" 🎥({self.active_video_renderer.status_string})"
         else:
             self.active_video_renderer = None
+        if hasattr(self.work_frame.painter, "warning") and type(self.work_frame.painter.warning) is str:
+            status += "| " + self.work_frame.painter.warning
         self.main_window.show_status(status)
         pos = self.main_window.scene_work_frame.cursor_math_pos
         pos_text = "" if pos is None else "Cursor position: %.4g;%.4g" % (np.real(pos), np.imag(pos))

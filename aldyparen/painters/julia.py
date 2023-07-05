@@ -26,6 +26,7 @@ class JuliaPainter:
         self.max_colors = max_colors
         self.iterate_func = None
         self.attractors = [np.inf]
+        self.warning = None
 
     def to_object(self):
         return {"func": self.func,
@@ -78,4 +79,6 @@ class JuliaPainter:
             ans[i] = idx
 
         if color_limit_exceeded:
-            print("Warning! Color limit exceeded, extra colors were mapped to 0.")
+            self.warning = "Warning! Color limit exceeded, extra colors were mapped to 0."
+        else:
+            self.warning = None
