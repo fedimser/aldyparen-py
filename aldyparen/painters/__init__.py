@@ -28,17 +28,6 @@ class Painter:
         return painter_class(**data)
 
 
-class AxisPainter(Painter):
-    def __init__(self, width=0.01):
-        self.width = width
-
-    def to_object(self):
-        return {"width": self.width}
-
-    def paint(self, points):
-        return fff(points, self.width)
-
-
 # If point is inside, returns 0.
 # If point is outside, returns at which iteration we exited it.
 @numba.jit("u4(f8,f8,i8)")
@@ -77,5 +66,5 @@ class SierpinskiCarpetPainter(Painter):
 
 
 # All supported painters.
-ALL_PAINTERS = [MandelbroidPainter, MadnelbrotHighPrecisionPainter, AxisPainter, SierpinskiCarpetPainter]
+ALL_PAINTERS = [MandelbroidPainter, MadnelbrotHighPrecisionPainter, SierpinskiCarpetPainter]
 PAINTERS_INDEX = {ALL_PAINTERS[i].__name__: i for i in range(len(ALL_PAINTERS))}
