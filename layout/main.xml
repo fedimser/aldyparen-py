@@ -755,7 +755,6 @@
     <addaction name="menu_render_photo"/>
     <addaction name="menu_render_video"/>
     <addaction name="separator"/>
-    <addaction name="menu_settings"/>
     <addaction name="separator"/>
     <addaction name="menu_exit"/>
    </widget>
