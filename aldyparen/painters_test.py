@@ -6,7 +6,6 @@ from aldyparen.util import SUPPORTED_FUNCTIONS
 
 def test_defaults():
     for painter_class in ALL_PAINTERS:
-        print("Testing painter ", painter_class.__name__)
         painter = painter_class()
         config1 = painter.to_object()
         config1_json = json.dumps(config1)
@@ -17,10 +16,14 @@ def test_defaults():
 
 
 def test_mandelbroid_rejects_bad_functions():
-    pass
+    error_msg = None
+    try:
+        MandelbroidPainter(gen_function="f(c,z)")
+    except ValueError as err:
+        error_msg = str(err)
+    assert "Unexpected token: f" in error_msg
 
 
 def test_mandelbroid_supports_all_functions():
     gen_function = '+'.join(func + '(c+z+1j)' for func in SUPPORTED_FUNCTIONS)
-    print(gen_function)
     MandelbroidPainter(gen_function=gen_function)
