@@ -322,7 +322,7 @@ class MainWindow(QtWidgets.QMainWindow):
         width = self.spin_box_video_resolution_1.value()
         height = self.spin_box_video_resolution_2.value()
         fps = self.app.settings.get_video_fps()
-        filters = "Video files (*.mp4 *.avi);;All files (*.*)"
+        filters = "MP4 video files (*.mp4);;All files (*.*)"
         file_name = QFileDialog.getSaveFileName(self, 'Choose video location', self.app.settings.work_dir, filters)[0]
         if len(file_name) == 0:
             return

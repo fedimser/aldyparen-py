@@ -8,6 +8,7 @@ from typing import List
 import numpy as np
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer, QThreadPool
+from PyQt5.QtWidgets import QMessageBox
 
 from .async_runners import ImageRenderRunnable
 from .main import MainWindow
@@ -29,6 +30,7 @@ class AldyparenApp:
         self.is_loading_project = False
         self.is_exiting = False
         self.need_update_movie_in_tick = False
+        self.error_messages_to_show = []  # type: List[str]
 
         self.saved_painter_configs = dict()  # TODO: this better store actual painters.
         for painter_class in ALL_PAINTERS:
@@ -135,6 +137,14 @@ class AldyparenApp:
         if self.need_update_movie_in_tick:
             self.need_update_movie_in_tick = False
             self.main_window.on_movie_updated()
+
+        if len(self.error_messages_to_show) > 0:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Error")
+            msg.setText(self.error_messages_to_show[0])
+            msg.exec()
+            self.error_messages_to_show = self.error_messages_to_show[1:]
 
     def update_work_frame_transform(self, new_transform: Transform):
         self.work_frame = replace(self.work_frame, transform=new_transform)
@@ -280,3 +290,6 @@ class AldyparenApp:
             json.dumps(cur_frame.painter.to_object()),
             "Transform: " + str(cur_frame.transform)
         ])
+
+    def show_error_message_async(self, msg):
+        self.error_messages_to_show.append(msg)

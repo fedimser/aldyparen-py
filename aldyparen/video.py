@@ -25,7 +25,6 @@ class VideoRenderer:
             clips.append(ImageClip(self.image_renderer.render(frames[i])).set_duration(1.0 / self.fps))
             render_rate = (time() - time_start) / (i + 1)
             self.status_string = f"%d/%d frames, %.1f s/frame" % (i + 1, n, render_rate)
-            print(self.status_string)
         self.status_string = "Saving video..."
         video = concatenate(clips, method="compose")
         video.write_videofile(file_name, fps=self.fps)

@@ -71,5 +71,8 @@ class VideoRenderRunnable(QRunnable):
         self.file_name = file_name
 
     def run(self):
-        self.renderer.render_video(self.frames, self.file_name)
+        try:
+            self.renderer.render_video(self.frames, self.file_name)
+        except Exception as e:
+            self.app.show_error_message_async(str(e))
         self.app.video_rendering_tasks_count -= 1
