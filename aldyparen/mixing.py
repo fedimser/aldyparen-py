@@ -5,7 +5,7 @@ from typing import List
 import numpy as np
 
 from aldyparen.graphics import Frame, ColorPalette, Transform
-from aldyparen.painters import MandelbroidPainter, Painter
+from aldyparen.painters import MandelbroidPainter, JuliaPainter, Painter
 
 
 def make_animation(frame1: Frame, frame2: Frame, length: int) -> List[Frame]:
@@ -32,6 +32,8 @@ def mix_painters(p1: 'Painter', p2: 'Painter', w: float) -> Painter:
     assert p2.__class__ == cl
     if cl == MandelbroidPainter:
         return mix_mandelbroid(p1, p2, w)
+    if cl == JuliaPainter:
+        return mix_julia(p1, p2, w)
     else:
         if p1 != p2:
             raise ValueError("Cannot mix painters.")
@@ -69,6 +71,14 @@ def mix_mandelbroid(p1: MandelbroidPainter, p2: MandelbroidPainter, w: float) ->
     radius = (1 - w) * p1.radius + w * p2.radius
     max_iter = np.round((1 - w) * p1.max_iter + w * p2.max_iter)
     return MandelbroidPainter(gen_function, max_iter=max_iter, radius=radius)
+
+
+def mix_julia(p1: JuliaPainter, p2: JuliaPainter, w: float) -> JuliaPainter:
+    func = mix_functions(p1.func, p2.func, w)
+    iters = np.round((1 - w) * p1.iters + w * p2.iters)
+    tolerance = (1 - w) * p1.tolerance + w * p2.tolerance
+    max_colors = np.round((1 - w) * p1.max_colors + w * p2.max_colors)
+    return JuliaPainter(func=func, iters=iters, tolerance=tolerance, max_colors=20)
 
 
 def mix_functions(f1: str, f2: str, w: float):

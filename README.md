@@ -1,6 +1,7 @@
 # aldyparen-py
 
-Aldyparen (Algebraic Dynamic Parametric Renderer) is a program for rendering certain types of fractals as photos or videos.
+Aldyparen (Algebraic Dynamic Parametric Renderer) is a program for rendering certain types of fractals
+as high-resolution images or videos.
 
 ## Features
 
@@ -22,7 +23,7 @@ Aldyparen (Algebraic Dynamic Parametric Renderer) is a program for rendering cer
   * Can be exported (rendered) to a video file in MP4 format.
 * "Painters" - abstract framework allowing exploring and rendering different things:
   * `MandelbroidPainter` - generalization of [Mandelbrot set]() for arbitrary function.
-     * Basically replace `z^2+c` with arbitrary `f(z,c)`.
+     * Basically replaced `z^2+c` with arbitrary `f(z,c)`.
   * `MadnelbrotHighPrecisionPainter` - high-precision Mandelbrot set renderer. Uses arbitrary-precision arithmetic.
     * Will render Mandelbrot set correctly at very high zoom, where standard complex128 arithmetic 
       fails because of insufficient precision.
@@ -40,18 +41,30 @@ Aldyparen (Algebraic Dynamic Parametric Renderer) is a program for rendering cer
     to RGB colors using palette. If palette is smaller than number of colors, it's 
     repeated from beginning.
 
-## TODO
+## UI screenshot
+<img src="examples/screenshot.jpg" width="500"/>
+
+
+## TODOs
 
 * Allow specifying Numba target (cpu/parallel/cuda).
 * Add jupyter example for usage as library (incl.difference between standard/high precision).
 * Add instructions for building from source.
 * Build as standalone app, see https://build-system.fman.io/pyqt5-tutorial
+* Check that built app is cross-platform (Windows/Linux).
 * Generate few movies, save them as example JSONs, and publish rendered videos.
 * Add tests for the app (loading from file, rendering to file).
+* Selecting MadnelbrotHighPrecisionPainter with rotation should not crash.
 
 ## Development notes
 
-This is a Python clone (rewritten from scratch) of [Aldyparen](https://github.com/fedimser/Aldyparen), which I have written in C# back in 2017. It's built using PyQt5. UI layout designed using [Qt Designer](https://doc.qt.io/qt-6/qtdesigner-manual.html).
+This application is written in Python using PyQt5. 
+UI layout designed using [Qt Designer](https://doc.qt.io/qt-6/qtdesigner-manual.html).
+I used [Numba](https://numba.pydata.org/) for optimizing numerical calculations.
+
+This is a Python clone (rewritten from scratch) of [Aldyparen](https://github.com/fedimser/Aldyparen),
+which I have written in C# back in 2017. 
+This app has all the functionality of the old Aldyparen, plus some extra features (e.g. new "painters").
 
 To install reequirements, and run program from source, run (it's recommended to use virtualenv):
 
