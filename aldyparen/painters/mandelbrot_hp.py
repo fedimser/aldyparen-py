@@ -50,10 +50,12 @@ class MadnelbrotHighPrecisionPainter:
         assert mgrid_y.dtype == np.int16
         assert (mgrid_x.shape == mgrid_y.shape)
         assert len(mgrid_x.shape) == 1
+        self.warning = None
+        if not np.allclose(transform.rotation, 0):
+            self.warning = "Warning: rotation is ignored!"
         # TODO: make this more universal.
-        # TODO: support rotation.
         # TODO: account for the 1/2 error - can supply doubled mgrid, and different upp.
-        assert np.allclose(transform.rotation, 0), "Rotation not supported yet"
+
         center_x = hpn_from_str(str(np.real(transform.center)))
         center_y = hpn_from_str(str(np.imag(transform.center)))
         # Units per pixel.
