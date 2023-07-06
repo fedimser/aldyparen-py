@@ -20,8 +20,6 @@ def count_iters(x0, y0, max_iter):
     return max_iter
 
 
-# No rotation, so far.
-
 @numba.jit("void(i8[:],i8[:],i2[:],i2[:],i8[:],i4,u4[:])", nogil=True)
 def mandelbrot_high_precision_numba(center_x, center_y, mgrid_x, mgrid_y, uphp, max_iter, ans):
     n = len(mgrid_x)
