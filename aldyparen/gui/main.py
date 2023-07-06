@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsScen
     QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog
 
 from .async_runners import render_movie_preview_async, render_video_async
-from .. import ColorPalette
+from ..graphics import ColorPalette
 from ..painters import ALL_PAINTERS
 
 

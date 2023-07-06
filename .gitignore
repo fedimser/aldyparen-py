@@ -9,3 +9,5 @@
 *.mp4
 *.avi
 TODO.txt
+*.ipynb
+!/examples/*.ipynb

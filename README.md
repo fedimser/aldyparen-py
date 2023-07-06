@@ -55,7 +55,6 @@ as high-resolution images or videos.
 * Check that built app is cross-platform (Windows/Linux).
 * Generate few movies, save them as example JSONs, and publish rendered videos.
 * Add tests for the app (loading from file, rendering to file).
-* Selecting MadnelbrotHighPrecisionPainter with rotation should not crash.
 
 ## Development notes
 

@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from aldyparen.graphics import Frame, StaticRenderer, Transform, ColorPalette, InteractiveRenderer, ChunkingRenderer
-from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter, MadnelbrotHighPrecisionPainter, JuliaPainter
+from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter, MandelbrotHighPrecisionPainter, JuliaPainter
 
 GOLDEN_DIR = os.path.join(os.getcwd(), "goldens")
 
@@ -37,7 +37,7 @@ def test_renders_mandelbroids():
 def test_renders_mandelbrot_high_precision():
     renderer = StaticRenderer(100, 100)
     palette = ColorPalette.gradient('white', 'black', size=10)
-    p = MadnelbrotHighPrecisionPainter(max_iter=100)
+    p = MandelbrotHighPrecisionPainter(max_iter=100)
     frame1 = Frame(p, Transform(0, 4, 0), palette)
     assert_picture(renderer.render(frame1), f"mandelbrot_hp")
     center = np.complex128(-1.99977406013629035931 - 0.00000000329004032147j)
@@ -82,7 +82,7 @@ def test_serialization():
     _verify_serialization(
         Frame(MandelbroidPainter(gen_function="z**3+sin(z)+c"), Transform(2 + 3j, 10, 3.1), ColorPalette.random()))
     _verify_serialization(
-        Frame(MadnelbrotHighPrecisionPainter(), Transform(2j, 1e-3, -6), ColorPalette.grayscale(20)))
+        Frame(MandelbrotHighPrecisionPainter(), Transform(2j, 1e-3, -6), ColorPalette.grayscale(20)))
 
 
 def test_transform_to_string():

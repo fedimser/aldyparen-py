@@ -6,7 +6,7 @@ from aldyparen.util import prepare_function
 
 
 class JuliaPainter:
-    """Paints complex plane based on where they get by applying `func` many times.
+    """Paints points of the complex plane based on where they get by applying `func` many times.
 
     Points z1 and z2 will be painted the same color if `abs(F(z1),F(z2))<tolerance`, where F(z)=f(f(f...(z)..))`, where
     `f` is applied `iters` times.
@@ -18,6 +18,12 @@ class JuliaPainter:
     """
 
     def __init__(self, func="z-(z*z*z-1)/(3*z*z)", iters=100, tolerance=1e-9, max_colors=20):
+        """
+        :param func: function of variable `z`.
+        :param iters: maximal number of iterations for convergence.
+        :param tolerance: distance between two points to consider them the same.
+        :param max_colors: any number
+        """
         self.func = func
         self.iters = iters
         assert 0 < tolerance < 1e-5
@@ -51,7 +57,7 @@ class JuliaPainter:
         try:
             points_after = self.iterate_func(points)
         except Exception as e:
-            print(f"Error in _iterate: {e}")
+            self.warning = f"Error: {e}"
             ans[:] = np.zeros_like(points, dtype=np.uint32)
             return
 
@@ -80,5 +86,3 @@ class JuliaPainter:
 
         if color_limit_exceeded:
             self.warning = "Warning! Color limit exceeded, extra colors were mapped to 0."
-        else:
-            self.warning = None

@@ -179,6 +179,7 @@ class Renderer:
 
     def render_meshgrid_mono(self, frame: Frame, mgrid_x: np.ndarray, mgrid_y: np.ndarray, ans: np.ndarray):
         """Renders monochrome frame for pixels with given coordinates"""
+        frame.painter.warning = None
         assert ans.shape == mgrid_x.shape == mgrid_y.shape
         if len(mgrid_x.shape) > 1:
             mgrid_x = mgrid_x.reshape((-1,))

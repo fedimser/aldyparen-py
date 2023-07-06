@@ -1,6 +1,4 @@
-# Mandelbrot set with high precision.
-
-from aldyparen import Renderer, Transform
+from aldyparen.graphics import Renderer, Transform
 from aldyparen.math.hpn import *
 
 
@@ -36,7 +34,9 @@ def mandelbrot_high_precision_numba(center_x, center_y, mgrid_x, mgrid_y, upp, m
         ans[i] = count_iters(xg, yg, max_iter)
 
 
-class MadnelbrotHighPrecisionPainter:
+class MandelbrotHighPrecisionPainter:
+    """Mandelbrot set with high precision."""
+
     def __init__(self, max_iter=10, tag="abc"):
         self.max_iter = max_iter
         self.tag = tag
@@ -50,7 +50,6 @@ class MadnelbrotHighPrecisionPainter:
         assert mgrid_y.dtype == np.int16
         assert (mgrid_x.shape == mgrid_y.shape)
         assert len(mgrid_x.shape) == 1
-        self.warning = None
         if not np.allclose(transform.rotation, 0):
             self.warning = "Warning: rotation is ignored!"
         # TODO: make this more universal.

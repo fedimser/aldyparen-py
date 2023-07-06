@@ -1,6 +1,6 @@
 import json
 
-from aldyparen import ALL_PAINTERS, MandelbroidPainter
+from aldyparen.painters import ALL_PAINTERS, MandelbroidPainter
 from aldyparen.util import SUPPORTED_FUNCTIONS
 
 
