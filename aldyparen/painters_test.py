@@ -101,6 +101,9 @@ def _verify_serialization(frame1: Frame):
     assert frame1.palette == frame2.palette
     assert frame1.painter.__class__ == frame2.painter.__class__
     assert frame1.painter.to_object() == frame2.painter.to_object()
+    pic1 = StaticRenderer(10, 10).render(frame1)
+    pic2 = StaticRenderer(10, 10).render(frame2)
+    assert np.array_equal(pic1, pic2)
 
 
 def test_serialization():
@@ -110,4 +113,4 @@ def test_serialization():
     _verify_serialization(
         Frame(MandelbrotHighPrecisionPainter(), Transform(2j, 1e-3, -6), ColorPalette.grayscale(20)))
     _verify_serialization(
-        Frame(JuliaPainter(func="z**2"), Transform(0, 5, 0), ColorPalette.random(3)))
+        Frame(JuliaPainter(func="z-(z**2-1)/(2*z)", iters=10), Transform(0, 5, 0), ColorPalette.random(3)))

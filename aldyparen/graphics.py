@@ -1,4 +1,3 @@
-import base64
 import time
 from dataclasses import dataclass
 from typing import Callable, Dict, List
@@ -87,14 +86,12 @@ class ColorPalette:
         return '#{:02X}{:02X}{:02X}'.format(color[0], color[1], color[2])
 
     def serialize(self) -> str:
-        return base64.b64encode(self.colors).decode("ascii")
+        return self.colors.tobytes().hex()
 
     @staticmethod
     def deserialize(data: str) -> 'ColorPalette':
-        colors = np.frombuffer(base64.decodebytes(data.encode("ascii")), dtype=np.uint8).reshape((-1, 3))
-        # TODO: avoid this copy by accepting read-only type in _numba_remap signature.
-        colors = np.array(colors)
-        return ColorPalette(colors)
+        colors = np.frombuffer(bytes.fromhex(data), dtype=np.uint8).reshape((-1, 3))
+        return ColorPalette(np.array(colors))
 
     def __eq__(self, other: 'ColorPalette'):
         return np.array_equal(self.colors, other.colors)
