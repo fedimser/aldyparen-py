@@ -23,14 +23,14 @@ def count_iters(x0, y0, max_iter):
 # No rotation, so far.
 
 @numba.jit("void(i8[:],i8[:],i2[:],i2[:],i8[:],i4,u4[:])", nogil=True)
-def mandelbrot_high_precision_numba(center_x, center_y, mgrid_x, mgrid_y, upp, max_iter, ans):
+def mandelbrot_high_precision_numba(center_x, center_y, mgrid_x, mgrid_y, uphp, max_iter, ans):
     n = len(mgrid_x)
     assert len(mgrid_y) == n
     assert len(ans) == n
 
     for i in range(n):
-        xg = center_x + upp * (mgrid_x[i])
-        yg = center_y - upp * (mgrid_y[i])
+        xg = center_x + uphp * (mgrid_x[i])
+        yg = center_y - uphp * (mgrid_y[i])
         ans[i] = count_iters(xg, yg, max_iter)
 
 
@@ -52,15 +52,13 @@ class MandelbrotHighPrecisionPainter:
         assert len(mgrid_x.shape) == 1
         if not np.allclose(transform.rotation, 0):
             self.warning = "Warning: rotation is ignored!"
-        # TODO: make this more universal.
-        # TODO: account for the 1/2 error - can supply doubled mgrid, and different upp.
 
         center_x = hpn_from_str(str(np.real(transform.center)))
         center_y = hpn_from_str(str(np.imag(transform.center)))
-        # Units per pixel.
-        upp = hpn_from_str(str(transform.scale / renderer.width_pxl))
+        # Units per half-pixel.
+        uphp = hpn_from_str(str(transform.scale / (2 * renderer.width_pxl)))
 
-        w = renderer.width_pxl
-        h = renderer.height_pxl
-        mandelbrot_high_precision_numba(center_x, center_y, mgrid_x - w // 2, mgrid_y - h // 2, upp,
-                                        self.max_iter, ans)
+        mandelbrot_high_precision_numba(center_x, center_y,
+                                        2 * mgrid_x - (renderer.width_pxl - 1),
+                                        2 * mgrid_y - (renderer.height_pxl - 1),
+                                        uphp, self.max_iter, ans)
