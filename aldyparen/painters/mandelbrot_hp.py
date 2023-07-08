@@ -1,7 +1,7 @@
 from aldyparen.math.hpn import *
 
 
-@numba.jit("void(i8[:,:],i8[:,:],u4,u4[:])", nogil=True)
+@numba.jit("void(i8[:,:],i8[:,:],u4,u4[:])", nogil=True, nopython=True)
 def _count_iters_vec(x0, y0, max_iter, ans):
     hpn_normalize_in_place_vec(x0)
     hpn_normalize_in_place_vec(y0)

@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 from aldyparen.math.hpn import hpn_from_number, hpn_from_str
 
 
-@numba.jit("u1[:,:,:](u4[:,:],u1[:,:])", parallel=True, nogil=True)
+@numba.jit("u1[:,:,:](u4[:,:],u1[:,:])", parallel=True, nogil=True, nopython=True)
 def _numba_remap(pic, colors):
     h, w = pic.shape
     colors_num = colors.shape[0]

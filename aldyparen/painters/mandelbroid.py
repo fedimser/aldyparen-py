@@ -23,7 +23,7 @@ class MandelbroidPainter:
         if self.paint_func is None:
             numba_namespace = {"numba": numba, "np": np}
             source = "\n".join([
-                f'@numba.vectorize("u4(c16)", target="parallel")',
+                f'@numba.vectorize("u4(c16)", target="parallel", nogil=True, nopython=True)',
                 f'def painter__(c):',
                 f'  z = 0',
                 f'  for i in range({self.max_iter}):',

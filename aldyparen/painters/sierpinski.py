@@ -4,7 +4,7 @@ import numpy as np
 
 # If point is inside, returns 0.
 # If point is outside, returns at which iteration we exited it.
-@numba.jit("u4(f8,f8,i8)")
+@numba.jit("u4(f8,f8,i8)", nopython=True)
 def is_point_outside_carpet(x, y, depth):
     if depth <= 0:
         return 0
@@ -17,7 +17,7 @@ def is_point_outside_carpet(x, y, depth):
     return is_point_outside_carpet(x - kx, y - ky, depth - 1)
 
 
-@numba.vectorize("u4(c16,i8)", target="parallel")
+@numba.vectorize("u4(c16,i8)", target="parallel", nopython=True)
 def sierpinski_numba(p, depth):
     x = np.real(p)
     y = np.imag(p)
