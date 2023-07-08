@@ -777,8 +777,17 @@
     </property>
     <addaction name="menu_docs"/>
    </widget>
+   <widget class="QMenu" name="menuPresets">
+    <property name="title">
+     <string>Presets</string>
+    </property>
+    <addaction name="separator"/>
+    <addaction name="menu_mandelbrot"/>
+    <addaction name="menu_burning_ship"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVideo_edit"/>
+   <addaction name="menuPresets"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -913,6 +922,16 @@
   <action name="actionAbout_2">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="menu_mandelbrot">
+   <property name="text">
+    <string>Mandelbrot set</string>
+   </property>
+  </action>
+  <action name="menu_burning_ship">
+   <property name="text">
+    <string>Burning ship fractal</string>
    </property>
   </action>
  </widget>

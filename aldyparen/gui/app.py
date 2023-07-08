@@ -109,6 +109,17 @@ class AldyparenApp:
         config = self.work_frame.painter.to_object()
         self.main_window.set_painter_config(json.dumps(config))
 
+    def set_mandelbroid_painter(self, gen_function):
+        self.set_painter(MandelbroidPainter(gen_function=gen_function))
+
+    def set_painter(self, painter: 'Painter'):
+        self.is_loading_project = True
+        self.main_window.combo_painter_type.setCurrentIndex(PAINTERS_INDEX[painter.__class__.__name__])
+        self.main_window.set_painter_config(json.dumps(painter.to_object()))
+        self.work_frame = replace(self.work_frame, painter=painter)
+        self.on_work_frame_changed()
+        self.is_loading_project = False
+
     # TODO: default downsample factor should be in settings.
     def reset_work_frame(self):
         self.work_frame_renderer.halt()
