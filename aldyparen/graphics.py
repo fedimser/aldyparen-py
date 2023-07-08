@@ -99,9 +99,13 @@ class ColorPalette:
 
 @dataclass(frozen=True)
 class Transform:
-    center: np.complex128  # Point displayed at the center of the frame.
+    center: np.complex128  # Point displayed at the center of the frame, before rotation.
     scale: float  # Width of the frame, in units.
     rotation: float  # radians, about (0, 0), counterclockwise.
+
+    @staticmethod
+    def create(center=0.0, scale=1.0, rotation=0.0) -> 'Transform':
+        return Transform(np.complex128(center), scale, rotation)
 
     def translate(self, dx, dy) -> 'Transform':
         return Transform(self.center - dx - dy * 1j, self.scale, self.rotation)
@@ -113,6 +117,9 @@ class Transform:
     def scale_at_point(self, pole, scale_factor) -> 'Transform':
         pole *= np.exp(1j * self.rotation)
         return Transform(pole - (pole - self.center) * scale_factor, self.scale * scale_factor, self.rotation)
+
+    def rotate_at_frame_center(self, angle):
+        return self.rotate_at_point(self.center * np.exp(-1j * self.rotation), angle)
 
     def __str__(self):
         rot_deg = (self.rotation / np.pi * 180) % 360
