@@ -1,16 +1,19 @@
 import os
-from typing import Union
+from typing import Union, TYPE_CHECKING
 
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
 from PyQt5.QtCore import QPointF, QCoreApplication, QUrl, QThreadPool
-from PyQt5.QtGui import QDesktopServices
+from PyQt5.QtGui import QDesktopServices, QColor
 from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
-    QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog
+    QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog, QColorDialog
 
 from .async_runners import render_movie_preview_async, render_video_async
 from ..graphics import ColorPalette
 from ..painters import ALL_PAINTERS
+
+if TYPE_CHECKING:
+    from .app import AldyparenApp
 
 
 def show_alert(text, title=""):
@@ -91,6 +94,22 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         return self.cursor_math_pos
 
 
+class PalettePreviewScene(QtWidgets.QGraphicsScene):
+    def __init__(self, parent, app: 'AldyparenApp'):
+        super().__init__(parent)
+        self.app = app
+
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent):
+        num_colors = self.app.work_frame.palette.colors.shape[0]
+        color_idx = int(np.floor((event.scenePos().x() / self.width()) * num_colors))
+        cur_clr = self.app.work_frame.palette.colors[color_idx]
+        dialog = QColorDialog()
+        dialog.setCurrentColor(QColor(cur_clr[0], cur_clr[1], cur_clr[2], 255))
+        dialog.exec()
+        if dialog.result() == 1:
+            self.app.set_palette_color(color_idx, dialog.selectedColor())
+
+
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, app: 'AldyparenApp'):
         super(MainWindow, self).__init__()
@@ -155,7 +174,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_movie.setScene(self.scene_movie)
         self.scene_work_frame = WorkFrameScene(self, app)
         self.view_work_frame.setScene(self.scene_work_frame)
-        self.scene_palette_preview = QtWidgets.QGraphicsScene(self)
+        self.scene_palette_preview = PalettePreviewScene(self, app)
         self.view_palette_preview.setScene(self.scene_palette_preview)
 
     def set_image(self, view, scene, image):

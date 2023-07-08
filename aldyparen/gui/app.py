@@ -8,6 +8,7 @@ from typing import List
 import numpy as np
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer, QThreadPool
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMessageBox
 
 from .async_runners import ImageRenderRunnable
@@ -309,3 +310,12 @@ class AldyparenApp:
 
     def show_error_message_async(self, msg):
         self.error_messages_to_show.append(msg)
+
+    def set_palette_color(self, color_idx: int, color: QColor):
+        new_colors = np.array(self.work_frame.palette.colors)
+        new_colors[color_idx, 0] = color.red()
+        new_colors[color_idx, 1] = color.green()
+        new_colors[color_idx, 2] = color.blue()
+        new_palette = ColorPalette(new_colors)
+        self.update_work_frame_palette(new_palette)
+        self.main_window.show_palette_preview(new_palette)
