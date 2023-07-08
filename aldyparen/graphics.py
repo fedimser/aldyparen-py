@@ -8,6 +8,8 @@ import numpy as np
 from PyQt5.QtCore import QThread
 from matplotlib import pyplot as plt
 
+from aldyparen.math.hpn import hpn_from_number
+
 
 @numba.jit("u1[:,:,:](u4[:,:],u1[:,:])", parallel=True, nogil=True)
 def _numba_remap(pic, colors):
@@ -195,18 +197,31 @@ class Renderer:
             mgrid_x = mgrid_x.astype(np.int16)
         if mgrid_y.dtype != np.int16:
             mgrid_y = mgrid_y.astype(np.int16)
+        tr = frame.transform
+        rot_cos = np.cos(tr.rotation)
+        rot_sin = np.sin(tr.rotation)
+        w = self.width_pxl
+        h = self.height_pxl
 
-        if hasattr(frame.painter, "render_high_precision"):
-            frame.painter.render_high_precision(self, frame.transform, mgrid_x, mgrid_y, ans)
+        if hasattr(frame.painter, "paint_high_precision"):
+            prec = 7
+            center = tr.center * np.exp(-1j * tr.rotation)
+            center_x = hpn_from_number(center.real, prec=prec)
+            center_y = hpn_from_number(center.imag, prec=prec)
+            uphp = tr.scale / (2 * self.width_pxl)  # Units per half-pixel.
+            k_cos = hpn_from_number(uphp * rot_cos, prec=prec)
+            k_sin = hpn_from_number(uphp * rot_sin, prec=prec)
+            mgrid_x = 2 * mgrid_x - (w - 1)
+            mgrid_y = 2 * mgrid_y - (h - 1)
+            points_x = center_x.reshape((1, prec)) + np.outer(mgrid_x, k_cos) - np.outer(mgrid_y, k_sin)
+            points_y = center_y.reshape((1, prec)) - np.outer(mgrid_x, k_sin) - np.outer(mgrid_y, k_cos)
+            frame.painter.paint_high_precision(points_x, points_y, ans)
         else:
-            c = frame.transform.center
-            upp = frame.transform.scale / self.width_pxl  # units per pixel.
-            cs = np.cos(frame.transform.rotation)
-            sn = np.sin(frame.transform.rotation)
-            x_rot = cs - 1j * sn
-            y_rot = sn + 1j * cs
-            p_0 = (c.real - upp * 0.5 * (self.width_pxl - 1)) * x_rot + (
-                    c.imag + upp * 0.5 * (self.height_pxl - 1)) * y_rot
+            c = tr.center
+            upp = tr.scale / self.width_pxl  # units per pixel.
+            x_rot = rot_cos - 1j * rot_sin
+            y_rot = rot_sin + 1j * rot_cos
+            p_0 = (c.real - upp * 0.5 * (w - 1)) * x_rot + (c.imag + upp * 0.5 * (h - 1)) * y_rot
             k_x = upp * x_rot
             k_y = upp * y_rot
             points = p_0 + mgrid_x * k_x - mgrid_y * k_y

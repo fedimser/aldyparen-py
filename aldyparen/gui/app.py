@@ -147,7 +147,7 @@ class AldyparenApp:
             status += "| " + self.work_frame.painter.warning
         self.main_window.show_status(status)
         pos = self.main_window.scene_work_frame.cursor_math_pos
-        pos_text = "" if pos is None else "Cursor position: %.4g;%.4g" % (np.real(pos), np.imag(pos))
+        pos_text = "" if pos is None else "Cursor position: %.15g;%.15g" % (np.real(pos), np.imag(pos))
         self.main_window.label_cursor_position.setText(pos_text)
         self.main_window.label_transform_info.setText(str(self.work_frame.transform))
 
