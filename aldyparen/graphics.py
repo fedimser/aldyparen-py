@@ -132,6 +132,9 @@ class Transform:
     def rotate_at_frame_center(self, angle):
         return self.rotate_at_point(self.center * np.exp(-1j * self.rotation), angle)
 
+    def get_frame_center_in_math(self):
+        return self.center * np.exp(-1j * self.rotation)
+
     def __str__(self):
         rot_deg = (self.rotation / np.pi * 180) % 360
         scale_exp = int(np.floor(self.scale_log10))
@@ -220,7 +223,7 @@ class Renderer:
 
         if hasattr(frame.painter, "paint_high_precision"):
             prec = 7
-            center = tr.center * np.exp(-1j * tr.rotation)
+            center = tr.get_frame_center_in_math()
             center_x = hpn_from_number(center.real, prec=prec)
             center_y = hpn_from_number(center.imag, prec=prec)
 
@@ -235,11 +238,11 @@ class Renderer:
             points_y = center_y.reshape((1, prec)) - np.outer(mgrid_x, k_sin) - np.outer(mgrid_y, k_cos)
             frame.painter.paint_high_precision(points_x, points_y, ans)
         else:
-            c = tr.center
+            c = tr.get_frame_center_in_math()
             upp = tr.get_scale() / self.width_pxl  # units per pixel.
             x_rot = rot_cos - 1j * rot_sin
             y_rot = rot_sin + 1j * rot_cos
-            p_0 = (c.real - upp * 0.5 * (w - 1)) * x_rot + (c.imag + upp * 0.5 * (h - 1)) * y_rot
+            p_0 = c + (- upp * 0.5 * (w - 1)) * x_rot + (upp * 0.5 * (h - 1)) * y_rot
             k_x = upp * x_rot
             k_y = upp * y_rot
             points = p_0 + mgrid_x * k_x - mgrid_y * k_y
