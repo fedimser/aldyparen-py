@@ -7,7 +7,7 @@ from typing import List
 
 import numpy as np
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QTimer, QThreadPool
+from PyQt5.QtCore import QTimer, QThreadPool, QCoreApplication
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMessageBox
 
@@ -19,12 +19,14 @@ from ..mixing import make_animation
 from ..painters import MandelbroidPainter, ALL_PAINTERS, PAINTERS_INDEX
 from ..video import VideoRenderer
 
+APP_NAME = "Aldyparen"
 VERSION = "3.0"
 
 
 class AldyparenApp:
     def __init__(self):
         self.qt_app = QtWidgets.QApplication(sys.argv)
+        QCoreApplication.setApplicationName(f"{APP_NAME} {VERSION}")
 
         self.opened_file_name = None
         self.have_unsaved_changes = False
@@ -292,7 +294,7 @@ class AldyparenApp:
         self.opened_file_name = None
 
     def get_window_title(self):
-        title = "Aldyparen " + VERSION
+        title = f"{APP_NAME} {VERSION}"
         if self.opened_file_name is not None:
             title += " - " + os.path.basename(self.opened_file_name)
         if self.have_unsaved_changes:

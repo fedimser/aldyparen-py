@@ -3,8 +3,8 @@ from typing import Union, TYPE_CHECKING
 
 import numpy as np
 from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from PyQt5.QtCore import QPointF, QCoreApplication, QUrl, QThreadPool
-from PyQt5.QtGui import QDesktopServices, QColor
+from PyQt5.QtCore import QPointF, QCoreApplication, QUrl, QThreadPool, QSize
+from PyQt5.QtGui import QDesktopServices, QColor, QIcon
 from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
     QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog, QColorDialog
 
@@ -115,6 +115,11 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__()
         self.app = app
         uic.loadUi('layout/main.xml', self)
+
+        app_icon = QIcon()
+        app_icon.addFile('layout/icon16.png', QSize(16, 16))
+        app_icon.addFile('layout/icon64.png', QSize(64, 64))
+        self.setWindowIcon(app_icon)
 
         self.setMouseTracking(True)
 
