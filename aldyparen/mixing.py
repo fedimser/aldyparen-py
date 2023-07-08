@@ -43,7 +43,7 @@ def mix_painters(p1: 'Painter', p2: 'Painter', w: float) -> Painter:
 def mix_transforms(x: Transform, y: Transform, w: float) -> Transform:
     return Transform(
         center=np.complex128((1 - w) * x.center + w * y.center),
-        scale=np.exp((1 - w) * np.log(x.scale) + w * np.log(y.scale)),
+        scale_log10=(1 - w) * x.scale_log10 + w * y.scale_log10,
         rotation=(1 - w) * x.rotation + w * y.rotation
     )
 

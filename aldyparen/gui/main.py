@@ -78,7 +78,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
             self.app.work_frame.transform.translate(dx_pxl * upsp, -dy_pxl * upsp))
 
     def units_per_screen_pixel(self):
-        return self.app.work_frame.transform.scale / self.frame_width_pxl
+        return self.app.work_frame.transform.get_scale() / self.frame_width_pxl
 
     def calculate_cursor_math_pos(self, pos: QPointF):
         x = pos.x()

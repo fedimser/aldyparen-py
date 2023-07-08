@@ -8,7 +8,7 @@ import numpy as np
 from PyQt5.QtCore import QThread
 from matplotlib import pyplot as plt
 
-from aldyparen.math.hpn import hpn_from_number
+from aldyparen.math.hpn import hpn_from_number, hpn_from_str
 
 
 @numba.jit("u1[:,:,:](u4[:,:],u1[:,:])", parallel=True, nogil=True)
@@ -99,37 +99,49 @@ class ColorPalette:
         return np.array_equal(self.colors, other.colors)
 
 
+LN_10 = np.log(10)
+
+
 @dataclass(frozen=True)
 class Transform:
     center: np.complex128  # Point displayed at the center of the frame, before rotation.
-    scale: float  # Width of the frame, in units.
+    scale_log10: float  # Base-10 logarithm of the frame width (in math units).
     rotation: float  # radians, about (0, 0), counterclockwise.
 
     @staticmethod
-    def create(center=0.0, scale=1.0, rotation=0.0) -> 'Transform':
-        return Transform(np.complex128(center), scale, rotation)
+    def create(*, center=0.0, scale_log10=None, rotation=0.0, scale=None) -> 'Transform':
+        assert not (scale is not None and scale_log10 is not None)
+        if scale_log10 is None:
+            scale_log10 = 0.0 if scale is None else np.log10(scale)
+        else:
+            assert scale is None, "Cannot specify both scale and scale_log10"
+        return Transform(np.complex128(center), scale_log10, rotation)
 
     def translate(self, dx, dy) -> 'Transform':
-        return Transform(self.center - dx - dy * 1j, self.scale, self.rotation)
+        return Transform(self.center - dx - dy * 1j, self.scale_log10, self.rotation)
 
     def rotate_at_point(self, pole, angle) -> 'Transform':
         pole *= np.exp(1j * self.rotation)
-        return Transform(self.center + pole * (np.exp(1j * angle) - 1), self.scale, self.rotation + angle)
+        return Transform(self.center + pole * (np.exp(1j * angle) - 1), self.scale_log10, self.rotation + angle)
 
     def scale_at_point(self, pole, scale_factor) -> 'Transform':
         pole *= np.exp(1j * self.rotation)
-        return Transform(pole - (pole - self.center) * scale_factor, self.scale * scale_factor, self.rotation)
+        new_scale_log10 = self.scale_log10 + np.log10(scale_factor)
+        return Transform(pole - (pole - self.center) * scale_factor, new_scale_log10, self.rotation)
 
     def rotate_at_frame_center(self, angle):
         return self.rotate_at_point(self.center * np.exp(-1j * self.rotation), angle)
 
     def __str__(self):
         rot_deg = (self.rotation / np.pi * 180) % 360
-        return "c=(%.5e %.5e) s=%.2e r=%.1f°" % (
-            self.center.real, self.center.imag, self.scale, rot_deg)
+        scale_exp = int(np.floor(self.scale_log10))
+        scale_base = np.power(10, self.scale_log10 - scale_exp)
+        scale_str = "%.2fe%d" % (scale_base, scale_exp)
+        return "c=(%.5e %.5e) s=%s r=%.1f°" % (
+            self.center.real, self.center.imag, scale_str, rot_deg)
 
     def serialize(self) -> List[float]:
-        return [self.center.real, self.center.imag, self.scale, self.rotation]
+        return [self.center.real, self.center.imag, self.scale_log10, self.rotation]
 
     @staticmethod
     def deserialize(data: List[float]) -> 'Transform':
@@ -137,8 +149,11 @@ class Transform:
         return Transform(np.complex128(data[0] + 1j * data[1]), data[2], data[3])
 
     def __eq__(self, other: 'Transform'):
-        return np.isclose(self.center, other.center) and np.isclose(self.scale, other.scale) and np.isclose(
+        return np.isclose(self.center, other.center) and np.isclose(self.scale_log10, other.scale_log10) and np.isclose(
             self.rotation, other.rotation)
+
+    def get_scale(self) -> float:
+        return np.exp(LN_10 * self.scale_log10)
 
 
 @dataclass(frozen=True)
@@ -208,9 +223,12 @@ class Renderer:
             center = tr.center * np.exp(-1j * tr.rotation)
             center_x = hpn_from_number(center.real, prec=prec)
             center_y = hpn_from_number(center.imag, prec=prec)
-            uphp = tr.scale / (2 * self.width_pxl)  # Units per half-pixel.
-            k_cos = hpn_from_number(uphp * rot_cos, prec=prec)
-            k_sin = hpn_from_number(uphp * rot_sin, prec=prec)
+
+            scale_exp = int(np.floor(tr.scale_log10))
+            scale_base = np.power(10, tr.scale_log10 - scale_exp)
+            uphp = scale_base / (2 * self.width_pxl)  # Units per half-pixel.
+            k_cos = hpn_from_str(str(uphp * rot_cos), prec=prec, extra_power_10=scale_exp)
+            k_sin = hpn_from_str(str(uphp * rot_sin), prec=prec, extra_power_10=scale_exp)
             mgrid_x = 2 * mgrid_x - (w - 1)
             mgrid_y = 2 * mgrid_y - (h - 1)
             points_x = center_x.reshape((1, prec)) + np.outer(mgrid_x, k_cos) - np.outer(mgrid_y, k_sin)
@@ -218,7 +236,7 @@ class Renderer:
             frame.painter.paint_high_precision(points_x, points_y, ans)
         else:
             c = tr.center
-            upp = tr.scale / self.width_pxl  # units per pixel.
+            upp = tr.get_scale() / self.width_pxl  # units per pixel.
             x_rot = rot_cos - 1j * rot_sin
             y_rot = rot_sin + 1j * rot_cos
             p_0 = (c.real - upp * 0.5 * (w - 1)) * x_rot + (c.imag + upp * 0.5 * (h - 1)) * y_rot

@@ -53,7 +53,7 @@ def test_mandelbroid_supports_all_functions():
 def test_renders_mandelbroids():
     palette = ColorPalette.gradient('yellow', 'black', size=21)
     renderer = StaticRenderer(200, 200)
-    transform = Transform(0, 4, 0.0)
+    transform = Transform.create(scale=4)
     funcs = ["z*z+c", "z*z*z+c", "z*z*z+3**z+c"]
     for i in range(3):
         frame = Frame(MandelbroidPainter(gen_function=funcs[i], max_iter=20), transform, palette)
@@ -64,29 +64,29 @@ def test_renders_mandelbrot_high_precision():
     renderer = StaticRenderer(100, 100)
     palette = ColorPalette.gradient('white', 'black', size=10)
     p = MandelbrotHighPrecisionPainter(max_iter=100)
-    frame1 = Frame(p, Transform(0, 4, 0), palette)
+    frame1 = Frame(p, Transform.create(scale=4), palette)
     _assert_picture(renderer.render(frame1), f"mandelbrot_hp")
     center = np.complex128(-1.99977406013629035931 - 0.00000000329004032147j)
-    frame2 = Frame(p, Transform(center, 1e-6, 0.0), palette)
+    frame2 = Frame(p, Transform.create(center=center, scale_log10=-6), palette)
     _assert_picture(renderer.render(frame2), f"mandelbrot_hp_zoom")
 
 
 def test_renders_julia_set():
     renderer = StaticRenderer(200, 200)
-    transform = Transform(np.complex128(0), 3, 0.0)
+    transform = Transform.create(scale=3)
     # Newton fractal for P(z)=z^3-1.
     frame = Frame(JuliaPainter(func="z-(z**3-1)/(3*z**2)"), transform, ColorPalette.default())
     _assert_picture(renderer.render(frame), "newton_z3m1")
 
     # Newton fractal for P(z)=(z-1)(z-2)(z-3).
-    frame = Frame(JuliaPainter(func="z-(z**3-6*z**2+11*z-6)/(3*z**2-12*z+11)"), Transform(2, 5, 0),
+    frame = Frame(JuliaPainter(func="z-(z**3-6*z**2+11*z-6)/(3*z**2-12*z+11)"), Transform.create(center=2, scale=5),
                   ColorPalette.default())
     _assert_picture(renderer.render(frame), "newton_poly3")
 
 
 def test_renders_sierpinski_carpet():
     renderer = StaticRenderer(200, 200)
-    transform = Transform(np.complex128(0.5 + 0.5j), 1, 0.0)
+    transform = Transform.create(center=0.5 + 0.5j)
     palette = ColorPalette.gradient('black', 'white', size=2)
     frame = Frame(SierpinskiCarpetPainter(depth=4), transform, palette)
     _assert_picture(renderer.render(frame), "sierpinski_carpet")
@@ -107,10 +107,12 @@ def _verify_serialization(frame1: Frame):
 
 
 def test_serialization():
-    _verify_serialization(Frame(SierpinskiCarpetPainter(depth=4), Transform(0, 1, 0), ColorPalette.default()))
+    _verify_serialization(Frame(SierpinskiCarpetPainter(depth=4), Transform.create(), ColorPalette.default()))
     _verify_serialization(
-        Frame(MandelbroidPainter(gen_function="z**3+sin(z)+c"), Transform(2 + 3j, 10, 3.1), ColorPalette.random()))
+        Frame(MandelbroidPainter(gen_function="z**3+sin(z)+c"), Transform.create(center=2 + 3j, scale=10, rotation=3.1),
+              ColorPalette.random()))
     _verify_serialization(
-        Frame(MandelbrotHighPrecisionPainter(), Transform(2j, 1e-3, -6), ColorPalette.grayscale(20)))
+        Frame(MandelbrotHighPrecisionPainter(), Transform.create(center=2j, scale=1e-3, rotation=-6),
+              ColorPalette.grayscale(20)))
     _verify_serialization(
-        Frame(JuliaPainter(func="z-(z**2-1)/(2*z)", iters=10), Transform(0, 5, 0), ColorPalette.random(3)))
+        Frame(JuliaPainter(func="z-(z**2-1)/(2*z)", iters=10), Transform.create(scale=5), ColorPalette.random(3)))

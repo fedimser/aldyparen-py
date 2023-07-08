@@ -41,7 +41,7 @@ class AldyparenApp:
             self.saved_painter_configs[painter_name] = painter_class().to_object()
         self.selected_painter_class = ALL_PAINTERS[0]
         default_painter = ALL_PAINTERS[0]()
-        self.default_transform = Transform(0, 4, 0.0)
+        self.default_transform = Transform.create(scale=4)
         self.work_frame = Frame(default_painter, self.default_transform, ColorPalette.default())
 
         self.main_window = MainWindow(self)

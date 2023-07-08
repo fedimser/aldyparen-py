@@ -46,14 +46,18 @@ def hpn_normalize_in_place_vec(x):
         x[:, i] %= DIG_RANGE
 
 
-def hpn_from_str(s, prec=16) -> np.ndarray:
-    """Creates HPN from string representation with given precision."""
+def hpn_from_str(s, prec=16, extra_power_10=0) -> np.ndarray:
+    """Creates HPN from string representation with given precision.
+    :param prec: Precision.
+    :param extra_power_10: Multiplies result by 10^extra_power_10.
+    """
     assert prec >= 2
     assert prec <= MAX_PRECISION, "Precision too large"
     match = NUMBER_PATTERN.match(s)
     assert match is not None, f"Invalid syntax: {s}"
     int_part, _, frac_part, _, exp_part = match.groups()
     exp_val = int(exp_part) if exp_part is not None else 0
+    exp_val += extra_power_10
 
     if frac_part is None:
         frac_part = ""

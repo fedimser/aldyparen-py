@@ -15,8 +15,8 @@ def test_mix_functions():
 def test_make_animation():
     p1 = MandelbroidPainter(gen_function="z**2+c", max_iter=50, radius=10)
     p2 = MandelbroidPainter(gen_function="z**10+c", max_iter=100, radius=20)
-    t1 = Transform(0, 1, 0)
-    t2 = Transform(2 + 4j, 25, 2)
+    t1 = Transform.create(scale=1)
+    t2 = Transform.create(center=2 + 4j, scale=25, rotation=2)
     palette1 = ColorPalette(colors=np.array([[2, 4, 6], [8, 10, 12], [14, 16, 18]], dtype=np.uint8))
     palette2 = ColorPalette(colors=np.ones((5, 3), dtype=np.uint8) * 10)
     frame1 = Frame(p1, t1, palette1)
@@ -27,7 +27,7 @@ def test_make_animation():
     assert animation[0] == frame1
     assert animation[10] == frame2
     mid_frame = animation[5]
-    assert mid_frame.transform == Transform(1 + 2j, 5, 1)
+    assert mid_frame.transform == Transform.create(center=1 + 2j, scale=5, rotation=1)
     mid_painter = mid_frame.painter  # type: MandelbroidPainter
     assert mid_painter.max_iter == 75
     assert np.allclose(mid_painter.radius, 15)
