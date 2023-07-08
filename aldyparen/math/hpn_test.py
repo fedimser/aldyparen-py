@@ -56,13 +56,11 @@ def test_conversion_range():
     assert np.allclose(hpn_to_float(hpn_from_str(str(min_value))), min_value)
     assert np.allclose(hpn_to_float(hpn_from_str(str(max_value))), max_value)
 
-    with pytest.raises(Exception) as e:
+    # Note: error message for "int too large" is different on different platforms.
+    with pytest.raises(Exception):
         hpn_from_str(str(max_value + 1))
-    assert "int too large" in str(e)
-
-    with pytest.raises(Exception) as e:
+    with pytest.raises(Exception):
         hpn_from_str(str(min_value - 1))
-    assert "int too large" in str(e)
 
     with pytest.raises(Exception) as e:
         hpn_from_str("12e100000000")
