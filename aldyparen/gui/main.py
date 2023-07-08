@@ -87,6 +87,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
             x = x - 0.5 * self.width()
             y = -(y - 0.5 * self.height())
             self.cursor_math_pos = self.app.work_frame.transform.center + np.complex128(x + 1j * y) * upsp
+            self.cursor_math_pos *= np.exp(-1j * self.app.work_frame.transform.rotation)
         return self.cursor_math_pos
 
 

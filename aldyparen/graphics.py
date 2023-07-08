@@ -99,17 +99,19 @@ class ColorPalette:
 
 @dataclass(frozen=True)
 class Transform:
-    center: np.complex128  # Point displayed at the center of screen.
+    center: np.complex128  # Point displayed at the center of the frame.
     scale: float  # Width of the frame, in units.
-    rotation: float  # radians, about (0, 0), clockwise.
+    rotation: float  # radians, about (0, 0), counterclockwise.
 
     def translate(self, dx, dy) -> 'Transform':
         return Transform(self.center - dx - dy * 1j, self.scale, self.rotation)
 
     def rotate_at_point(self, pole, angle) -> 'Transform':
+        pole *= np.exp(1j * self.rotation)
         return Transform(self.center + pole * (np.exp(1j * angle) - 1), self.scale, self.rotation + angle)
 
     def scale_at_point(self, pole, scale_factor) -> 'Transform':
+        pole *= np.exp(1j * self.rotation)
         return Transform(pole - (pole - self.center) * scale_factor, self.scale * scale_factor, self.rotation)
 
     def __str__(self):
