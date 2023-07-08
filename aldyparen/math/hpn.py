@@ -98,7 +98,7 @@ def hpn_from_str(s, prec=16, extra_power_10=0) -> np.ndarray:
     return result
 
 
-def hpn_from_number(x: float | int, prec=16):
+def hpn_from_number(x, prec=16):
     """Creates HPN from number (can be any numeric type)."""
     return hpn_from_str(str(x), prec=prec)
 
