@@ -11,3 +11,8 @@
 TODO.txt
 *.ipynb
 !/examples/*.ipynb
+
+# PyInstaller
+/build
+/dist
+*.spec
