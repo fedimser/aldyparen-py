@@ -8,6 +8,7 @@ from aldyparen.util import prepare_function
 
 class MandelbroidPainter:
     def __init__(self, gen_function="z*z+c", max_iter=100, radius=2):
+        assert 1 <= max_iter <= 1000000, "bad max_iter"
         self.gen_function = gen_function
         self.max_iter = max_iter
         self.radius = radius

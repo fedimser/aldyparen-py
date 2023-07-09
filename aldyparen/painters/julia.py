@@ -53,11 +53,13 @@ class JuliaPainter:
         :param max_colors: any number
         """
         self.func = func
+        assert 1 <= iters <= 1000000, "bad iters"
         self.iters = iters
         assert 0 < tolerance, "Tolerance must be positive"
         assert tolerance < 0.1, "Tolerance too high"
         self.tolerance = tolerance
         self.func_prepared = prepare_function(func, variables=['z', 'c'])
+        assert 1 <= max_colors <= 1000000, "bad max_colors"
         self.max_colors = max_colors
         self.iterate_func = None
         self.warning = None

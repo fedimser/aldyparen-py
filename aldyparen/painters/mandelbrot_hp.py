@@ -71,6 +71,7 @@ class MandelbrotHighPrecisionPainter:
     """Mandelbrot set with high precision."""
 
     def __init__(self, max_iter=10):
+        assert 1 <= max_iter <= 1000000000, "bad max_iter"
         self.max_iter = max_iter
 
     def to_object(self):
