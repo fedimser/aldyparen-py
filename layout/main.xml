@@ -118,7 +118,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -278,7 +278,7 @@
        <number>10000</number>
       </property>
       <property name="value">
-       <number>2160</number>
+       <number>100</number>
       </property>
      </widget>
      <widget class="QLabel" name="label_11">
@@ -310,7 +310,7 @@
        <number>10000</number>
       </property>
       <property name="value">
-       <number>3840</number>
+       <number>100</number>
       </property>
      </widget>
      <widget class="QLabel" name="label_13">
@@ -331,15 +331,12 @@
        <rect>
         <x>10</x>
         <y>145</y>
-        <width>141</width>
+        <width>181</width>
         <height>25</height>
        </rect>
       </property>
       <property name="mouseTracking">
        <bool>true</bool>
-      </property>
-      <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Re-render working frame from scratch&lt;/p&gt;&lt;p&gt;Helps to unfreeze it (in case of accidentaly extremely expensive frame) &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
       <property name="text">
        <string>Reset video preview</string>
@@ -374,7 +371,7 @@
        <number>10000</number>
       </property>
       <property name="value">
-       <number>2160</number>
+       <number>100</number>
       </property>
      </widget>
      <widget class="QSpinBox" name="spin_box_movie_view_resolution_1">
@@ -393,7 +390,7 @@
        <number>10000</number>
       </property>
       <property name="value">
-       <number>3840</number>
+       <number>100</number>
       </property>
      </widget>
     </widget>
