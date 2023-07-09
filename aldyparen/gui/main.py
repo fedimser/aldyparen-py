@@ -445,11 +445,12 @@ class MainWindow(QtWidgets.QMainWindow):
             return
 
         try:
-            center = float(self.edit_center_x.text()) + 1j * float(self.edit_center_y.text())
             scale_log10 = float(self.edit_scale_log10.text())
             rotation_deg = float(self.edit_rotation_deg.text())
-            new_transform = Transform.create(center=center, scale_log10=scale_log10, rotation_deg=rotation_deg)
-        except Exception:
+            new_transform = Transform.create(center_x=self.edit_center_x.text(),
+                                             center_y=self.edit_center_y.text(),
+                                             scale_log10=scale_log10, rotation_deg=rotation_deg)
+        except Exception as e:
             self.transform_text_is_invalid = True
             return
         self.ui_handlers_locked = True

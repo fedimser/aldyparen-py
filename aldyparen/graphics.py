@@ -109,18 +109,22 @@ class Transform:
     rotation: float  # Radians, about frame center, counterclockwise.
 
     @staticmethod
-    def create(*, center=0.0, scale_log10=None, rotation=None, rotation_deg=None, scale=None) -> 'Transform':
-        assert not (scale is not None and scale_log10 is not None)
-        if scale_log10 is None:
-            scale_log10 = 0.0 if scale is None else np.log10(scale)
-        else:
-            assert scale is None, "Cannot specify both scale and scale_log10"
-        if rotation is None:
-            rotation = 0.0 if rotation_deg is None else (rotation_deg / 180) * np.pi
-        else:
-            assert rotation_deg is None, "Cannot specify both rotation and rotation_deg"
+    def create(*, center=None, center_x: float | str = None, center_y: float | str = None,
+               scale_log10=None,  scale=None,
+               rotation=None, rotation_deg=None) -> 'Transform':
+        if scale is not None:
+            scale_log10 = np.log10(scale)
+        if rotation_deg is not None:
+            rotation = (rotation_deg / 180) * np.pi
+        if center_x is not None and center_y is not None:
+            center = np.complex128(float(center_x) + 1j * float(center_y))
 
-        return Transform(np.complex128(center), scale_log10, rotation)
+        transform = Transform(np.complex128(center or 0.0), scale_log10 or 0.0, rotation or 0.0)
+        if type(center_x) is str:
+            object.__setattr__(transform, "center_x_str", center_x)
+        if type(center_y) is str:
+            object.__setattr__(transform, "center_y_str", center_y)
+        return transform
 
     def translate(self, delta) -> 'Transform':
         return Transform(self.center - delta * self._k(), self.scale_log10, self.rotation)
@@ -226,12 +230,14 @@ class Renderer:
         h = self.height_pxl
 
         if hasattr(frame.painter, "paint_high_precision"):
-            prec = 7
-            center_x = hpn_from_number(tr.center.real, prec=prec)
-            center_y = hpn_from_number(tr.center.imag, prec=prec)
-
+            center_x_str = tr.center_x_str if hasattr(tr, "center_x_str") else str(tr.center.real)
+            center_y_str = tr.center_y_str if hasattr(tr, "center_y_str") else str(tr.center.imag)
             scale_exp = int(np.floor(tr.scale_log10))
             scale_base = np.power(10, tr.scale_log10 - scale_exp)
+            prec = max(len(center_x_str), len(center_y_str), -scale_base) // 8 + 5
+            center_x = hpn_from_str(center_x_str, prec=prec)
+            center_y = hpn_from_str(center_y_str, prec=prec)
+
             uphp = scale_base / (2 * self.width_pxl)  # Units per half-pixel.
             k_cos = hpn_from_str(str(uphp * rot_cos), prec=prec, extra_power_10=scale_exp)
             k_sin = hpn_from_str(str(uphp * rot_sin), prec=prec, extra_power_10=scale_exp)
