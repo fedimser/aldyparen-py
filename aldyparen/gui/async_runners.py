@@ -34,7 +34,7 @@ class MoviePreviewRenderRunnable(QRunnable):
         image = self.app.movie_frame_renderer.render(self.frame)
         object.__setattr__(self.frame, "cached_movie_preview", image)
         if self.app.frames[self.app.selected_frame_idx] == self.frame:
-            self.app.need_update_movie_in_tick = True
+            self.app.shown_movie_frame_is_invalid = True
 
 
 class ImageRenderRunnable(QRunnable):

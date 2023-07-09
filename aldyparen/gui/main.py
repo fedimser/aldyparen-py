@@ -314,11 +314,11 @@ class MainWindow(QtWidgets.QMainWindow):
             sb.setEnabled(False)
         else:
             assert 0 <= cur_idx < mov_len
-            self.set_movie_frame(render_movie_preview_async(self.app, self.app.frames[cur_idx]))
             self.label_frame_info.setText(self.app.get_selected_frame_info())
             sb.setEnabled(True)
             sb.setMaximum(mov_len - 1)
             sb.setValue(cur_idx)
+            self.app.shown_movie_frame_is_invalid = True
         self.update_title()
 
     def closeEvent(self, event):

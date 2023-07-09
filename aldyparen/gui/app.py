@@ -11,7 +11,7 @@ from PyQt5.QtCore import QTimer, QThreadPool, QCoreApplication
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMessageBox
 
-from .async_runners import ImageRenderRunnable
+from .async_runners import ImageRenderRunnable, render_movie_preview_async
 from .main import MainWindow
 from .settings import AldyparenSettings
 from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette, ChunkingRenderer
@@ -32,7 +32,7 @@ class AldyparenApp:
         self.have_unsaved_changes = False
         self.is_loading_project = False
         self.is_exiting = False
-        self.need_update_movie_in_tick = False
+        self.shown_movie_frame_is_invalid = True
         self.error_messages_to_show = []  # type: List[str]
 
         self.saved_painter_configs = dict()  # TODO: this better store actual painters.
@@ -156,9 +156,13 @@ class AldyparenApp:
         pos_text = "" if pos is None else "Cursor position: %.15g;%.15g" % (np.real(pos), np.imag(pos))
         self.main_window.label_cursor_position.setText(pos_text)
 
-        if self.need_update_movie_in_tick:
-            self.need_update_movie_in_tick = False
-            self.main_window.on_movie_updated()
+        if self.shown_movie_frame_is_invalid:
+            cur_idx = self.selected_frame_idx
+            if 0 <= self.selected_frame_idx < len(self.frames):
+                self.main_window.set_movie_frame(render_movie_preview_async(self, self.frames[cur_idx]))
+            else:
+                self.main_window.scene_movie.clear()
+            self.shown_movie_frame_is_invalid = False
 
         if len(self.error_messages_to_show) > 0:
             msg = QMessageBox()

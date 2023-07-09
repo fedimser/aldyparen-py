@@ -266,7 +266,6 @@ class StaticRenderer(Renderer):
         self.mgrid_y, self.mgrid_x = np.mgrid[0:height_pxl, 0:width_pxl]
 
     def render(self, frame):
-        print("Static render, rendering ", self.width_pxl, self.height_pxl)
         pic = np.empty((self.height_pxl, self.width_pxl), dtype=np.uint32)
         self.render_meshgrid_mono(frame, self.mgrid_x, self.mgrid_y, pic)
         return frame.palette.remap(pic)
