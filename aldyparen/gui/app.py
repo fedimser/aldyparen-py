@@ -68,7 +68,7 @@ class AldyparenApp:
         self.main_window.update_title()
         self.main_window.on_movie_updated()
         self.main_window.show_palette_preview(self.work_frame.palette)
-        self.timer.start(25)
+        self.timer.start(100)
         self.qt_app.exec()
 
     def on_work_frame_changed(self):
@@ -149,7 +149,6 @@ class AldyparenApp:
         pos = self.main_window.scene_work_frame.cursor_math_pos
         pos_text = "" if pos is None else "Cursor position: %.15g;%.15g" % (np.real(pos), np.imag(pos))
         self.main_window.label_cursor_position.setText(pos_text)
-        self.main_window.label_transform_info.setText(str(self.work_frame.transform))
 
         if self.need_update_movie_in_tick:
             self.need_update_movie_in_tick = False
@@ -163,8 +162,12 @@ class AldyparenApp:
             msg.exec()
             self.error_messages_to_show = self.error_messages_to_show[1:]
 
+        if self.main_window.transform_text_is_invalid:
+            self.main_window.update_transform_text()
+
     def update_work_frame_transform(self, new_transform: Transform):
         self.work_frame = replace(self.work_frame, transform=new_transform)
+        self.main_window.update_transform_text()
         self.on_work_frame_changed()
 
     def update_work_frame_palette(self, new_palette: ColorPalette):

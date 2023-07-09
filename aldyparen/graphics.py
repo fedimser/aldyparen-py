@@ -109,12 +109,17 @@ class Transform:
     rotation: float  # Radians, about frame center, counterclockwise.
 
     @staticmethod
-    def create(*, center=0.0, scale_log10=None, rotation=0.0, scale=None) -> 'Transform':
+    def create(*, center=0.0, scale_log10=None, rotation=None, rotation_deg=None, scale=None) -> 'Transform':
         assert not (scale is not None and scale_log10 is not None)
         if scale_log10 is None:
             scale_log10 = 0.0 if scale is None else np.log10(scale)
         else:
             assert scale is None, "Cannot specify both scale and scale_log10"
+        if rotation is None:
+            rotation = 0.0 if rotation_deg is None else (rotation_deg / 180) * np.pi
+        else:
+            assert rotation_deg is None, "Cannot specify both rotation and rotation_deg"
+
         return Transform(np.complex128(center), scale_log10, rotation)
 
     def translate(self, delta) -> 'Transform':
@@ -153,6 +158,9 @@ class Transform:
     def __eq__(self, other: 'Transform'):
         return np.isclose(self.center, other.center) and np.isclose(self.scale_log10, other.scale_log10) and np.isclose(
             self.rotation, other.rotation)
+
+    def rotation_deg(self):
+        return 180 * self.rotation / np.pi
 
 
 @dataclass(frozen=True)

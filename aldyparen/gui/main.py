@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsScen
     QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog, QColorDialog
 
 from .async_runners import render_movie_preview_async, render_video_async
-from ..graphics import ColorPalette
+from ..graphics import ColorPalette, Transform
 from ..painters import ALL_PAINTERS
 
 if TYPE_CHECKING:
@@ -111,6 +111,7 @@ class PalettePreviewScene(QtWidgets.QGraphicsScene):
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, app: 'AldyparenApp'):
         super(MainWindow, self).__init__()
+        self.ui_handlers_locked = True
         self.app = app
         uic.loadUi('layout/main.xml', self)
 
@@ -134,8 +135,12 @@ class MainWindow(QtWidgets.QMainWindow):
         combo.addItem("Gradient")
         combo.addItem("Gradient+Black")
 
-        self.edit_painter_config.textChanged.connect(
-            lambda: self.on_config_text_changed())
+        # Edits
+        self.edit_painter_config.textChanged.connect(self.on_config_text_changed)
+        self.edit_center_x.textChanged.connect(self.on_transform_text_edited)
+        self.edit_center_y.textChanged.connect(self.on_transform_text_edited)
+        self.edit_scale_log10.textChanged.connect(self.on_transform_text_edited)
+        self.edit_rotation_deg.textChanged.connect(self.on_transform_text_edited)
 
         # Buttons.
         self.button_reset_transform.clicked.connect(
@@ -179,6 +184,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_work_frame.setScene(self.scene_work_frame)
         self.scene_palette_preview = PalettePreviewScene(self, app)
         self.view_palette_preview.setScene(self.scene_palette_preview)
+
+        self.transform_text_is_invalid = True
+        self.ui_handlers_locked = False
 
     def set_image(self, view, scene, image):
         if type(image) == str:
@@ -419,3 +427,31 @@ class MainWindow(QtWidgets.QMainWindow):
             row[0, i, :] = palette.colors[j, :]
         image = np.tile(row, (h, 1, 1))
         self.set_image(self.view_palette_preview, self.scene_palette_preview, image)
+
+    def update_transform_text(self):
+        if self.ui_handlers_locked:
+            return
+        self.ui_handlers_locked = True
+        tr = self.app.work_frame.transform
+        self.edit_center_x.setText(str(tr.center.real))
+        self.edit_center_y.setText(str(tr.center.imag))
+        self.edit_scale_log10.setText(str(tr.scale_log10))
+        self.edit_rotation_deg.setText(str(tr.rotation_deg()))
+        self.transform_text_is_invalid = False
+        self.ui_handlers_locked = False
+
+    def on_transform_text_edited(self):
+        if self.ui_handlers_locked:
+            return
+
+        try:
+            center = float(self.edit_center_x.text()) + 1j * float(self.edit_center_y.text())
+            scale_log10 = float(self.edit_scale_log10.text())
+            rotation_deg = float(self.edit_rotation_deg.text())
+            new_transform = Transform.create(center=center, scale_log10=scale_log10, rotation_deg=rotation_deg)
+        except Exception:
+            self.transform_text_is_invalid = True
+            return
+        self.ui_handlers_locked = True
+        self.app.update_work_frame_transform(new_transform)
+        self.ui_handlers_locked = False
