@@ -11,6 +11,7 @@ def test_mix_functions():
     f3 = mix_functions(f1, f2, 0.25)
     assert (f3 == '1.75*x+3.25*y-6.25')
 
+
 def test_mix_functions_fractional():
     f1 = "2*x+3*x**2"
     f2 = "2.5*x+3.5*x**2.0"
