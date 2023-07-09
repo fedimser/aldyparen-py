@@ -48,7 +48,6 @@ as high-resolution images or videos.
 
 ## TODOs
 
-* Allow specifying Numba target (cpu/parallel/cuda).
 * Add jupyter example for usage as library (incl.difference between standard/high precision).
 * Add instructions for building from source.
 * Build as standalone app, see https://build-system.fman.io/pyqt5-tutorial
