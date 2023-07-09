@@ -298,7 +298,7 @@ class ChunkingRenderer(Renderer):
         plt.imsave(file_name, pic)
 
 
-@numba.jit("(u4[:],i2[:],i2[:],u4[:,:])", parallel=True, nogil=True)
+@numba.jit("(u4[:],i2[:],i2[:],u4[:,:])", parallel=True, nogil=True, nopython=True)
 def _rearrange_points(points, x, y, output):
     for i in numba.prange(len(points)):
         output[y[i]][x[i]] = points[i]
