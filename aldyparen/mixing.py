@@ -5,7 +5,8 @@ from typing import List
 import numpy as np
 
 from aldyparen.graphics import Frame, ColorPalette, Transform
-from aldyparen.painters import MandelbroidPainter, JuliaPainter, Painter
+from aldyparen.math.hpn import Hpn
+from aldyparen.painters import MandelbroidPainter, JuliaPainter, Painter, MandelbrotHighPrecisionPainter
 
 
 def make_animation(frame1: Frame, frame2: Frame, length: int) -> List[Frame]:
@@ -34,6 +35,8 @@ def mix_painters(p1: 'Painter', p2: 'Painter', w: float) -> Painter:
         return mix_mandelbroid(p1, p2, w)
     if cl == JuliaPainter:
         return mix_julia(p1, p2, w)
+    if cl == MandelbrotHighPrecisionPainter:
+        return mix_mandelbrot_hp(p1, p2, w)
     else:
         if p1 != p2:
             raise ValueError("Cannot mix painters.")
@@ -42,11 +45,15 @@ def mix_painters(p1: 'Painter', p2: 'Painter', w: float) -> Painter:
 
 def mix_transforms(x: Transform, y: Transform, w: float) -> Transform:
     return Transform(
-        center_x=x.center_x * (1 - w) + y.center_x * w,
-        center_y=x.center_y * (1 - w) + y.center_y * w,
+        center_x=mix_hpn(x.center_x, y.center_x, w),
+        center_y=mix_hpn(x.center_y, y.center_y, w),
         scale_log10=(1 - w) * x.scale_log10 + w * y.scale_log10,
         rotation=(1 - w) * x.rotation + w * y.rotation
     )
+
+
+def mix_hpn(x: Hpn, y: Hpn, w: float) -> Hpn:
+    return x + (y - x) * w
 
 
 def extend_palette(x: np.ndarray, new_len: int) -> np.ndarray:
@@ -70,16 +77,16 @@ def mix_palettes(x: ColorPalette, y: ColorPalette, w: float) -> ColorPalette:
 def mix_mandelbroid(p1: MandelbroidPainter, p2: MandelbroidPainter, w: float) -> MandelbroidPainter:
     gen_function = mix_functions(p1.gen_function, p2.gen_function, w)
     radius = (1 - w) * p1.radius + w * p2.radius
-    max_iter = np.round((1 - w) * p1.max_iter + w * p2.max_iter)
+    max_iter = int(np.round((1 - w) * p1.max_iter + w * p2.max_iter))
     return MandelbroidPainter(gen_function, max_iter=max_iter, radius=radius)
 
 
 def mix_julia(p1: JuliaPainter, p2: JuliaPainter, w: float) -> JuliaPainter:
     func = mix_functions(p1.func, p2.func, w)
-    iters = np.round((1 - w) * p1.iters + w * p2.iters)
+    iters = int(np.round((1 - w) * p1.iters + w * p2.iters))
     tolerance = (1 - w) * p1.tolerance + w * p2.tolerance
-    max_colors = np.round((1 - w) * p1.max_colors + w * p2.max_colors)
-    return JuliaPainter(func=func, iters=iters, tolerance=tolerance, max_colors=20)
+    max_colors = int(np.round((1 - w) * p1.max_colors + w * p2.max_colors))
+    return JuliaPainter(func=func, iters=iters, tolerance=tolerance, max_colors=max_colors)
 
 
 def mix_functions(f1: str, f2: str, w: float):
@@ -109,3 +116,9 @@ def mix_functions(f1: str, f2: str, w: float):
             else:
                 raise ValueError("Incompatible tokens: %s %s" % (val1, val2))
     return untokenize(result).decode('utf-8').replace(' ', '')
+
+
+def mix_mandelbrot_hp(p1: MandelbrotHighPrecisionPainter, p2: MandelbrotHighPrecisionPainter,
+                      w: float) -> MandelbrotHighPrecisionPainter:
+    max_iter = int(np.round((1 - w) * p1.max_iter + w * p2.max_iter))
+    return MandelbrotHighPrecisionPainter(max_iter=max_iter)

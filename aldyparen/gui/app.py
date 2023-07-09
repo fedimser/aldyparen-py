@@ -135,6 +135,10 @@ class AldyparenApp:
     def reset_video_preview(self):
         self.movie_frame_renderer = StaticRenderer(self.settings.get_movie_view_width(),
                                                    self.settings.get_movie_view_height())
+        if 0 <= self.selected_frame_idx < len(self.frames):
+            frame = self.frames[self.selected_frame_idx]
+            object.__setattr__(frame, "cached_movie_preview", None)
+            self.shown_movie_frame_is_invalid = True
 
     def tick(self):
         self.work_frame_renderer.tick()
@@ -149,9 +153,13 @@ class AldyparenApp:
             status += f" 🎥({self.active_video_renderer.status_string})"
         else:
             self.active_video_renderer = None
+        thread_count = QThreadPool.globalInstance().activeThreadCount()
+        if thread_count > 0:
+            status += f"🧵({thread_count})"
         if hasattr(self.work_frame.painter, "warning") and type(self.work_frame.painter.warning) is str:
             status += "| " + self.work_frame.painter.warning
         self.main_window.show_status(status)
+
         pos = self.main_window.scene_work_frame.cursor_math_pos
         pos_text = "" if pos is None else "Cursor position: %.15g;%.15g" % (np.real(pos), np.imag(pos))
         self.main_window.label_cursor_position.setText(pos_text)
