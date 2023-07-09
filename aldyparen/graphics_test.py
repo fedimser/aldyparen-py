@@ -13,14 +13,25 @@ def test_transform_to_string():
 
 def test_transform_manipulation():
     t = Transform.create()
-    assert t == Transform(np.complex128(0), 0, 0)
+    assert t == Transform(np.complex128(0), 0.0, 0.0)
     t = t.translate(1 + 0.5j).rotate_and_scale_at(2 + 0.5j, scale_factor=10, angle=0.5)
-    assert t == Transform.create(center=-18.948778930+5.200597962j, scale_log10=1, rotation=0.5)
+    assert t == Transform.create(center=-18.948778930 + 5.200597962j, scale_log10=1, rotation=0.5)
 
 
 def test_transform_creation():
     t = Transform.create(center=-1.76 - 0.03j, scale=0.1)
     assert t == Transform(np.complex128(-1.76 - 0.03j), -1, 0)
+
+
+def test_transform_serialization_high_precision():
+    x = "0." + "1" * 100
+    y = "1." + "2" * 100
+    t = Transform.create(center_x=x, center_y=y, scale=1)
+    assert np.isclose(t.center, 0.111111111 + 1.222222222j)
+    t2 = Transform.deserialize(t.serialize())
+    assert t2 == t
+    assert t2.center_x_str == x
+    assert t2.center_y_str == y
 
 
 def _render_with_interactive_renderer(w: int, h: int, frame: Frame) -> np.ndarray:

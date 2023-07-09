@@ -110,7 +110,7 @@ class Transform:
 
     @staticmethod
     def create(*, center=None, center_x: float | str = None, center_y: float | str = None,
-               scale_log10=None,  scale=None,
+               scale_log10=None, scale=None,
                rotation=None, rotation_deg=None) -> 'Transform':
         if scale is not None:
             scale_log10 = np.log10(scale)
@@ -152,12 +152,13 @@ class Transform:
             self.center.real, self.center.imag, scale_str, rot_deg)
 
     def serialize(self) -> List[float]:
-        return [self.center.real, self.center.imag, self.scale_log10, self.rotation]
+        x, y = self.center_str()
+        return [x, y, self.scale_log10, self.rotation]
 
     @staticmethod
-    def deserialize(data: List[float]) -> 'Transform':
+    def deserialize(data: List) -> 'Transform':
         assert len(data) == 4
-        return Transform(np.complex128(data[0] + 1j * data[1]), data[2], data[3])
+        return Transform.create(center_x=data[0], center_y=data[1], scale_log10=data[2], rotation=data[3])
 
     def __eq__(self, other: 'Transform'):
         return np.isclose(self.center, other.center) and np.isclose(self.scale_log10, other.scale_log10) and np.isclose(
@@ -165,6 +166,11 @@ class Transform:
 
     def rotation_deg(self):
         return 180 * self.rotation / np.pi
+
+    def center_str(self) -> (str, str):
+        x = self.center_x_str if hasattr(self, "center_x_str") else str(self.center.real)
+        y = self.center_y_str if hasattr(self, "center_y_str") else str(self.center.imag)
+        return (x, y)
 
 
 @dataclass(frozen=True)
@@ -230,8 +236,7 @@ class Renderer:
         h = self.height_pxl
 
         if hasattr(frame.painter, "paint_high_precision"):
-            center_x_str = tr.center_x_str if hasattr(tr, "center_x_str") else str(tr.center.real)
-            center_y_str = tr.center_y_str if hasattr(tr, "center_y_str") else str(tr.center.imag)
+            center_x_str, center_y_str = tr.center_str()
             scale_exp = int(np.floor(tr.scale_log10))
             scale_base = np.power(10, tr.scale_log10 - scale_exp)
             prec = max(len(center_x_str), len(center_y_str), -scale_base) // 8 + 5

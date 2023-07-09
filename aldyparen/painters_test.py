@@ -1,28 +1,12 @@
 import json
-import os
 
-import matplotlib.image as mpimg
 import numpy as np
-from matplotlib import pyplot as plt
 
 from aldyparen.graphics import Frame, StaticRenderer, Transform, ColorPalette
 from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter, MandelbrotHighPrecisionPainter, \
     JuliaPainter, ALL_PAINTERS
+from aldyparen.test_util import _assert_picture
 from aldyparen.util import SUPPORTED_FUNCTIONS
-
-GOLDEN_DIR = os.path.join(os.getcwd(), "goldens")
-
-
-def _assert_picture(picture, golden_name, overwrite=False):
-    golden_path = os.path.join(GOLDEN_DIR, golden_name + ".bmp")
-    if overwrite:
-        plt.imsave(golden_path, picture)
-    golden = None
-    if os.path.exists(golden_path):
-        golden = mpimg.imread(golden_path)
-    if golden is None or picture.shape != golden.shape or not np.allclose(picture, golden):
-        plt.imsave(os.path.join(GOLDEN_DIR, golden_name + "_expected.bmp"), picture)
-        raise AssertionError(f"Golden mismatch: {golden_name}")
 
 
 def test_defaults():
@@ -74,7 +58,7 @@ def test_renders_mandelbrot_high_precision():
 
 def test_renders_julia_set():
     renderer = StaticRenderer(200, 200)
-    transform = Transform.create(center=0.1+0.2j, scale=3, rotation=0.8)
+    transform = Transform.create(center=0.1 + 0.2j, scale=3, rotation=0.8)
     # Newton fractal for P(z)=z^3-1.
     frame = Frame(JuliaPainter(func="z-(z**3-1)/(3*z**2)"), transform, ColorPalette.default())
     _assert_picture(renderer.render(frame), "newton_z3m1")

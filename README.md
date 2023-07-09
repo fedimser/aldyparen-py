@@ -27,7 +27,8 @@ as high-resolution images or videos.
   * `MadnelbrotHighPrecisionPainter` - high-precision Mandelbrot set renderer. Uses arbitrary-precision arithmetic.
     * Will render Mandelbrot set correctly at very high zoom, where standard complex128 arithmetic 
       fails because of insufficient precision.
-    * Doesn't support rotation. 
+    * Panning with mouse will not work at very high zoom, but you can specify center with arbitrary precision in a text 
+      edit in the "Transform" tab, and it will work correctly. 
     * Is not well optimized. Long arithmetic implemented from scratch in Python and
       sped up with Numba.
     * I originally intended this for rendering video of deep zooms,
@@ -41,14 +42,21 @@ as high-resolution images or videos.
   * Painters are supposed to return numbers of colors (0,1,2...). Then they are mapped
     to RGB colors using palette. If palette is smaller than number of colors, it's 
     repeated from beginning.
+  * There are some preset palettes (grayscale, gradient, etc.).
+  * You can change individual colors by clicking on them in the "Palette" tab.
 
-## UI screenshot
-<img src="examples/screenshot.jpg" width="500"/>
+## UI screenshots
+<img src="examples/screenshot1.jpg" width="500"/>
+<img src="examples/screenshot2.jpg" width="500"/>
+
+## Examples
+
+* Example of using this as Python library - [link](examples/example.ipynb).
+* Example project - [link](examples/project1.json).
 
 
 ## TODOs
 
-* Add jupyter example for usage as library (incl.difference between standard/high precision).
 * Add instructions for building from source.
 * Build as standalone app, see https://build-system.fman.io/pyqt5-tutorial
 * Check that built app is cross-platform (Windows/Linux).
