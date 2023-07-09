@@ -1,9 +1,10 @@
+import os
 from time import time
 from typing import List, Callable
 
 from moviepy.editor import concatenate, ImageClip
 
-from aldyparen.graphics import ChunkingRenderer, Frame, StaticRenderer
+from aldyparen.graphics import ChunkingRenderer, Frame
 
 
 class VideoRenderer:
@@ -25,7 +26,11 @@ class VideoRenderer:
             clips.append(ImageClip(self.image_renderer.render(frames[i])).set_duration(1.0 / self.fps))
             render_rate = (time() - time_start) / (i + 1)
             self.status_string = f"%d/%d frames, %.1f s/frame" % (i + 1, n, render_rate)
+
         self.status_string = "Saving video..."
         video = concatenate(clips, method="compose")
+        dir = os.path.dirname(file_name)
+        if not os.path.exists(dir):
+            os.makedirs(dir)
         video.write_videofile(file_name, fps=self.fps)
         self.status_string = "Done"

@@ -3,6 +3,7 @@
 /.pytest_cache
 /.vscode
 /images
+/videos
 /tmp
 /venv
 *.pyc
