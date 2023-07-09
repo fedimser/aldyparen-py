@@ -32,9 +32,10 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         self.drag_start_y = 0.0
         self.frame_width_pxl = 0
         self.cursor_math_pos = None  # type: Union[None, np.complex128]
+        self.cursor_rel_screen_pos = None
 
     def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent):
-        self.calculate_cursor_math_pos(event.scenePos())
+        self.calculate_cursor_pos(event.scenePos())
         if self.is_dragging:
             if self.cursor_math_pos is None:
                 self.is_dragging = False
@@ -60,38 +61,35 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         if bool(modifiers & QtCore.Qt.ShiftModifier):
             delta *= 20
 
-        self.calculate_cursor_math_pos(event.scenePos())
+        self.calculate_cursor_pos(event.scenePos())
         if self.cursor_math_pos is None:
             return
         if bool(modifiers & QtCore.Qt.ControlModifier):
             # 2 degrees minimal increment (for standard mouse).
             angle = delta * (np.pi / 90)
-            self.app.update_work_frame_transform(
-                self.app.work_frame.transform.rotate_at_point(self.cursor_math_pos, angle))
+            tr = self.app.work_frame.transform.rotate_and_scale_at(self.cursor_rel_screen_pos, angle=angle)
+
         else:
-            self.app.update_work_frame_transform(
-                self.app.work_frame.transform.scale_at_point(self.cursor_math_pos, 1.05 ** delta))
+            tr = self.app.work_frame.transform.rotate_and_scale_at(self.cursor_rel_screen_pos,
+                                                                   scale_factor=1.05 ** delta)
+        self.app.update_work_frame_transform(tr)
 
     def apply_drag(self, dx_pxl, dy_pxl):
-        upsp = self.units_per_screen_pixel()
+        delta = np.complex128(dx_pxl - 1j * dy_pxl) / self.frame_width_pxl
         self.app.update_work_frame_transform(
-            self.app.work_frame.transform.translate(dx_pxl * upsp, -dy_pxl * upsp))
+            self.app.work_frame.transform.translate(delta))
 
-    def units_per_screen_pixel(self):
-        return self.app.work_frame.transform.get_scale() / self.frame_width_pxl
-
-    def calculate_cursor_math_pos(self, pos: QPointF):
+    def calculate_cursor_pos(self, pos: QPointF):
         x = pos.x()
         y = pos.y()
         if x <= 0 or x >= self.width() or y <= 0 or y >= self.height():
+            self.cursor_rel_screen_pos = None
             self.cursor_math_pos = None
         else:
-            upsp = self.units_per_screen_pixel()
             x = x - 0.5 * self.width()
             y = -(y - 0.5 * self.height())
-            self.cursor_math_pos = self.app.work_frame.transform.center + np.complex128(x + 1j * y) * upsp
-            self.cursor_math_pos *= np.exp(-1j * self.app.work_frame.transform.rotation)
-        return self.cursor_math_pos
+            self.cursor_rel_screen_pos = np.complex128(x + 1j * y) / self.frame_width_pxl
+            self.cursor_math_pos = self.app.work_frame.transform.map_screen_to_math(self.cursor_rel_screen_pos)
 
 
 class PalettePreviewScene(QtWidgets.QGraphicsScene):

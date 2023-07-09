@@ -104,9 +104,9 @@ LN_10 = np.log(10)
 
 @dataclass(frozen=True)
 class Transform:
-    center: np.complex128  # Point displayed at the center of the frame, before rotation.
+    center: np.complex128  # Point displayed at the center of the frame.
     scale_log10: float  # Base-10 logarithm of the frame width (in math units).
-    rotation: float  # radians, about (0, 0), counterclockwise.
+    rotation: float  # Radians, about frame center, counterclockwise.
 
     @staticmethod
     def create(*, center=0.0, scale_log10=None, rotation=0.0, scale=None) -> 'Transform':
@@ -117,23 +117,22 @@ class Transform:
             assert scale is None, "Cannot specify both scale and scale_log10"
         return Transform(np.complex128(center), scale_log10, rotation)
 
-    def translate(self, dx, dy) -> 'Transform':
-        return Transform(self.center - dx - dy * 1j, self.scale_log10, self.rotation)
+    def translate(self, delta) -> 'Transform':
+        return Transform(self.center - delta * self._k(), self.scale_log10, self.rotation)
 
-    def rotate_at_point(self, pole, angle) -> 'Transform':
-        pole *= np.exp(1j * self.rotation)
-        return Transform(self.center + pole * (np.exp(1j * angle) - 1), self.scale_log10, self.rotation + angle)
+    def rotate_and_scale_at(self, rel_screen_point, scale_factor=1.0, angle=0.0) -> 'Transform':
+        old_k = self._k()
+        new_scale_log_10 = self.scale_log10 + np.log10(scale_factor)
+        new_rotation = self.rotation + angle
+        new_k = np.exp(LN_10 * new_scale_log_10 - 1j * new_rotation)
+        new_center = self.center + (old_k - new_k) * rel_screen_point
+        return Transform(new_center, new_scale_log_10, new_rotation)
 
-    def scale_at_point(self, pole, scale_factor) -> 'Transform':
-        pole *= np.exp(1j * self.rotation)
-        new_scale_log10 = self.scale_log10 + np.log10(scale_factor)
-        return Transform(pole - (pole - self.center) * scale_factor, new_scale_log10, self.rotation)
+    def _k(self):
+        return np.exp(LN_10 * self.scale_log10 - 1j * self.rotation)
 
-    def rotate_at_frame_center(self, angle):
-        return self.rotate_at_point(self.center * np.exp(-1j * self.rotation), angle)
-
-    def get_frame_center_in_math(self):
-        return self.center * np.exp(-1j * self.rotation)
+    def map_screen_to_math(self, screen_point: np.complex128) -> np.complex128:
+        return self.center + screen_point * self._k()
 
     def __str__(self):
         rot_deg = (self.rotation / np.pi * 180) % 360
@@ -154,9 +153,6 @@ class Transform:
     def __eq__(self, other: 'Transform'):
         return np.isclose(self.center, other.center) and np.isclose(self.scale_log10, other.scale_log10) and np.isclose(
             self.rotation, other.rotation)
-
-    def get_scale(self) -> float:
-        return np.exp(LN_10 * self.scale_log10)
 
 
 @dataclass(frozen=True)
@@ -223,9 +219,8 @@ class Renderer:
 
         if hasattr(frame.painter, "paint_high_precision"):
             prec = 7
-            center = tr.get_frame_center_in_math()
-            center_x = hpn_from_number(center.real, prec=prec)
-            center_y = hpn_from_number(center.imag, prec=prec)
+            center_x = hpn_from_number(tr.center.real, prec=prec)
+            center_y = hpn_from_number(tr.center.imag, prec=prec)
 
             scale_exp = int(np.floor(tr.scale_log10))
             scale_base = np.power(10, tr.scale_log10 - scale_exp)
@@ -238,14 +233,8 @@ class Renderer:
             points_y = center_y.reshape((1, prec)) - np.outer(mgrid_x, k_sin) - np.outer(mgrid_y, k_cos)
             frame.painter.paint_high_precision(points_x, points_y, ans)
         else:
-            c = tr.get_frame_center_in_math()
-            upp = tr.get_scale() / self.width_pxl  # units per pixel.
-            x_rot = rot_cos - 1j * rot_sin
-            y_rot = rot_sin + 1j * rot_cos
-            p_0 = c + (- upp * 0.5 * (w - 1)) * x_rot + (upp * 0.5 * (h - 1)) * y_rot
-            k_x = upp * x_rot
-            k_y = upp * y_rot
-            points = p_0 + mgrid_x * k_x - mgrid_y * k_y
+            mgrid = ((mgrid_x - 0.5 * (w - 1)) - 1j * (mgrid_y - 0.5 * (h - 1))) / self.width_pxl
+            points = tr.map_screen_to_math(mgrid)
             frame.painter.paint(points, ans)
 
 

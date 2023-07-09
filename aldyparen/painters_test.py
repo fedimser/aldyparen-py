@@ -67,14 +67,14 @@ def test_renders_mandelbrot_high_precision():
     frame1 = Frame(p, Transform.create(scale=4), palette)
     _assert_picture(renderer.render(frame1), f"mandelbrot_hp")
     center = np.complex128(-1.99977406013629035931 - 0.00000000329004032147j)
-    tr2 = Transform.create(center=center, scale_log10=-6).rotate_at_frame_center(1.0)
+    tr2 = Transform.create(center=center, scale_log10=-6, rotation=1.0)
     frame2 = Frame(p, tr2, palette)
     _assert_picture(renderer.render(frame2), f"mandelbrot_hp_zoom")
 
 
 def test_renders_julia_set():
     renderer = StaticRenderer(200, 200)
-    transform = Transform.create(center=0.1+0.2j, scale=3).rotate_at_frame_center(0.8)
+    transform = Transform.create(center=0.1+0.2j, scale=3, rotation=0.8)
     # Newton fractal for P(z)=z^3-1.
     frame = Frame(JuliaPainter(func="z-(z**3-1)/(3*z**2)"), transform, ColorPalette.default())
     _assert_picture(renderer.render(frame), "newton_z3m1")

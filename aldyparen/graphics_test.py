@@ -14,18 +14,13 @@ def test_transform_to_string():
 def test_transform_manipulation():
     t = Transform.create()
     assert t == Transform(np.complex128(0), 0, 0)
-    t = t.translate(1.5, 2.5)
-    assert t == Transform.create(center=-1.5 - 2.5j, scale=1)
-    t = t.rotate_at_point(1 + 2j, 0.5)
-    assert t == Transform.create(center=-2.5812685153180333 - 2.2654093376150515j, scale=1, rotation=0.5)
-    t = t.scale_at_point(-1 - 3j, 3)
-    assert t == Transform.create(center=-8.86519365379857 - 0.5718815642945119j, scale=3, rotation=0.5)
+    t = t.translate(1 + 0.5j).rotate_and_scale_at(2 + 0.5j, scale_factor=10, angle=0.5)
+    assert t == Transform.create(center=-18.948778930+5.200597962j, scale_log10=1, rotation=0.5)
 
 
 def test_transform_creation():
     t = Transform.create(center=-1.76 - 0.03j, scale=0.1)
     assert t == Transform(np.complex128(-1.76 - 0.03j), -1, 0)
-    assert t.rotate_at_frame_center(np.pi) == Transform(np.complex128(1.76 + 0.03j), -1, np.pi)
 
 
 def _render_with_interactive_renderer(w: int, h: int, frame: Frame) -> np.ndarray:

@@ -1,3 +1,4 @@
+from .debug_dot import DebugDotPainter
 from .julia import JuliaPainter
 from .mandelbroid import MandelbroidPainter
 from .mandelbrot_hp import MandelbrotHighPrecisionPainter
@@ -32,5 +33,6 @@ class Painter:
 
 
 # All supported painters.
-ALL_PAINTERS = [MandelbroidPainter, MandelbrotHighPrecisionPainter, JuliaPainter, SierpinskiCarpetPainter]
+ALL_PAINTERS = [DebugDotPainter, MandelbroidPainter, MandelbrotHighPrecisionPainter, JuliaPainter,
+                SierpinskiCarpetPainter]
 PAINTERS_INDEX = {ALL_PAINTERS[i].__name__: i for i in range(len(ALL_PAINTERS))}
