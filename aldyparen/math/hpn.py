@@ -160,3 +160,10 @@ def hpn_mul_vec_inplace(x, y, ans):
     for j in numba.prange(n):
         for i in range(prec):
             ans[j, i:] += x[j, i] * y[j, :prec - i]
+
+
+@numba.jit("i8[:](i8[:])")
+def hpn_square(x):
+    ans = hpn_mul(x, x)
+    hpn_normalize_in_place(ans)
+    return ans
