@@ -148,7 +148,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.button_reset_painter_config.clicked.connect(
             lambda: self.confirm_then("Reset painter config?", self.app.reset_painter_config))
         self.button_generate_palette.clicked.connect(self.on_generate_palette_click)
-        self.button_force_update.clicked.connect(self.on_force_update_clicked)
+        self.button_reset_work_frame.clicked.connect(self.app.reset_work_frame)
+        self.button_reset_video_preview.clicked.connect(self.app.reset_video_preview)
         self.button_render_photo.clicked.connect(self.render_image)
         self.button_render_video.clicked.connect(self.render_video)
         self.button_make_animation.clicked.connect(self.make_animation)
@@ -276,9 +277,6 @@ class MainWindow(QtWidgets.QMainWindow):
             return ColorPalette.gradient_plus_one(c1, c2, 'black', size=size)
         else:
             raise ValueError(f"Unrecognized palette type: {palette_type}")
-
-    def on_force_update_clicked(self):
-        self.app.reset_work_frame()
 
     def make_animation(self):
         if len(self.app.frames) == 0:

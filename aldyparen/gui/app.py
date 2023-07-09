@@ -46,11 +46,12 @@ class AldyparenApp:
 
         self.main_window = MainWindow(self)
         self.settings = AldyparenSettings(self)
-        self.work_frame_renderer = InteractiveRenderer(self.settings.work_view_width,
-                                                       self.settings.work_view_height,
+        self.work_frame_renderer = InteractiveRenderer(self.settings.get_work_view_width(),
+                                                       self.settings.get_work_view_height(),
                                                        self.main_window.set_work_frame,
                                                        downsample_factor=self.settings.get_downsample_factor())
-        self.movie_frame_renderer = StaticRenderer(self.settings.movie_view_width, self.settings.movie_view_height)
+        self.movie_frame_renderer = StaticRenderer(self.settings.get_movie_view_width(),
+                                                   self.settings.get_movie_view_height())
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.tick)
@@ -123,12 +124,17 @@ class AldyparenApp:
         self.on_work_frame_changed()
         self.is_loading_project = False
 
-    # TODO: default downsample factor should be in settings.
     def reset_work_frame(self):
         self.work_frame_renderer.halt()
-        self.work_frame_renderer = InteractiveRenderer(480, 270, self.main_window.set_work_frame,
+        self.work_frame_renderer = InteractiveRenderer(self.settings.get_work_view_width(),
+                                                       self.settings.get_work_view_height(),
+                                                       self.main_window.set_work_frame,
                                                        downsample_factor=self.settings.get_downsample_factor())
         self.on_work_frame_changed()
+
+    def reset_video_preview(self):
+        self.movie_frame_renderer = StaticRenderer(self.settings.get_movie_view_width(),
+                                                   self.settings.get_movie_view_height())
 
     def tick(self):
         self.work_frame_renderer.tick()

@@ -14,13 +14,11 @@ class AldyparenSettings:
 
         self.work_dir = self.qsettings.value("work_dir") or os.getcwd()
 
-        # Settings not settable in UI.
-        self.work_view_width = _load_int("work_view_width") or 480
-        self.work_view_height = _load_int("work_view_height") or 270
-        self.movie_view_width = _load_int("movie_view_width") or 160
-        self.movie_view_height = _load_int("movie_view_height") or 90
-
         # Settings settable in UI.
+        self.app.main_window.spin_box_work_frame_resolution_1.setValue(_load_int("work_view_width") or 480)
+        self.app.main_window.spin_box_work_frame_resolution_2.setValue(_load_int("work_view_height") or 270)
+        self.app.main_window.spin_box_movie_view_resolution_1.setValue(_load_int("movie_view_width") or 160)
+        self.app.main_window.spin_box_movie_view_resolution_2.setValue(_load_int("movie_view_height") or 90)
         self.app.main_window.spin_box_image_resolution_1.setValue(_load_int("image_width") or 3840)
         self.app.main_window.spin_box_image_resolution_2.setValue(_load_int("image_height") or 2160)
         self.app.main_window.spin_box_video_resolution_1.setValue(_load_int("video_width") or 2560)
@@ -32,15 +30,27 @@ class AldyparenSettings:
     def get_downsample_factor(self):
         return self.app.main_window.spin_box_downsampling.value()
 
+    def get_work_view_width(self):
+        return self.app.main_window.spin_box_work_frame_resolution_1.value()
+
+    def get_work_view_height(self):
+        return self.app.main_window.spin_box_work_frame_resolution_2.value()
+
+    def get_movie_view_width(self):
+        return self.app.main_window.spin_box_movie_view_resolution_1.value()
+
+    def get_movie_view_height(self):
+        return self.app.main_window.spin_box_movie_view_resolution_2.value()
+
     def get_video_fps(self):
         return self.app.main_window.spin_box_fps.value()
 
     def save(self):
         self.qsettings.setValue("work_dir", self.work_dir)
-        self.qsettings.setValue("work_view_width", self.work_view_width)
-        self.qsettings.setValue("work_view_height", self.work_view_height)
-        self.qsettings.setValue("movie_view_width", self.movie_view_width)
-        self.qsettings.setValue("movie_view_height", self.movie_view_height)
+        self.qsettings.setValue("work_view_width", self.app.main_window.spin_box_work_frame_resolution_1.value())
+        self.qsettings.setValue("work_view_height", self.app.main_window.spin_box_work_frame_resolution_2.value())
+        self.qsettings.setValue("movie_view_width", self.app.main_window.spin_box_movie_view_resolution_1.value())
+        self.qsettings.setValue("movie_view_height", self.app.main_window.spin_box_movie_view_resolution_2.value())
         self.qsettings.setValue("image_width", self.app.main_window.spin_box_image_resolution_1.value())
         self.qsettings.setValue("image_height", self.app.main_window.spin_box_image_resolution_2.value())
         self.qsettings.setValue("video_width", self.app.main_window.spin_box_video_resolution_1.value())

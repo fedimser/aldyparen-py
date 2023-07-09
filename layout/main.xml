@@ -194,6 +194,209 @@
       </property>
      </widget>
     </widget>
+    <widget class="QWidget" name="tab_7">
+     <attribute name="title">
+      <string>UI settings</string>
+     </attribute>
+     <widget class="QSpinBox" name="spin_box_downsampling">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>45</y>
+        <width>61</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>16</number>
+      </property>
+      <property name="value">
+       <number>1</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_4">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>45</y>
+        <width>101</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Downsampling</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="button_reset_work_frame">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>70</y>
+        <width>141</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="mouseTracking">
+       <bool>true</bool>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Re-render working frame from scratch&lt;/p&gt;&lt;p&gt;Helps to unfreeze it (in case of accidentaly extremely expensive frame) &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="text">
+       <string>Reset work frame</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_12">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>161</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Work frame resolution</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spin_box_work_frame_resolution_2">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>20</y>
+        <width>61</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>10</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>2160</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_11">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>20</y>
+        <width>21</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>x</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spin_box_work_frame_resolution_1">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>20</y>
+        <width>61</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>10</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>3840</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_13">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>120</y>
+        <width>181</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Video preview resolution</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="button_reset_video_preview">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>145</y>
+        <width>141</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="mouseTracking">
+       <bool>true</bool>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Re-render working frame from scratch&lt;/p&gt;&lt;p&gt;Helps to unfreeze it (in case of accidentaly extremely expensive frame) &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="text">
+       <string>Reset video preview</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_14">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>120</y>
+        <width>21</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>x</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spin_box_movie_view_resolution_2">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>120</y>
+        <width>61</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>10</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>2160</number>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spin_box_movie_view_resolution_1">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>120</y>
+        <width>61</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>10</number>
+      </property>
+      <property name="maximum">
+       <number>10000</number>
+      </property>
+      <property name="value">
+       <number>3840</number>
+      </property>
+     </widget>
+    </widget>
    </widget>
    <widget class="QTabWidget" name="tabWidget_2">
     <property name="geometry">
@@ -577,62 +780,11 @@
      <attribute name="title">
       <string>Rendering</string>
      </attribute>
-     <widget class="QPushButton" name="button_force_update">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>40</y>
-        <width>121</width>
-        <height>25</height>
-       </rect>
-      </property>
-      <property name="mouseTracking">
-       <bool>true</bool>
-      </property>
-      <property name="toolTip">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Re-render working frame from scratch&lt;/p&gt;&lt;p&gt;Helps to unfreeze it (in case of accidentaly extremely expensive frame) &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="text">
-       <string>Force update</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_4">
-      <property name="geometry">
-       <rect>
-        <x>10</x>
-        <y>15</y>
-        <width>101</width>
-        <height>17</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Downsampling</string>
-      </property>
-     </widget>
-     <widget class="QSpinBox" name="spin_box_downsampling">
-      <property name="geometry">
-       <rect>
-        <x>120</x>
-        <y>10</y>
-        <width>61</width>
-        <height>21</height>
-       </rect>
-      </property>
-      <property name="minimum">
-       <number>1</number>
-      </property>
-      <property name="maximum">
-       <number>16</number>
-      </property>
-      <property name="value">
-       <number>1</number>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_6">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>170</y>
+        <y>90</y>
         <width>121</width>
         <height>17</height>
        </rect>
@@ -645,7 +797,7 @@
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>170</y>
+        <y>90</y>
         <width>61</width>
         <height>21</height>
        </rect>
@@ -664,7 +816,7 @@
       <property name="geometry">
        <rect>
         <x>220</x>
-        <y>170</y>
+        <y>90</y>
         <width>61</width>
         <height>21</height>
        </rect>
@@ -683,7 +835,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>200</y>
+        <y>120</y>
         <width>121</width>
         <height>25</height>
        </rect>
@@ -702,7 +854,7 @@
       <property name="geometry">
        <rect>
         <x>200</x>
-        <y>170</y>
+        <y>90</y>
         <width>21</width>
         <height>20</height>
        </rect>
@@ -715,7 +867,7 @@
       <property name="geometry">
        <rect>
         <x>200</x>
-        <y>90</y>
+        <y>10</y>
         <width>21</width>
         <height>20</height>
        </rect>
@@ -728,7 +880,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>90</y>
+        <y>10</y>
         <width>121</width>
         <height>17</height>
        </rect>
@@ -741,7 +893,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>120</y>
+        <y>40</y>
         <width>121</width>
         <height>25</height>
        </rect>
@@ -760,7 +912,7 @@
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>90</y>
+        <y>10</y>
         <width>61</width>
         <height>21</height>
        </rect>
@@ -779,7 +931,7 @@
       <property name="geometry">
        <rect>
         <x>220</x>
-        <y>90</y>
+        <y>10</y>
         <width>61</width>
         <height>21</height>
        </rect>
@@ -798,7 +950,7 @@
       <property name="geometry">
        <rect>
         <x>340</x>
-        <y>170</y>
+        <y>90</y>
         <width>61</width>
         <height>21</height>
        </rect>
@@ -817,7 +969,7 @@
       <property name="geometry">
        <rect>
         <x>310</x>
-        <y>170</y>
+        <y>90</y>
         <width>31</width>
         <height>17</height>
        </rect>
