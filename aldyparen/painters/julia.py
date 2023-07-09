@@ -54,7 +54,8 @@ class JuliaPainter:
         """
         self.func = func
         self.iters = iters
-        assert 0 < tolerance < 1e-5
+        assert 0 < tolerance, "Tolerance must be positive"
+        assert tolerance < 0.1, "Tolerance too high"
         self.tolerance = tolerance
         self.func_prepared = prepare_function(func, variables=['z', 'c'])
         self.max_colors = max_colors
@@ -75,7 +76,8 @@ class JuliaPainter:
             stop_tolerance = self.tolerance / 10
             source = "\n".join([
                 f'@numba.vectorize("c16(c16)", target="parallel")',
-                f'def _iterate(z):',
+                f'def _iterate(c):',
+                f'  z = c',
                 f'  for i in range({self.iters}):',
                 f'    z2 = {self.func_prepared}',
                 f'    if np.abs(z-z2) < {stop_tolerance}: return z2',
