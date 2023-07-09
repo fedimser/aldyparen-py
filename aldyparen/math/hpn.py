@@ -30,6 +30,78 @@ MAX_PRECISION = 900
 NUMBER_PATTERN = re.compile(r"^([-]?\d+)([.](\d*))?(e([-+]?\d+))?$")
 
 
+class Hpn:
+    def __init__(self, digits, prec=None):
+        if type(digits) != np.ndarray:
+            digits = _hpn_from_str(str(digits), prec=prec)
+        assert digits.dtype == np.int64
+        assert len(digits.shape) == 1
+        self.digits = digits
+
+    def prec(self) -> int:
+        return len(self.digits)
+
+    def to_float(self) -> float:
+        return float(_hpn_to_str(self.digits))
+
+    @staticmethod
+    def _extend_precision(digits, new_prec):
+        old_prec = len(digits)
+        assert new_prec >= old_prec
+        if new_prec > old_prec:
+            return np.pad(digits, (0, new_prec - old_prec), 'constant', constant_values=(0, 0))
+        return digits
+
+    def _get_digits_for_op(self, other):
+        if type(other) == Hpn:
+            digits = other.digits
+        else:
+            digits = _hpn_from_number(other)
+        if len(digits) < self.prec():
+            digits = Hpn._extend_precision(other.digits, self.prec())
+        return digits
+
+    def __add__(self, other):
+        other_digits = self._get_digits_for_op(other)
+        self_digits = Hpn._extend_precision(self.digits, len(other_digits))
+        ans = self_digits + other_digits
+        hpn_normalize_in_place(ans)
+        return Hpn(ans)
+
+    def __sub__(self, other):
+        other_digits = self._get_digits_for_op(other)
+        self_digits = Hpn._extend_precision(self.digits, len(other_digits))
+        ans = self_digits - other_digits
+        hpn_normalize_in_place(ans)
+        return Hpn(ans)
+
+    def __mul__(self, other):
+        other_digits = self._get_digits_for_op(other)
+        self_digits = Hpn._extend_precision(self.digits, len(other_digits))
+        ans = hpn_mul(self_digits, other_digits)
+        hpn_normalize_in_place(ans)
+        return Hpn(ans)
+
+    def __str__(self):
+        return _hpn_to_str(self.digits)
+
+    @staticmethod
+    def from_str(s: str, prec: int = None, extra_power_10=0) -> 'Hpn':
+        """Creates HPN from string representation with given precision.
+        :param prec: Precision.
+        :param extra_power_10: Multiplies result by 10^extra_power_10.
+        """
+        return Hpn(_hpn_from_str(s, prec=prec, extra_power_10=extra_power_10))
+
+    @staticmethod
+    def equalize_precisions(*args: 'Hpn', min_prec=2):
+        prec = min_prec
+        for arg in args:
+            prec = max(prec, arg.prec())
+        for arg in args:
+            arg.digits = Hpn._extend_precision(arg.digits, prec)
+
+
 @numba.jit("void(i8[:])")
 def hpn_normalize_in_place(x):
     prec = x.shape[0]
@@ -46,13 +118,7 @@ def hpn_normalize_in_place_vec(x):
         x[:, i] %= DIG_RANGE
 
 
-def hpn_from_str(s, prec=16, extra_power_10=0) -> np.ndarray:
-    """Creates HPN from string representation with given precision.
-    :param prec: Precision.
-    :param extra_power_10: Multiplies result by 10^extra_power_10.
-    """
-    assert prec >= 2
-    assert prec <= MAX_PRECISION, "Precision too large"
+def _hpn_from_str(s, prec: int = None, extra_power_10=0) -> np.ndarray:
     match = NUMBER_PATTERN.match(s)
     assert match is not None, f"Invalid syntax: {s}"
     int_part, _, frac_part, _, exp_part = match.groups()
@@ -65,8 +131,11 @@ def hpn_from_str(s, prec=16, extra_power_10=0) -> np.ndarray:
         frac_part += "0" * (DIG_GROUP_LENGTH - (len(frac_part) % DIG_GROUP_LENGTH))
     assert len(frac_part) % DIG_GROUP_LENGTH == 0
     frac_digits = len(frac_part) // DIG_GROUP_LENGTH
-    need_precision = 1 + frac_digits + int(np.ceil(max(0, -exp_val) / DIG_GROUP_LENGTH))
-    assert need_precision <= prec, f"Insufficient precision, need at least {need_precision}"
+    need_precision = max(2, 1 + frac_digits + int(np.ceil(max(0, -exp_val) / DIG_GROUP_LENGTH)))
+    if prec is None:
+        prec = need_precision
+    assert prec >= need_precision, f"Insufficient precision, need at least {need_precision}"
+    assert prec <= MAX_PRECISION, "Precision too large"
 
     result = np.zeros(prec, dtype=np.int64)
     result[0] = np.int64(int_part)
@@ -98,20 +167,15 @@ def hpn_from_str(s, prec=16, extra_power_10=0) -> np.ndarray:
     return result
 
 
-def hpn_from_number(x, prec=16):
+def _hpn_from_number(x, prec=16):
     """Creates HPN from number (can be any numeric type)."""
-    return hpn_from_str(str(x), prec=prec)
+    return _hpn_from_str(str(x), prec=prec)
 
 
 def hpn_from_numpy_vec(x, prec=16):
     """Creates vector of HPNs from vector of numbers."""
     assert len(x.shape) == 1
-    return np.array([hpn_from_str(str(num), prec=prec) for num in x], dtype=np.int64)
-
-
-def hpn_to_float(x: np.ndarray) -> float:
-    """Converts HPN vector to float."""
-    return float(hpn_to_str(x))
+    return np.array([_hpn_from_str(str(num), prec=prec) for num in x], dtype=np.int64)
 
 
 def hpn_to_numpy_vec(x: np.ndarray) -> np.ndarray:
@@ -129,14 +193,11 @@ def _frac_to_str(x):
     return "".join(str(x).zfill(DIG_GROUP_LENGTH) for x in x[1:]).rstrip("0")
 
 
-ZERO = hpn_from_str("0.0")
-
-
-def hpn_to_str(x):
+def _hpn_to_str(x):
     """String representation of HPN, with full precision."""
     hpn_normalize_in_place(x)
     if x[0] < 0 and not np.all(x[1:] == 0):
-        t = ZERO - x.copy()
+        t = np.zeros_like(x) - x.copy()
         hpn_normalize_in_place(t)
         ans = ("-0" if x[0] == -1 else str(x[0] + 1)) + "." + _frac_to_str(t)
     else:

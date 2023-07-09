@@ -16,13 +16,13 @@ ALL_TEST_NUMBERS = CANONICAL_NUMBERS + [x[0] for x in NON_CANONICAL_NUMBERS] + L
 
 def test_to_from_string():
     for x in CANONICAL_NUMBERS:
-        assert hpn_to_str(hpn_from_str(x)) == x
+        assert str(Hpn.from_str(x)) == x
     for number, canonical in NON_CANONICAL_NUMBERS:
-        assert hpn_to_str(hpn_from_str(number)) == canonical
+        assert str(Hpn.from_str(number)) == canonical
 
 
 def test_arithmetic():
-    numbers_hpn = [hpn_from_str(x) for x in ALL_TEST_NUMBERS]
+    numbers_hpn = [Hpn.from_str(x, prec=16) for x in ALL_TEST_NUMBERS]
     numbers_np = [np.double(x) for x in ALL_TEST_NUMBERS]
     n = len(ALL_TEST_NUMBERS)
 
@@ -30,50 +30,50 @@ def test_arithmetic():
         x = numbers_hpn[i]
         for j in range(n):
             y = numbers_hpn[j]
-            assert np.allclose(hpn_to_float(x + y), numbers_np[i] + numbers_np[j])
-            assert np.allclose(hpn_to_float(x - y), numbers_np[i] - numbers_np[j])
-            if abs(x[0]) < 1e5 and abs(y[0]) < 1e5:
-                assert np.allclose(hpn_to_float(hpn_mul(x, y)), numbers_np[i] * numbers_np[j])
+            assert np.allclose((x + y).to_float(), numbers_np[i] + numbers_np[j])
+            assert np.allclose((x - y).to_float(), numbers_np[i] - numbers_np[j])
+            if abs(x.digits[0]) < 1e5 and abs(y.digits[0]) < 1e5:
+                assert np.allclose((x * y).to_float(), numbers_np[i] * numbers_np[j])
 
 
 def test_conversion_precision_errors():
     with pytest.raises(Exception) as e:
-        hpn_from_str("0.0001", prec=1000)
+        Hpn.from_str("0.0001", prec=1000)
     assert "Precision too large" in str(e)
 
     with pytest.raises(Exception) as e:
-        hpn_from_str("0.11111111111111111111111111111111111111", prec=2)
+        Hpn.from_str("0.11111111111111111111111111111111111111", prec=2)
     assert "Insufficient precision" in str(e)
 
     with pytest.raises(Exception) as e:
-        hpn_from_str("0.0001e-1000", prec=16)
+        Hpn.from_str("0.0001e-1000", prec=16)
     assert "Insufficient precision" in str(e)
 
 
 def test_conversion_range():
     min_value = -2 ** 63
     max_value = 2 ** 63 - 1
-    assert np.allclose(hpn_to_float(hpn_from_str(str(min_value))), min_value)
-    assert np.allclose(hpn_to_float(hpn_from_str(str(max_value))), max_value)
+    assert np.allclose(Hpn.from_str(str(min_value)).to_float(), min_value)
+    assert np.allclose(Hpn.from_str(str(max_value)).to_float(), max_value)
 
     # Note: error message for "int too large" is different on different platforms.
     with pytest.raises(Exception):
-        hpn_from_str(str(max_value + 1))
+        Hpn.from_str(str(max_value + 1))
     with pytest.raises(Exception):
-        hpn_from_str(str(min_value - 1))
+        Hpn.from_str(str(min_value - 1))
 
     with pytest.raises(Exception) as e:
-        hpn_from_str("12e100000000")
+        Hpn.from_str("12e100000000")
     assert "Exponent too large" in str(e)
 
     with pytest.raises(Exception) as e:
-        hpn_from_str("-10000000000e18")
+        Hpn.from_str("-10000000000e18")
     assert "Integer part outside of int64 range" in str(e)
 
-    assert np.allclose(hpn_to_float(hpn_from_str("0.00001e23")), 1e18)  # should be ok.
+    assert np.allclose(Hpn.from_str("0.00001e23").to_float(), 1e18)
 
     with pytest.raises(Exception) as e:
-        hpn_from_str("0.00001e24")
+        Hpn.from_str("0.00001e24")
     assert "Integer part outside of int64 range" in str(e)
 
 

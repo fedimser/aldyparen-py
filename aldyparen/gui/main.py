@@ -435,8 +435,8 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         self.ui_handlers_locked = True
         tr = self.app.work_frame.transform
-        self.edit_center_x.setText(str(tr.center.real))
-        self.edit_center_y.setText(str(tr.center.imag))
+        self.edit_center_x.setText(str(tr.center_x))
+        self.edit_center_y.setText(str(tr.center_y))
         self.edit_scale_log10.setText(str(tr.scale_log10))
         self.edit_rotation_deg.setText(str(tr.rotation_deg()))
         self.transform_text_is_invalid = False
