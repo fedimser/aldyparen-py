@@ -17,7 +17,7 @@ from .settings import AldyparenSettings
 from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette, ChunkingRenderer
 from ..mixing import make_animation
 from ..painters import MandelbroidPainter, ALL_PAINTERS, PAINTERS_INDEX
-from ..video import VideoRenderer
+from ..video import VideoRenderer, deserialize_movie
 
 APP_NAME = "Aldyparen"
 VERSION = "3.0"
@@ -278,15 +278,11 @@ class AldyparenApp:
         self.main_window.combo_painter_type.setCurrentIndex(painter_idx)
         self.main_window.set_painter_config(json.dumps(self.work_frame.painter.to_object()))
         self.main_window.show_palette_preview(self.work_frame.palette)
+        self.main_window.transform_text_is_invalid = True
         self.on_work_frame_changed()
 
         # Load movie to UI.
-        self.frames = []
-        prev = None
-        for frame_json in data["frames"]:
-            frame = Frame.deserialize(frame_json, prev=prev)
-            self.frames.append(frame)
-            prev = frame
+        self.frames = deserialize_movie(data["frames"])
         self.selected_frame_idx = data["selected_frame_idx"]
         self.opened_file_name = file_name
         self.have_unsaved_changes = False
