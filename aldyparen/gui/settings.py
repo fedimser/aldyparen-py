@@ -20,6 +20,12 @@ class AldyparenSettings:
         self.movie_view_width = _load_int("movie_view_width") or 160
         self.movie_view_height = _load_int("movie_view_height") or 90
 
+        self.numba_vectorize_target = self.qsettings.value("numba_vectorize_target")
+        if self.numba_vectorize_target not in ["cpu", "parallel", "cuda"]:
+            self.numba_vectorize_target = None
+        if self.numba_vectorize_target is None:
+            self.numba_vectorize_target = "parallel"
+
         # Settings settable in UI.
         self.app.main_window.spin_box_image_resolution_1.setValue(_load_int("image_width") or 3840)
         self.app.main_window.spin_box_image_resolution_2.setValue(_load_int("image_height") or 2160)
@@ -41,6 +47,7 @@ class AldyparenSettings:
         self.qsettings.setValue("work_view_height", self.work_view_height)
         self.qsettings.setValue("movie_view_width", self.movie_view_width)
         self.qsettings.setValue("movie_view_height", self.movie_view_height)
+        self.qsettings.setValue("numba_vectorize_target", self.numba_vectorize_target)
         self.qsettings.setValue("image_width", self.app.main_window.spin_box_image_resolution_1.value())
         self.qsettings.setValue("image_height", self.app.main_window.spin_box_image_resolution_2.value())
         self.qsettings.setValue("video_width", self.app.main_window.spin_box_video_resolution_1.value())
