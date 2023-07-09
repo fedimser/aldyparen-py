@@ -257,6 +257,7 @@ class AldyparenApp:
                 os.makedirs(dir)
             file_name = datetime.now().isoformat()[:19]
             if type(self.work_frame.painter) is MandelbroidPainter:
+                # TODO: this doesn't work on Windows, sanitize special characters.
                 file_name += "[" + self.work_frame.painter.gen_function + "]"
             file_name += ".bmp"
             file_name = os.path.join(dir, file_name)

@@ -10,12 +10,12 @@ Representation
    if an overflow happens during a calculation, it will be silently ignored and the result will be incorrect.
  * Maximum precision is 900, which is 7200 decimal digits. With this precision it's guaranteed that we won't have an
    overflow in multiplication (because 1e8*1e8*900 = 9e18 < 2^63).
- * We represent numbers directly as array without wrapping them in an object, so that they casn be used in Numba.
 
 Calculations:
- * Supported arithmetic: addition (use "+"), subtraction (use "-"), multiplication.
- * Arithmetic can be done only with HPNs having the same precision.
- * Normalization is not done automatically, you need call `hpn_normalize_in_place` function.
+ * Supported arithmetic: addition, subtraction, multiplication.
+ * Can either use operators with `Hpn` objects (will extend to match precision or normalize), or operate directly
+   on arrays (precision must match, must call `normalize` manually). The latter is intended to be called from Numba
+   code.
  * Supports operations with 1D vectors of HPNs (all must have the same precision).
 """
 
@@ -102,7 +102,7 @@ class Hpn:
             arg.digits = Hpn._extend_precision(arg.digits, prec)
 
 
-@numba.jit("void(i8[:])")
+@numba.jit("void(i8[:])", nopython=True)
 def hpn_normalize_in_place(x):
     prec = x.shape[0]
     for i in range(prec - 1, 0, -1):
@@ -110,7 +110,7 @@ def hpn_normalize_in_place(x):
         x[i] %= DIG_RANGE
 
 
-@numba.jit("void(i8[:,:])")
+@numba.jit("void(i8[:,:])", nopython=True)
 def hpn_normalize_in_place_vec(x):
     prec = x.shape[1]
     for i in range(prec - 1, 0, -1):
@@ -205,7 +205,7 @@ def _hpn_to_str(x):
     return ans
 
 
-@numba.jit("i8[:](i8[:],i8[:])")
+@numba.jit("i8[:](i8[:],i8[:])", nopython=True)
 def hpn_mul(x, y):
     prec = x.shape[0]
     ans = np.zeros_like(x)
@@ -214,7 +214,7 @@ def hpn_mul(x, y):
     return ans
 
 
-@numba.jit("void(i8[:,:],i8[:,:],i8[:,:])", parallel=True)
+@numba.jit("void(i8[:,:],i8[:,:],i8[:,:])", parallel=True, nopython=True)
 def hpn_mul_vec_inplace(x, y, ans):
     n, prec = x.shape
     ans[:] = 0
@@ -223,7 +223,7 @@ def hpn_mul_vec_inplace(x, y, ans):
             ans[j, i:] += x[j, i] * y[j, :prec - i]
 
 
-@numba.jit("i8[:](i8[:])")
+@numba.jit("i8[:](i8[:])", nopython=True)
 def hpn_square(x):
     ans = hpn_mul(x, x)
     hpn_normalize_in_place(ans)
