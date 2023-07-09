@@ -224,10 +224,12 @@ class MainWindow(QtWidgets.QMainWindow):
         edit.setPlainText(text)
 
     def on_config_text_changed(self):
-        if self.app.is_loading_project:
+        if self.app.is_loading_project or self.ui_handlers_locked:
             return
         edit = self.edit_painter_config  # type: QPlainTextEdit
+        self.ui_handlers_locked = True
         self.app.set_painter_config(edit.toPlainText())
+        self.ui_handlers_locked = False
 
     def set_label_painter_status(self, status):
         label = self.label_config_status  # type: QLabel

@@ -97,7 +97,7 @@ def mix_functions(f1: str, f2: str, w: float):
             raise ValueError("Incompatible tokens: %s %s" % (val1, val2))
         if type1 == NUMBER:
             new_val = (1 - w) * float(val1) + w * float(val2)
-            result.append((NUMBER, str(new_val)))
+            result.append((NUMBER, "%f" % new_val))
         else:
             # Non-number tokens must be identical
             if val1 == val2:

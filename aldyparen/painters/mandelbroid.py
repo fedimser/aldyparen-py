@@ -38,5 +38,5 @@ class MandelbroidPainter:
         try:
             ans[:] = self.paint_func(points)
         except Exception as e:
-            print(f"Error in mandelbroid painter: {e}")
+            self.warning = f"Error in mandelbroid painter: {e}"
             ans[:] = np.zeros_like(points, dtype=np.uint32)

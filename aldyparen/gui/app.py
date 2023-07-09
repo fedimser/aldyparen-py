@@ -210,6 +210,10 @@ class AldyparenApp:
         self.work_frame = self.frames[self.selected_frame_idx]
         self.have_unsaved_changes = True
         self.on_work_frame_changed()
+        self.main_window.ui_handlers_locked = True
+        self.main_window.set_painter_config(json.dumps(self.work_frame.painter.to_object()))
+        self.main_window.transform_text_is_invalid = True
+        self.main_window.ui_handlers_locked = False
 
     def make_animation(self, length: int):
         assert length >= 2
@@ -228,15 +232,16 @@ class AldyparenApp:
         self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
 
-    def render_image(self, width, height):
-        dir = os.path.join(os.getcwd(), "images")
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-        file_name = datetime.now().isoformat()[:19]
-        if type(self.work_frame.painter) is MandelbroidPainter:
-            file_name += "[" + self.work_frame.painter.gen_function + "]"
-        file_name += ".bmp"
-        file_name = os.path.join(dir, file_name)
+    def render_image(self, width, height, file_name=None):
+        if file_name is None:
+            dir = os.path.join(os.getcwd(), "images")
+            if not os.path.exists(dir):
+                os.makedirs(dir)
+            file_name = datetime.now().isoformat()[:19]
+            if type(self.work_frame.painter) is MandelbroidPainter:
+                file_name += "[" + self.work_frame.painter.gen_function + "]"
+            file_name += ".bmp"
+            file_name = os.path.join(dir, file_name)
         renderer = ChunkingRenderer(width, height, is_aborted=lambda: self.is_exiting)
         task = ImageRenderRunnable(self, self.work_frame, renderer, file_name)
         task.setAutoDelete(True)

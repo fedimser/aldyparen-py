@@ -47,21 +47,19 @@ as high-resolution images or videos.
 
 ## UI screenshots
 <img src="examples/screenshot1.jpg" width="500"/>
-<img src="examples/screenshot2.jpg" width="500"/>
+<img src="examples/screenshot2.png" width="500"/>
 
 ## Examples
 
 * Example of using this as Python library - [link](examples/example.ipynb).
-* Example project - [link](examples/project1.json).
+* Example project - [link](examples/example_project_1.json).
 
 
 ## TODOs
 
-* Add instructions for building from source.
 * Build as standalone app, see https://build-system.fman.io/pyqt5-tutorial
 * Check that built app is cross-platform (Windows/Linux).
 * Generate few movies, save them as example JSONs, and publish rendered videos.
-* Add tests for the app (loading from file, rendering to file).
 
 ## Development notes
 
