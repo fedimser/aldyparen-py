@@ -57,6 +57,21 @@ as high-resolution images or videos.
 * Example of using this as Python library - [link](examples/example.ipynb).
 * Example project - [link](examples/example_project_1.json).
 
+## How to install and run
+
+Requirements:
+* OS: Windows/Linux/MacOS.
+* Python 3.10 or higher.
+* Git.
+
+Run from command line:
+```
+git clone https://github.com/fedimser/aldyparen-py.git
+cd aldyparen-py
+pip3 install -r requirements.txt
+python3 run_gui.py
+```
+
 ## Development notes
 
 This application is written in Python using PyQt5.
@@ -67,17 +82,13 @@ This is a Python clone (rewritten from scratch) of [Aldyparen](https://github.co
 which I have written in C# back in 2017.
 This app has all the functionality of the old Aldyparen, plus some extra features (e.g. new "painters").
 
-To install reequirements, and run program from source, run (it's recommended to use virtualenv):
-
-```
-pip3 install -r requirements.txt
-python3 run_gui.py
-```
-
-To run tests and validate style before submit, run:
-
+To start development, create virtualenv and install dependencies:
 ```
 pip3 install -r requirements.txt
 pip3 install pycodestyle pytest
+```
+
+To run tests and validate style before commit, run:
+```
 pycodestyle --max-line-length=120 ./aldyparen && python3 -m pytest .
 ```
