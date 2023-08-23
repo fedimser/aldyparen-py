@@ -32,7 +32,7 @@ NUMBER_PATTERN = re.compile(r"^([-]?\d+)([.](\d*))?(e([-+]?\d+))?$")
 
 class Hpn:
     def __init__(self, digits, prec=None):
-        if type(digits) != np.ndarray:
+        if type(digits) is not np.ndarray:
             digits = _hpn_from_str(str(digits), prec=prec)
         assert digits.dtype == np.int64
         assert len(digits.shape) == 1
@@ -53,7 +53,7 @@ class Hpn:
         return digits
 
     def _get_digits_for_op(self, other):
-        if type(other) == Hpn:
+        if type(other) is Hpn:
             digits = other.digits
         else:
             digits = _hpn_from_number(other)

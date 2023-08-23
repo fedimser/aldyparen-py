@@ -86,7 +86,7 @@ This app has all the functionality of the old Aldyparen, plus some extra feature
 To start development, create virtualenv and install dependencies:
 ```
 pip3 install -r requirements.txt
-pip3 install pycodestyle pytest
+pip3 install -r requirements-dev.txt
 ```
 
 To run tests and validate style before commit, run:

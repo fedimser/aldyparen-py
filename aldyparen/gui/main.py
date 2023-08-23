@@ -190,7 +190,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui_handlers_locked = False
 
     def set_image(self, view, scene, image):
-        if type(image) == str:
+        if type(image) is str:
             scene.clear()
             scene.addText(image)
             return

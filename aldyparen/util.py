@@ -30,7 +30,7 @@ def prepare_function(function, variables=[]):
     env = {var: np.complex128(1) for var in variables}
     env["np"] = np
     test_value = eval(result, env)
-    if type(test_value) != np.complex128:
+    if type(test_value) is not np.complex128:
         raise ValueError(f"Not a valid function")
 
     return result
