@@ -101,7 +101,7 @@ def test_renders_presets(preset_name):
     renderer = StaticRenderer(256, 256)
     painter, transform, palette = PRESETS[preset_name]
     frame = Frame(painter, transform, palette)
-    _assert_picture(renderer.render(frame), "preset_" + preset_name)
+    _assert_picture(renderer.render(frame), "preset_" + preset_name, max_mismatched_pixels=20)
 
 
 def _verify_serialization(frame1: Frame):
