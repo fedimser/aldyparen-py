@@ -3,7 +3,8 @@ import re
 import numpy as np
 
 SUPPORTED_FUNCTIONS = {
-    "exp", "log", "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh", "arcsin", "arccos", "arctan", "real", "imag",
+    "exp", "log", "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh", "arcsin", "arccos", "arctan",
+    "real", "imag",
     "abs", "angle"
 }
 OK_TOKEN_REGEX = re.compile(r"[+\-*/().0123456789]+")
@@ -34,3 +35,8 @@ def prepare_function(function, variables=[]):
         raise ValueError(f"Not a valid function")
 
     return result
+
+
+def prepare_eval_env():
+    return {"locals": None, "globals": None, "__name__": None, "__file__": None,
+            "__builtins__": None}

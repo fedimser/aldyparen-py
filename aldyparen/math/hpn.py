@@ -29,6 +29,10 @@ DIG_RANGE = 10 ** DIG_GROUP_LENGTH
 MAX_PRECISION = 900
 NUMBER_PATTERN = re.compile(r"^([-]?\d+)([.](\d*))?(e([-+]?\d+))?$")
 
+# Numba types
+HPN_TYPE = numba.types.Array(numba.types.int64, 1, 'A', readonly=True)
+HPN_MUT = numba.types.Array(numba.types.int64, 1, 'A')
+
 
 class Hpn:
     def __init__(self, digits, prec=None):
@@ -42,7 +46,7 @@ class Hpn:
         return len(self.digits)
 
     def to_float(self) -> float:
-        return float(_hpn_to_str(self.digits))
+        return _hpn_to_float(self.digits)
 
     @staticmethod
     def _extend_precision(digits, new_prec):
@@ -94,6 +98,11 @@ class Hpn:
         return Hpn(_hpn_from_str(s, prec=prec, extra_power_10=extra_power_10))
 
     @staticmethod
+    def from_number(value: int | float, prec: int = None) -> 'Hpn':
+        """Creates HPN from number."""
+        return Hpn.from_str(str(value), prec=prec)
+
+    @staticmethod
     def equalize_precisions(*args: 'Hpn', min_prec=2):
         prec = min_prec
         for arg in args:
@@ -102,7 +111,7 @@ class Hpn:
             arg.digits = Hpn._extend_precision(arg.digits, prec)
 
 
-@numba.jit("void(i8[:])", nopython=True)
+@numba.jit("void(i8[:])", nopython=True, inline="always")
 def hpn_normalize_in_place(x):
     prec = x.shape[0]
     for i in range(prec - 1, 0, -1):
@@ -167,7 +176,7 @@ def _hpn_from_str(s, prec: int = None, extra_power_10=0) -> np.ndarray:
     return result
 
 
-def _hpn_from_number(x, prec=16):
+def _hpn_from_number(x, prec=16) -> np.ndarray:
     """Creates HPN from number (can be any numeric type)."""
     return _hpn_from_str(str(x), prec=prec)
 
@@ -193,7 +202,7 @@ def _frac_to_str(x):
     return "".join(str(x).zfill(DIG_GROUP_LENGTH) for x in x[1:]).rstrip("0")
 
 
-def _hpn_to_str(x):
+def _hpn_to_str(x) -> str:
     """String representation of HPN, with full precision."""
     hpn_normalize_in_place(x)
     if x[0] < 0 and not np.all(x[1:] == 0):
@@ -205,6 +214,11 @@ def _hpn_to_str(x):
     return ans
 
 
+def _hpn_to_float(x: np.ndarray) -> float:
+    """Converts HPN to float (with precision loss)."""
+    return float(_hpn_to_str(x))
+
+
 @numba.jit("i8[:](i8[:],i8[:])", nopython=True)
 def hpn_mul(x, y):
     prec = x.shape[0]
@@ -212,6 +226,13 @@ def hpn_mul(x, y):
     for i in range(prec):
         ans[i:] += x[i] * y[:prec - i]
     return ans
+
+
+@numba.jit(numba.types.void(HPN_TYPE, HPN_TYPE, HPN_MUT), nopython=True)
+def hpn_mul_inplace_noclear(x, y, ans):
+    prec = x.shape[0]
+    for i in range(prec):
+        ans[i:] += x[i] * y[:prec - i]
 
 
 @numba.jit("void(i8[:,:],i8[:,:],i8[:,:])", parallel=True, nopython=True)
@@ -226,5 +247,14 @@ def hpn_mul_vec_inplace(x, y, ans):
 @numba.jit("i8[:](i8[:])", nopython=True)
 def hpn_square(x):
     ans = hpn_mul(x, x)
+    hpn_normalize_in_place(ans)
+    return ans
+
+
+@numba.jit(HPN_MUT(HPN_TYPE), nopython=True)
+def hpn_abs(x):
+    if x[0] >= 0:
+        return np.copy(x)
+    ans = x * -1
     hpn_normalize_in_place(ans)
     return ans
