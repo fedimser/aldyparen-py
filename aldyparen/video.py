@@ -20,7 +20,7 @@ class VideoRenderer:
 
     def render_video(self, frames: List[Frame], file_name: str):
         from moviepy.editor import concatenate, ImageClip, VideoFileClip, concatenate_videoclips
-        
+
         dir_name = os.path.dirname(file_name)
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
