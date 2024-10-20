@@ -2,6 +2,7 @@ import json
 import random
 
 import numpy as np
+import pytest
 
 from aldyparen.graphics import Frame, StaticRenderer, Transform, ColorPalette
 from aldyparen.gui.presets import PRESETS
@@ -93,6 +94,14 @@ def test_renders_sierpinski_carpet():
     palette = ColorPalette.gradient('black', 'white', size=2)
     frame = Frame(SierpinskiCarpetPainter(depth=4), transform, palette)
     _assert_picture(renderer.render(frame), "sierpinski_carpet")
+
+
+@pytest.mark.parametrize("preset_name", list(PRESETS.keys()))
+def test_renders_presets(preset_name):
+    renderer = StaticRenderer(256, 256)
+    painter, transform, palette = PRESETS[preset_name]
+    frame = Frame(painter, transform, palette)
+    _assert_picture(renderer.render(frame), "preset_" + preset_name)
 
 
 def _verify_serialization(frame1: Frame):
