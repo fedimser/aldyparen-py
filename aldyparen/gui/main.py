@@ -1,3 +1,4 @@
+import math
 import os
 from typing import Union, TYPE_CHECKING
 
@@ -363,12 +364,13 @@ class MainWindow(QtWidgets.QMainWindow):
         file_name = QFileDialog.getSaveFileName(self, 'Choose video location', self.app.settings.work_dir, filters)[0]
         if len(file_name) == 0:
             return
+        dur_sec = math.ceil(len(self.app.frames) / fps)
         prompt = "\n".join([
             "Confirm video render.",
             f"Resolution: {width}x{height}",
             f"Frame rate: {fps} FPS",
             f"Location: {file_name}",
-            f"Duration: {len(self.app.frames)} frames."
+            f"Duration: {len(self.app.frames)} frames, {dur_sec} seconds."
         ])
         if not self.confirm(prompt):
             return
