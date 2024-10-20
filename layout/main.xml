@@ -1028,7 +1028,9 @@
     </property>
     <addaction name="separator"/>
     <addaction name="menu_mandelbrot"/>
+    <addaction name="menu_mandelbrot_hp"/>
     <addaction name="menu_burning_ship"/>
+    <addaction name="menu_burning_ship_hp"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVideo_edit"/>
@@ -1180,6 +1182,16 @@
   <action name="menu_burning_ship">
    <property name="text">
     <string>Burning ship fractal</string>
+   </property>
+  </action>
+  <action name="menu_burning_ship_hp">
+   <property name="text">
+    <string>Burning ship (high precision)</string>
+   </property>
+  </action>
+  <action name="menu_mandelbrot_hp">
+   <property name="text">
+    <string>Mandelbrot set (high precision)</string>
    </property>
   </action>
  </widget>

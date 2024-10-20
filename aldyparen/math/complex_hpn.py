@@ -6,7 +6,7 @@ import numba
 import numpy as np
 
 from aldyparen.math.hpn import hpn_normalize_in_place, Hpn, hpn_mul_inplace_noclear, hpn_abs, \
-    HPN_TYPE, HPN_MUT
+    HPN_TYPE, HPN_MUT, DEFAULT_PRECISION
 
 # Numba types
 HPCN_TYPE = numba.types.UniTuple(HPN_TYPE, 2)
@@ -19,7 +19,7 @@ class ComplexHpn:
         self.imag = imag
 
     @staticmethod
-    def from_number(x: int | float | complex, prec=16) -> "ComplexHpn":
+    def from_number(x: int | float | complex, prec=DEFAULT_PRECISION) -> "ComplexHpn":
         x = complex(x)
         return ComplexHpn(Hpn.from_number(x.real, prec=prec), Hpn.from_number(x.imag, prec=prec))
 
@@ -99,3 +99,14 @@ def sqr(x):
 def abscw(x):
     """Component-wise modulus."""
     return hpn_abs(x[0]), hpn_abs(x[1])
+
+
+@numba.jit(numba.types.boolean(HPCN_TYPE, HPN_TYPE), nopython=True)
+def is_on_or_outside_circle(z, radius_squared):
+    """Returns abs(z)>radius."""
+    buf = np.zeros_like(radius_squared)
+    hpn_mul_inplace_noclear(z[0], z[0], buf)
+    hpn_mul_inplace_noclear(z[1], z[1], buf)
+    buf -= radius_squared
+    hpn_normalize_in_place(buf)
+    return buf[0] >= 0

@@ -13,14 +13,17 @@ from PyQt5.QtWidgets import QMessageBox
 
 from .async_runners import ImageRenderRunnable, render_movie_preview_async
 from .main import MainWindow
+from .presets import PRESETS
 from .settings import AldyparenSettings
-from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette, ChunkingRenderer
+from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette, \
+    ChunkingRenderer
 from ..mixing import make_animation
-from ..painters import MandelbroidPainter, ALL_PAINTERS, PAINTERS_INDEX
+from ..painters import MandelbroidPainter, ALL_PAINTERS, PAINTERS_INDEX, \
+    MandelbroidHighPrecisionPainter
 from ..video import VideoRenderer, deserialize_movie
 
 APP_NAME = "Aldyparen"
-VERSION = "3.0"
+VERSION = "3.1"
 
 
 class AldyparenApp:
@@ -113,8 +116,11 @@ class AldyparenApp:
         config = self.work_frame.painter.to_object()
         self.main_window.set_painter_config(json.dumps(config))
 
-    def set_mandelbroid_painter(self, gen_function):
-        self.set_painter(MandelbroidPainter(gen_function=gen_function))
+    def load_preset(self, preset_name: str):
+        painter, transform, palette = PRESETS[preset_name]
+        self.set_painter(painter)
+        self.update_work_frame_transform(transform)
+        self.update_work_frame_palette(palette)
 
     def set_painter(self, painter: 'Painter'):
         self.is_loading_project = True
@@ -258,6 +264,8 @@ class AldyparenApp:
             file_name = datetime.now().isoformat()[:19]
             if type(self.work_frame.painter) is MandelbroidPainter:
                 # TODO: this doesn't work on Windows, sanitize special characters.
+                file_name += "[" + self.work_frame.painter.gen_function + "]"
+            elif type(self.work_frame.painter) is MandelbroidHighPrecisionPainter:
                 file_name += "[" + self.work_frame.painter.gen_function + "]"
             file_name += ".bmp"
             file_name = os.path.join(dir, file_name)

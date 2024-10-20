@@ -98,6 +98,9 @@ class ColorPalette:
     def __eq__(self, other: 'ColorPalette'):
         return np.array_equal(self.colors, other.colors)
 
+    def __add__(self, other: 'ColorPalette'):
+        return ColorPalette(np.concatenate([self.colors, other.colors]))
+
 
 LN_10 = np.log(10)
 

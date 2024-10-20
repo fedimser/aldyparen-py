@@ -172,9 +172,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu_video_make_animation.triggered.connect(self.make_animation)
         self.menu_video_remove_selected_frame.triggered.connect(self.app.remove_selected_frame)
         self.menu_video_selected_frame_to_work_area.triggered.connect(self.app.clone_selected_frame)
-        self.menu_mandelbrot.triggered.connect(lambda: self.app.set_mandelbroid_painter("z*z+c"))
-        self.menu_burning_ship.triggered.connect(
-            lambda: self.app.set_mandelbroid_painter("(abs(real(z))+1j*abs(imag(z)))**2+c"))
+        self.menu_mandelbrot.triggered.connect(lambda: self.app.load_preset("mandelbrot"))
+        self.menu_mandelbrot_hp.triggered.connect(lambda: self.app.load_preset("mandelbrot_hp"))
+        self.menu_burning_ship.triggered.connect(lambda: self.app.load_preset("burning_ship"))
+        self.menu_burning_ship_hp.triggered.connect(lambda: self.app.load_preset("burning_ship_hp"))
         self.menu_docs.triggered.connect(self.open_docs)
 
         self.scroll_bar_movie.sliderMoved.connect(self.on_movie_scroll)

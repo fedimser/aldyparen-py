@@ -1,10 +1,14 @@
 import json
+import random
 
 import numpy as np
 
 from aldyparen.graphics import Frame, StaticRenderer, Transform, ColorPalette
-from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter, MandelbrotHighPrecisionPainter, \
-    JuliaPainter, ALL_PAINTERS
+from aldyparen.gui.presets import PRESETS
+from aldyparen.math.complex_hpn import ComplexHpn
+from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter, \
+    MandelbrotHighPrecisionPainter, \
+    JuliaPainter, ALL_PAINTERS, MandelbroidHighPrecisionPainter
 from aldyparen.test_util import _assert_picture
 from aldyparen.util import SUPPORTED_FUNCTIONS
 
@@ -47,13 +51,26 @@ def test_renders_mandelbroids():
 def test_renders_mandelbrot_high_precision():
     renderer = StaticRenderer(100, 100)
     palette = ColorPalette.gradient('white', 'black', size=10)
-    p = MandelbrotHighPrecisionPainter(max_iter=100)
-    frame1 = Frame(p, Transform.create(scale=4), palette)
+    p1 = MandelbrotHighPrecisionPainter(max_iter=100)
+    p2 = MandelbroidHighPrecisionPainter(gen_function="z*z+c", max_iter=100, radius=2)
+    frame1 = Frame(p1, Transform.create(scale=4), palette)
     _assert_picture(renderer.render(frame1), f"mandelbrot_hp")
+    frame2 = Frame(p2, Transform.create(scale=4), palette)
+    _assert_picture(renderer.render(frame2), f"mandelbrot_hp")
+
     center = np.complex128(-1.99977406013629035931 - 0.00000000329004032147j)
     tr2 = Transform.create(center=center, scale_log10=-6, rotation=1.0)
-    frame2 = Frame(p, tr2, palette)
+    frame1 = Frame(p1, tr2, palette)
+    _assert_picture(renderer.render(frame1), f"mandelbrot_hp_zoom")
+    frame2 = Frame(p2, tr2, palette)
     _assert_picture(renderer.render(frame2), f"mandelbrot_hp_zoom")
+
+
+def test_renders_presets():
+    renderer = StaticRenderer(256, 256)
+    for preset_name, (painter, transform, palette) in PRESETS.items():
+        frame = Frame(painter, transform, palette)
+        _assert_picture(renderer.render(frame), "preset_" + preset_name)
 
 
 def test_renders_julia_set():
@@ -64,7 +81,8 @@ def test_renders_julia_set():
     _assert_picture(renderer.render(frame), "newton_z3m1")
 
     # Newton fractal for P(z)=(z-1)(z-2)(z-3).
-    frame = Frame(JuliaPainter(func="z-(z**3-6*z**2+11*z-6)/(3*z**2-12*z+11)"), Transform.create(center=2, scale=5),
+    frame = Frame(JuliaPainter(func="z-(z**3-6*z**2+11*z-6)/(3*z**2-12*z+11)"),
+                  Transform.create(center=2, scale=5),
                   ColorPalette.default())
     _assert_picture(renderer.render(frame), "newton_poly3")
 
@@ -92,12 +110,16 @@ def _verify_serialization(frame1: Frame):
 
 
 def test_serialization():
-    _verify_serialization(Frame(SierpinskiCarpetPainter(depth=4), Transform.create(), ColorPalette.default()))
     _verify_serialization(
-        Frame(MandelbroidPainter(gen_function="z**3+sin(z)+c"), Transform.create(center=2 + 3j, scale=10, rotation=3.1),
+        Frame(SierpinskiCarpetPainter(depth=4), Transform.create(), ColorPalette.default()))
+    _verify_serialization(
+        Frame(MandelbroidPainter(gen_function="z**3+sin(z)+c"),
+              Transform.create(center=2 + 3j, scale=10, rotation=3.1),
               ColorPalette.random()))
     _verify_serialization(
-        Frame(MandelbrotHighPrecisionPainter(), Transform.create(center=2j, scale=1e-3, rotation=-6),
+        Frame(MandelbrotHighPrecisionPainter(),
+              Transform.create(center=2j, scale=1e-3, rotation=-6),
               ColorPalette.grayscale(20)))
     _verify_serialization(
-        Frame(JuliaPainter(func="z-(z**2-1)/(2*z)", iters=10), Transform.create(scale=5), ColorPalette.random(3)))
+        Frame(JuliaPainter(func="z-(z**2-1)/(2*z)", iters=10), Transform.create(scale=5),
+              ColorPalette.random(3)))

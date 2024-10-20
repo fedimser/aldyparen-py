@@ -28,6 +28,7 @@ DIG_GROUP_LENGTH = 8
 DIG_RANGE = 10 ** DIG_GROUP_LENGTH
 MAX_PRECISION = 900
 NUMBER_PATTERN = re.compile(r"^([-]?\d+)([.](\d*))?(e([-+]?\d+))?$")
+DEFAULT_PRECISION = 16
 
 # Numba types
 HPN_TYPE = numba.types.Array(numba.types.int64, 1, 'A', readonly=True)
@@ -176,12 +177,12 @@ def _hpn_from_str(s, prec: int = None, extra_power_10=0) -> np.ndarray:
     return result
 
 
-def _hpn_from_number(x, prec=16) -> np.ndarray:
+def _hpn_from_number(x, prec=DEFAULT_PRECISION) -> np.ndarray:
     """Creates HPN from number (can be any numeric type)."""
     return _hpn_from_str(str(x), prec=prec)
 
 
-def hpn_from_numpy_vec(x, prec=16):
+def hpn_from_numpy_vec(x, prec=DEFAULT_PRECISION):
     """Creates vector of HPNs from vector of numbers."""
     assert len(x.shape) == 1
     return np.array([_hpn_from_str(str(num), prec=prec) for num in x], dtype=np.int64)
