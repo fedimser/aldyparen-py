@@ -3,8 +3,6 @@ import os
 from time import time
 from typing import List, Callable, Tuple
 
-from moviepy.editor import concatenate, ImageClip, VideoFileClip, concatenate_videoclips
-
 from aldyparen.graphics import ChunkingRenderer, Frame
 
 
@@ -21,6 +19,8 @@ class VideoRenderer:
         self.verbose = verbose
 
     def render_video(self, frames: List[Frame], file_name: str):
+        from moviepy.editor import concatenate, ImageClip, VideoFileClip, concatenate_videoclips
+        
         dir_name = os.path.dirname(file_name)
         if not os.path.exists(dir_name):
             os.makedirs(dir_name)
@@ -28,7 +28,7 @@ class VideoRenderer:
         # Split work into parts to limit RAM usage.
         n = len(frames)
         frames_per_part = max(0, self.MAX_MEMORY_USAGE_BYTES // (
-                    self.image_renderer.width_pxl * self.image_renderer.height_pxl * 3))
+                self.image_renderer.width_pxl * self.image_renderer.height_pxl * 3))
         parts_num = (n + frames_per_part - 1) // frames_per_part
         parts = []  # type: List[Tuple[str, List[int]]]
         if frames_per_part >= n:
