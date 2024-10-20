@@ -25,21 +25,39 @@ as high-resolution images or videos.
     * `MandelbroidPainter` - generalization of [Mandelbrot set](https://en.wikipedia.org/wiki/Mandelbrot_set) for
       arbitrary function.
         * Basically replaced `z^2+c` with arbitrary `f(z,c)`.
-    * `MadnelbrotHighPrecisionPainter` - high-precision Mandelbrot set renderer. Uses arbitrary-precision arithmetic.
-        * Will render Mandelbrot set correctly at very high zoom, where standard complex128 arithmetic
-          fails because of insufficient precision.
+        * It has parameters: `gen_function` (a function of two arguments `z` and `c`, for example `"z**2+c""`),
+            `radius` and `max_iter`.
+        * To paint point `c`, we start we `z=0` and repeat `z := gen_function(z,c)` until either `|z| > radius` or
+            we did `max_iter` iterations. Number of iterations made determines the color of the point `c`.
+        * I call such generalized Mandlbrot fractal a "Mandelbroid fractal".
+    * `MadnelbroidHighPrecisionPainter` - paints Mandelbroid fractal, but with high-precision.
+        * Will render Mandelbroid set correctly at very high zoom, where standard 64-bit floating point arithmetic
+          fails because of insufficient precision. To illustrate why we need high-precision, compare these two pictures: 
+          [1](https://photos.app.goo.gl/ZtiAdVYQJ4W1MfzU7), [2](https://photos.app.goo.gl/T1M72irowzJn4Nqd6).
+          They both show the same region of the [Burning Ship fractal](https://en.wikipedia.org/wiki/Burning_Ship_fractal),
+          but the first one uses standard 64-bit floating arithmetic, while the second uses high-precision arithmetic.
+        * Parameters:
+            * `gen_function`,`radius` and `max_iter` - same as for `MandelbroidPainter`.
+            * `precision` - size of long number. Number of decimal digits after dot is `8*precision`.
+        * Currently `gen_function` supports addition, subtraction, multiplication andthe following functions:
+            * `sqr` - square, `sqr(z) = z * z`.
+            * `abscw` - component-wise modulus, `abscw(z) = |Re(z)| + i*|Im(z)|`.
         * Panning with mouse will not work at very high zoom, but you can specify center with arbitrary precision in a
-          text
-          edit in the "Transform" tab, and it will work correctly.
-        * Is not well optimized. Long arithmetic implemented from scratch in Python and
+          text edit in the "Transform" tab, and it will work correctly.
+        * It's not well optimized. Long arithmetic implemented from scratch in Python and
           sped up with Numba.
         * I originally intended this for rendering video of deep zooms,
-          but there is much better specialized software for that.
+          but there is much better specialized software for that. 
+    * `MadnelbrotHighPrecisionPainter` - specialized version of `MadnelbroidHighPrecisionPainter`.
+        * Renders only Mandelbrot set with fixed `radius=2`, but does it more efficiently.
+        * Parameters: `max_iter`.
     * `JuliaPainter` - displays [Julia set](https://en.wikipedia.org/wiki/Julia_set).
         * Can be used to show [Newton fractal](https://en.wikipedia.org/wiki/Newton_fractal)
           (pass `func = z - P(z)/P'(z)`).
+        * Parameters: `func`, `iters`, `tolerance`, `max_colors`.
     * `SierpinskiCarpetPainter` - renders [Sierpinski carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet),
       as an example of non-algebraic fractal.
+        * Parameters: `depth`.
 * Configurable color palette.
     * Painters are supposed to return numbers of colors (0,1,2...). Then they are mapped
       to RGB colors using palette. If palette is smaller than number of colors, it's
