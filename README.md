@@ -55,7 +55,7 @@ as high-resolution images or videos.
 ## Examples
 
 * Example of using this as Python library - [link](examples/example.ipynb).
-* Example project - [link](examples/example_project_1.json).
+* Example project - [link](examples/example_project_1.json) (rendered video - [link](https://www.youtube.com/watch?v=fsI0lQ-PMnI)).
 * Example high-resolution renders - [link](https://photos.app.goo.gl/TRyUn9QRy7kJ1sYP8).
 
 ## How to install and run
