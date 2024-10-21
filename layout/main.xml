@@ -405,7 +405,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">
@@ -597,6 +597,19 @@
         <width>211</width>
         <height>21</height>
        </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_precision">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>190</y>
+        <width>91</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Precision: ?</string>
       </property>
      </widget>
     </widget>

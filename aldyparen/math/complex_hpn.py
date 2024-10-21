@@ -2,6 +2,9 @@
 
 HPCNs are represented as Numba tuples of 2 HPNs.
 """
+import functools
+from dataclasses import dataclass
+
 import numba
 import numpy as np
 
@@ -13,17 +16,25 @@ HPCN_TYPE = numba.types.UniTuple(HPN_TYPE, 2)
 HPCN_MUT = numba.types.UniTuple(HPN_MUT, 2)
 
 
+@dataclass(frozen=True)
 class ComplexHpn:
-    def __init__(self, real: Hpn, imag: Hpn):
-        self.real = real
-        self.imag = imag
+    real: Hpn
+    imag: Hpn
+
+    def __post_init__(self):
+        assert self.real.prec() == self.imag.prec()
 
     @staticmethod
-    def from_number(x: int | float | complex, prec=DEFAULT_PRECISION) -> "ComplexHpn":
-        x = complex(x)
-        return ComplexHpn(Hpn.from_number(x.real, prec=prec), Hpn.from_number(x.imag, prec=prec))
+    def from_number(x: int | float | complex | np.complex128, prec=None) -> "ComplexHpn":
+        return ComplexHpn.from_complex(complex(x), prec=prec)
 
-    def to_complex(self) -> np.complex128:
+    @staticmethod
+    def from_complex(x: complex | np.complex128, prec=None) -> "ComplexHpn":
+        x, y = Hpn.equalize_precisions([Hpn.create(x.real), Hpn.create(x.imag)], min_prec=prec or 0)
+        return ComplexHpn(x, y)
+
+    @functools.cached_property
+    def approx(self) -> np.complex128:
         return np.complex128(self.real.to_float() + 1j * self.imag.to_float())
 
     @staticmethod
@@ -34,14 +45,32 @@ class ComplexHpn:
         """Returns tuple that can be used directly in computations."""
         return self.real.digits, self.imag.digits
 
+    def prec(self) -> int:
+        return self.real.prec()
+
+    def extend_precision(self, new_prec: int) -> 'ComplexHpn':
+        return ComplexHpn(self.real.extend_precision(new_prec), self.imag.extend_precision(new_prec))
+
+    def _prepare_binary_op(self, other: 'ComplexHpn') -> tuple['ComplexHpn', 'ComplexHpn']:
+        if type(other) is not ComplexHpn:
+            other = ComplexHpn.from_number(other)
+        if other.prec() < self.prec():
+            return self, other.extend_precision(self.prec())
+        elif other.prec() > self.prec():
+            return self.extend_precision(other.prec()), other
+        return self, other
+
     def __add__(self, other: "ComplexHpn"):
-        return ComplexHpn.from_raw(add(self.to_raw(), other.to_raw()))
+        x, y = self._prepare_binary_op(other)
+        return ComplexHpn.from_raw(add(x.to_raw(), y.to_raw()))
 
     def __sub__(self, other: "ComplexHpn"):
-        return ComplexHpn.from_raw(sub(self.to_raw(), other.to_raw()))
+        x, y = self._prepare_binary_op(other)
+        return ComplexHpn.from_raw(sub(x.to_raw(), y.to_raw()))
 
     def __mul__(self, other: "ComplexHpn"):
-        return ComplexHpn.from_raw(mul(self.to_raw(), other.to_raw()))
+        x, y = self._prepare_binary_op(other)
+        return ComplexHpn.from_raw(mul(x.to_raw(), y.to_raw()))
 
 
 @numba.jit(HPCN_MUT(HPCN_TYPE, HPCN_TYPE), nopython=True)
@@ -93,6 +122,21 @@ def sqr(x):
     hpn_normalize_in_place(ans_real)
     hpn_normalize_in_place(ans_imag)
     return ans_real, ans_imag
+
+
+@numba.jit(HPCN_MUT(HPCN_TYPE, numba.types.int64), nopython=True)
+def power_int(x, y):
+    """Raises HPCN to integer power (using binary exponentiation)."""
+    a = np.zeros_like(x[0]), np.zeros_like(x[1])
+    a[0][0] = 1
+    while True:
+        if y & 1:
+            a = mul(a, x)
+        y = y >> 1
+        if y == 0:
+            break
+        x = sqr(x)
+    return a
 
 
 @numba.jit(HPCN_MUT(HPCN_TYPE), nopython=True)

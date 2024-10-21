@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 
 from aldyparen.graphics import Frame, ColorPalette, Transform
+from aldyparen.math.complex_hpn import ComplexHpn
 from aldyparen.math.hpn import Hpn
 from aldyparen.painters import MandelbroidPainter, JuliaPainter, Painter, MandelbrotHighPrecisionPainter
 
@@ -45,14 +46,13 @@ def mix_painters(p1: 'Painter', p2: 'Painter', w: float) -> Painter:
 
 def mix_transforms(x: Transform, y: Transform, w: float) -> Transform:
     return Transform(
-        center_x=mix_hpn(x.center_x, y.center_x, w),
-        center_y=mix_hpn(x.center_y, y.center_y, w),
+        center=mix_hpcn(x.center, y.center, w),
         scale_log10=(1 - w) * x.scale_log10 + w * y.scale_log10,
         rotation=(1 - w) * x.rotation + w * y.rotation
     )
 
 
-def mix_hpn(x: Hpn, y: Hpn, w: float) -> Hpn:
+def mix_hpcn(x: ComplexHpn, y: ComplexHpn, w: float) -> ComplexHpn:
     return x + (y - x) * w
 
 

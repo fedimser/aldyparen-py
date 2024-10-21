@@ -9,7 +9,7 @@ from aldyparen.math.hpn import Hpn
 def test_conversion():
     for x in [0, 1, 2.3 + 4.5j, 100 - 10j]:
         x_hpn = ComplexHpn.from_number(x)
-        x2 = x_hpn.to_complex()
+        x2 = x_hpn.approx
         assert np.allclose(x, x2)
 
 
@@ -19,9 +19,9 @@ def test_arithmetic():
         b = random.uniform(-100, 100) + 1j * random.uniform(-100, 100)
         a_hpn = ComplexHpn.from_number(a)
         b_hpn = ComplexHpn.from_number(b)
-        assert np.isclose((a_hpn + b_hpn).to_complex(), a + b)
-        assert np.isclose((a_hpn - b_hpn).to_complex(), a - b)
-        assert np.isclose((a_hpn * b_hpn).to_complex(), a * b)
+        assert np.isclose((a_hpn + b_hpn).approx, a + b)
+        assert np.isclose((a_hpn - b_hpn).approx, a - b)
+        assert np.isclose((a_hpn * b_hpn).approx, a * b)
 
 
 def test_is_on_or_outside_circle():

@@ -29,16 +29,15 @@ as high-resolution images or videos.
             `radius` and `max_iter`.
         * To paint point `c`, we start we `z=0` and repeat `z := gen_function(z,c)` until either `|z| > radius` or
             we did `max_iter` iterations. Number of iterations made determines the color of the point `c`.
-        * I call such generalized Mandlbrot fractal a "Mandelbroid fractal".
+        * I call such generalized Mandelbrot fractal a "Mandelbroid fractal".
     * `MadnelbroidHighPrecisionPainter` - paints Mandelbroid fractal, but with high-precision.
         * Will render Mandelbroid set correctly at very high zoom, where standard 64-bit floating point arithmetic
           fails because of insufficient precision. To illustrate why we need high-precision, compare these two pictures: 
-          [1](https://photos.app.goo.gl/ZtiAdVYQJ4W1MfzU7), [2](https://photos.app.goo.gl/T1M72irowzJn4Nqd6).
+          [1](https://photos.app.goo.gl/T1M72irowzJn4Nqd6), [2](https://photos.app.goo.gl/ZtiAdVYQJ4W1MfzU7).
           They both show the same region of the [Burning Ship fractal](https://en.wikipedia.org/wiki/Burning_Ship_fractal),
           but the first one uses standard 64-bit floating arithmetic, while the second uses high-precision arithmetic.
         * Parameters:
             * `gen_function`,`radius` and `max_iter` - same as for `MandelbroidPainter`.
-            * `precision` - size of long number. Number of decimal digits after dot is `8*precision`.
         * Currently `gen_function` supports addition, subtraction, multiplication andthe following functions:
             * `sqr` - square, `sqr(z) = z * z`.
             * `abscw` - component-wise modulus, `abscw(z) = |Re(z)| + i*|Im(z)|`.

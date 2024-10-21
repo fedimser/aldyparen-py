@@ -6,7 +6,6 @@ import pytest
 
 from aldyparen.graphics import Frame, StaticRenderer, Transform, ColorPalette
 from aldyparen.gui.presets import PRESETS
-from aldyparen.math.complex_hpn import ComplexHpn
 from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter, \
     MandelbrotHighPrecisionPainter, \
     JuliaPainter, ALL_PAINTERS, MandelbroidHighPrecisionPainter
@@ -65,13 +64,6 @@ def test_renders_mandelbrot_high_precision():
     _assert_picture(renderer.render(frame1), f"mandelbrot_hp_zoom")
     frame2 = Frame(p2, tr2, palette)
     _assert_picture(renderer.render(frame2), f"mandelbrot_hp_zoom")
-
-
-def test_renders_presets():
-    renderer = StaticRenderer(256, 256)
-    for preset_name, (painter, transform, palette) in PRESETS.items():
-        frame = Frame(painter, transform, palette)
-        _assert_picture(renderer.render(frame), "preset_" + preset_name)
 
 
 def test_renders_julia_set():

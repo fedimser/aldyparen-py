@@ -5,12 +5,13 @@ import numpy as np
 import random
 from typing import Callable
 
+PRECISION = 10
 
-def check_univariate(expr: str, golden: Callable[[complex], complex]):
-    evaluator = compile_expression_hpcn(expr, ["z"])
-    for _ in range(10):
+def check_univariate(expr: str, golden: Callable[[complex], complex], iters=10):
+    evaluator = compile_expression_hpcn(expr, ["z"], precision=PRECISION)
+    for _ in range(iters):
         z = random.uniform(-100, 100) + 1j * random.uniform(-100, 100)
-        ans = ComplexHpn.from_raw(evaluator(ComplexHpn.from_number(z).to_raw())).to_complex()
+        ans = ComplexHpn.from_raw(evaluator(ComplexHpn.from_number(z, prec=PRECISION).to_raw())).approx
         expected = np.complex128(golden(z))
         assert np.allclose(ans, expected)
 
@@ -30,15 +31,18 @@ def test_univariate():
     check_univariate("(z+1)*(z+2)*(z+3)", lambda z: (z + 1) * (z + 2) * (z + 3))
     check_univariate("z-5", lambda z: z - 5)
     check_univariate("(z-1)*(z+2)*(3-z)*(4j+z)", lambda z: (z - 1) * (z + 2) * (3 - z) * (4j + z))
+    check_univariate("z**3", lambda z: z ** 3)
+    check_univariate("z**4", lambda z: z ** 4)
+    check_univariate("z**5", lambda z: z ** 5)
 
 
 def check_bivariate(expr: str, golden: Callable[[complex, complex], complex]):
-    evaluator = compile_expression_hpcn(expr, ["a", "b"])
+    evaluator = compile_expression_hpcn(expr, ["a", "b"], precision=PRECISION)
     for _ in range(10):
         a = random.uniform(-100, 100) + 1j * random.uniform(-100, 100)
         b = random.uniform(-100, 100) + 1j * random.uniform(-100, 100)
-        ans = ComplexHpn.from_raw(evaluator(ComplexHpn.from_number(a).to_raw(),
-                                            ComplexHpn.from_number(b).to_raw())).to_complex()
+        ans = ComplexHpn.from_raw(evaluator(ComplexHpn.from_number(a, prec=PRECISION).to_raw(),
+                                            ComplexHpn.from_number(b, prec=PRECISION).to_raw())).approx
         expected = np.complex128(golden(a, b))
         assert np.allclose(ans, expected)
 

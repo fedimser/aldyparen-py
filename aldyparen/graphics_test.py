@@ -22,11 +22,11 @@ def test_transform_serialization_high_precision():
     x = "0." + "1" * 100
     y = "1." + "2" * 100
     t = Transform.create(center_x=x, center_y=y, scale=1)
-    assert np.isclose(t._center(), 0.111111111 + 1.222222222j)
+    assert np.isclose(t.center.approx, 0.111111111 + 1.222222222j)
     t2 = Transform.deserialize(t.serialize())
     assert t2 == t
-    assert str(t2.center_x) == x
-    assert str(t2.center_y) == y
+    assert str(t2.center.real) == x
+    assert str(t2.center.imag) == y
 
 
 def _render_with_interactive_renderer(w: int, h: int, frame: Frame) -> np.ndarray:
