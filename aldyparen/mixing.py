@@ -6,7 +6,8 @@ import numpy as np
 
 from aldyparen.graphics import Frame, ColorPalette, Transform
 from aldyparen.math.hpn import Hpn
-from aldyparen.painters import MandelbroidPainter, JuliaPainter, Painter, MandelbrotHighPrecisionPainter
+from aldyparen.painters import MandelbroidPainter, JuliaPainter, Painter, MandelbrotHighPrecisionPainter, \
+    MandelbroidHighPrecisionPainter
 
 
 def make_animation(frame1: Frame, frame2: Frame, length: int) -> List[Frame]:
@@ -90,6 +91,8 @@ def mix_julia(p1: JuliaPainter, p2: JuliaPainter, w: float) -> JuliaPainter:
 
 
 def mix_functions(f1: str, f2: str, w: float):
+    if f1 == f2:
+        return f1
     tokens1 = list(tokenize(BytesIO(f1.encode('utf-8')).readline))
     tokens2 = list(tokenize(BytesIO(f2.encode('utf-8')).readline))
     n = len(tokens1)
