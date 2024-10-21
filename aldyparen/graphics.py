@@ -118,7 +118,7 @@ class Transform:
                rotation=None, rotation_deg=None) -> 'Transform':
         if center_x is not None:
             assert center is None
-            assert type(center_x) == type(center_y)
+            assert type(center_x) is type(center_y)
             center_x, center_y = Hpn.equalize_precisions([Hpn.create(center_x), Hpn.create(center_y)])
             center = ComplexHpn(center_x, center_y)
         elif center is not None:

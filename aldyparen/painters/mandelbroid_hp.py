@@ -18,7 +18,7 @@ class MandelbroidHighPrecisionPainter:
         self.radius = radius
 
         self.precision = -1
-        self.paint_func = None # type: Callable
+        self.paint_func = None  # type: Callable
 
     def prepare_paint_func(self, precision):
         assert 2 <= precision <= MAX_PRECISION
@@ -50,7 +50,6 @@ class MandelbroidHighPrecisionPainter:
                 ans[i] = _paint_func(points_x[i, :], points_y[i, :])
 
         self.paint_func = _paint_func_2
-
 
     def to_object(self):
         return {"gen_function": self.gen_function,

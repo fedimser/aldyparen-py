@@ -7,6 +7,7 @@ from typing import Callable
 
 PRECISION = 10
 
+
 def check_univariate(expr: str, golden: Callable[[complex], complex], iters=10):
     evaluator = compile_expression_hpcn(expr, ["z"], precision=PRECISION)
     for _ in range(iters):
