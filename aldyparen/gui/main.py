@@ -60,7 +60,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         modifiers = QApplication.keyboardModifiers()
         delta = -event.delta() / 120
         if bool(modifiers & QtCore.Qt.ShiftModifier):
-            delta *= 20
+            delta *= 25
 
         self.calculate_cursor_pos(event.scenePos())
         if self.cursor_math_pos is None:
@@ -72,8 +72,8 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
 
         else:
             tr = self.app.work_frame.transform.rotate_and_scale_at(self.cursor_rel_screen_pos,
-                                                                   scale_factor=1.05 ** delta)
-        self.app.update_work_frame_transform(tr)
+                                                                   scale_factor=10 ** (0.02 * delta))
+            self.app.update_work_frame_transform(tr)
 
     def apply_drag(self, dx_pxl, dy_pxl):
         delta = np.complex128(dx_pxl - 1j * dy_pxl) / self.frame_width_pxl
@@ -438,7 +438,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tr = self.app.work_frame.transform
         self.edit_center_x.setText(str(tr.center_x))
         self.edit_center_y.setText(str(tr.center_y))
-        self.edit_scale_log10.setText(str(tr.scale_log10))
+        self.edit_scale_log10.setText(f'{tr.scale_log10:.5f}')
         self.edit_rotation_deg.setText(str(tr.rotation_deg()))
         self.transform_text_is_invalid = False
         self.ui_handlers_locked = False
