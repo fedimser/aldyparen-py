@@ -246,6 +246,7 @@ class Renderer:
         h = self.height_pxl
 
         if hasattr(frame.painter, "paint_high_precision"):
+            # TODO: derive precision from scale to not have unnecessarily large precision.
             scale_exp = int(np.floor(tr.scale_log10))
             scale_base = np.power(10, tr.scale_log10 - scale_exp)
             cx = tr.center.real
