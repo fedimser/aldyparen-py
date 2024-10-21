@@ -5,10 +5,8 @@ from typing import List
 import numpy as np
 
 from aldyparen.graphics import Frame, ColorPalette, Transform
-from aldyparen.math.complex_hpn import ComplexHpn
 from aldyparen.math.hpn import Hpn
-from aldyparen.painters import MandelbroidPainter, JuliaPainter, Painter, MandelbrotHighPrecisionPainter, \
-    MandelbroidHighPrecisionPainter
+from aldyparen.painters import MandelbroidPainter, JuliaPainter, Painter, MandelbrotHighPrecisionPainter
 
 
 def make_animation(frame1: Frame, frame2: Frame, length: int) -> List[Frame]:
@@ -35,8 +33,6 @@ def mix_painters(p1: 'Painter', p2: 'Painter', w: float) -> Painter:
     assert p2.__class__ == cl
     if cl == MandelbroidPainter:
         return mix_mandelbroid(p1, p2, w)
-    if cl == MandelbroidHighPrecisionPainter:
-        return mix_mandelbroid_hp(p1, p2, w)
     if cl == JuliaPainter:
         return mix_julia(p1, p2, w)
     if cl == MandelbrotHighPrecisionPainter:
@@ -49,13 +45,14 @@ def mix_painters(p1: 'Painter', p2: 'Painter', w: float) -> Painter:
 
 def mix_transforms(x: Transform, y: Transform, w: float) -> Transform:
     return Transform(
-        center=mix_hpcn(x.center, y.center, w),
+        center_x=mix_hpn(x.center_x, y.center_x, w),
+        center_y=mix_hpn(x.center_y, y.center_y, w),
         scale_log10=(1 - w) * x.scale_log10 + w * y.scale_log10,
         rotation=(1 - w) * x.rotation + w * y.rotation
     )
 
 
-def mix_hpcn(x: ComplexHpn, y: ComplexHpn, w: float) -> ComplexHpn:
+def mix_hpn(x: Hpn, y: Hpn, w: float) -> Hpn:
     return x + (y - x) * w
 
 
@@ -84,14 +81,6 @@ def mix_mandelbroid(p1: MandelbroidPainter, p2: MandelbroidPainter, w: float) ->
     return MandelbroidPainter(gen_function, max_iter=max_iter, radius=radius)
 
 
-def mix_mandelbroid_hp(p1: MandelbrotHighPrecisionPainter, p2: MandelbrotHighPrecisionPainter,
-                       w: float) -> MandelbrotHighPrecisionPainter:
-    assert p1.gen_function == p2.gen_function
-    radius = (1 - w) * p1.radius + w * p2.radius
-    max_iter = int(np.round((1 - w) * p1.max_iter + w * p2.max_iter))
-    return MandelbroidPainter(p1.gen_function, max_iter=max_iter, radius=radius)
-
-
 def mix_julia(p1: JuliaPainter, p2: JuliaPainter, w: float) -> JuliaPainter:
     func = mix_functions(p1.func, p2.func, w)
     iters = int(np.round((1 - w) * p1.iters + w * p2.iters))
@@ -101,8 +90,6 @@ def mix_julia(p1: JuliaPainter, p2: JuliaPainter, w: float) -> JuliaPainter:
 
 
 def mix_functions(f1: str, f2: str, w: float):
-    if f1 == f2:
-        return f1
     tokens1 = list(tokenize(BytesIO(f1.encode('utf-8')).readline))
     tokens2 = list(tokenize(BytesIO(f2.encode('utf-8')).readline))
     n = len(tokens1)

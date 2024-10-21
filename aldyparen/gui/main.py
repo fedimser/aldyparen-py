@@ -60,7 +60,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         modifiers = QApplication.keyboardModifiers()
         delta = -event.delta() / 120
         if bool(modifiers & QtCore.Qt.ShiftModifier):
-            delta *= 25
+            delta *= 20
 
         self.calculate_cursor_pos(event.scenePos())
         if self.cursor_math_pos is None:
@@ -72,7 +72,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
 
         else:
             tr = self.app.work_frame.transform.rotate_and_scale_at(self.cursor_rel_screen_pos,
-                                                                   scale_factor=10 ** (0.02 * delta))
+                                                                   scale_factor=1.05 ** delta)
         self.app.update_work_frame_transform(tr)
 
     def apply_drag(self, dx_pxl, dy_pxl):
@@ -436,13 +436,12 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         self.ui_handlers_locked = True
         tr = self.app.work_frame.transform
-        self.edit_center_x.setText(str(tr.center.real))
-        self.edit_center_y.setText(str(tr.center.imag))
-        self.edit_scale_log10.setText(f'{tr.scale_log10:.5f}')
+        self.edit_center_x.setText(str(tr.center_x))
+        self.edit_center_y.setText(str(tr.center_y))
+        self.edit_scale_log10.setText(str(tr.scale_log10))
         self.edit_rotation_deg.setText(str(tr.rotation_deg()))
         self.transform_text_is_invalid = False
         self.ui_handlers_locked = False
-        self.label_precision.setText(f"Precision: {tr.center.prec()}")
 
     def on_transform_text_edited(self):
         if self.ui_handlers_locked:

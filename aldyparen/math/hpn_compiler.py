@@ -5,7 +5,6 @@ import numba
 
 from aldyparen.math import complex_hpn
 from aldyparen.math.complex_hpn import ComplexHpn
-from aldyparen.math.hpn import DEFAULT_PRECISION
 from aldyparen.util import prepare_eval_env
 
 ALLOWED_CHARS = set(string.ascii_lowercase + string.digits + ".,()+-*")
@@ -48,14 +47,8 @@ class CompilerExpression:
         return CompilerExpression(function=("complex_hpn.mul", [_ce(other), self]))
 
     def __pow__(self, other):
-        if type(other) is int:
-            assert other >= 1, "Only positive integer power is supported"
-            if other == 1:
-                return self
-            elif other == 2:
-                return CompilerExpression(function=("complex_hpn.sqr", [self]))
-            else:
-                return CompilerExpression(function=("power_int", [self, other]))
+        if type(other) is int and other == 2:
+            return CompilerExpression(function=("complex_hpn.sqr", [self]))
         raise f"Power of {other} is not supported"
 
     def to_hpn_expression(self, constants: dict[str, ComplexHpn], prec: int) -> str:
@@ -67,18 +60,13 @@ class CompilerExpression:
             return const_name
         assert self.function is not None
         func_name, args = self.function
-        if func_name == "power_int":
-            arg0 = args[0].to_hpn_expression(constants, prec)
-            assert type(args[1]) is int
-            assert args[1] >= 3  # type:ignore
-            return f"complex_hpn.power_int({arg0},{args[1]})"
         args = ','.join(expr.to_hpn_expression(constants, prec) for expr in args)
         return f"{func_name}({args})"
 
 
 # Returns function that evaluates operates on raw HPCNs (i.e. pairs of 1D arrays).
 # Resulting function takes N values of type (i8[:],i8[:]) and returns Tuple (i8[:],i8[:]).
-def compile_expression_hpcn(expr: str, var_names: list[str], precision=DEFAULT_PRECISION) -> Callable:
+def compile_expression_hpcn(expr: str, var_names: list[str], precision=16) -> Callable:
     for char in expr:
         assert char in ALLOWED_CHARS, f"Invalid character {char}"
 

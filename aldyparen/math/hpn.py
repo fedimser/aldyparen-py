@@ -20,8 +20,6 @@ Calculations:
 """
 
 import re
-from dataclasses import dataclass
-from typing import Any
 
 import numba
 import numpy as np
@@ -30,29 +28,20 @@ DIG_GROUP_LENGTH = 8
 DIG_RANGE = 10 ** DIG_GROUP_LENGTH
 MAX_PRECISION = 900
 NUMBER_PATTERN = re.compile(r"^([-]?\d+)([.](\d*))?(e([-+]?\d+))?$")
-DEFAULT_PRECISION = 8
+DEFAULT_PRECISION = 16
 
 # Numba types
 HPN_TYPE = numba.types.Array(numba.types.int64, 1, 'A', readonly=True)
 HPN_MUT = numba.types.Array(numba.types.int64, 1, 'A')
 
 
-@dataclass(frozen=True)
 class Hpn:
-    digits: np.ndarray  # Point displayed at the center of the frame.
-
-    @staticmethod
-    def create(value: Any) -> "Hpn":
-        if type(value) is Hpn:
-            return value
-        if type(value) is np.ndarray:
-            assert type(value) is np.ndarray
-            assert value.dtype == np.int64
-            assert len(value.shape) == 1
-            return Hpn(value)
-        if type(value) is str:
-            return Hpn(_hpn_from_str(value))
-        return Hpn(_hpn_from_str(str(value)))
+    def __init__(self, digits, prec=None):
+        if type(digits) is not np.ndarray:
+            digits = _hpn_from_str(str(digits), prec=prec)
+        assert digits.dtype == np.int64
+        assert len(digits.shape) == 1
+        self.digits = digits
 
     def prec(self) -> int:
         return len(self.digits)
@@ -60,35 +49,41 @@ class Hpn:
     def to_float(self) -> float:
         return _hpn_to_float(self.digits)
 
-    def extend_precision(self, new_prec) -> 'Hpn':
-        old_prec = len(self.digits)
+    @staticmethod
+    def _extend_precision(digits, new_prec):
+        old_prec = len(digits)
         assert new_prec >= old_prec
         if new_prec > old_prec:
-            return Hpn(np.pad(self.digits, (0, new_prec - old_prec), 'constant', constant_values=(0, 0)))
-        return self
+            return np.pad(digits, (0, new_prec - old_prec), 'constant', constant_values=(0, 0))
+        return digits
 
-    def _prepare_binary_op(self, other: 'Hpn') -> tuple['Hpn', 'Hpn']:
-        if other.prec() < self.prec():
-            return self, other.extend_precision(self.prec())
-        elif other.prec() > self.prec():
-            return self.extend_precision(other.prec()), other
-        return self, other
+    def _get_digits_for_op(self, other):
+        if type(other) is Hpn:
+            digits = other.digits
+        else:
+            digits = _hpn_from_number(other)
+        if len(digits) < self.prec():
+            digits = Hpn._extend_precision(other.digits, self.prec())
+        return digits
 
-    def __add__(self, other: 'Hpn'):
-        x, y = self._prepare_binary_op(other)
-        ans = x.digits + y.digits
+    def __add__(self, other):
+        other_digits = self._get_digits_for_op(other)
+        self_digits = Hpn._extend_precision(self.digits, len(other_digits))
+        ans = self_digits + other_digits
         hpn_normalize_in_place(ans)
         return Hpn(ans)
 
-    def __sub__(self, other: 'Hpn'):
-        x, y = self._prepare_binary_op(other)
-        ans = x.digits - y.digits
+    def __sub__(self, other):
+        other_digits = self._get_digits_for_op(other)
+        self_digits = Hpn._extend_precision(self.digits, len(other_digits))
+        ans = self_digits - other_digits
         hpn_normalize_in_place(ans)
         return Hpn(ans)
 
-    def __mul__(self, other: 'Hpn'):
-        x, y = self._prepare_binary_op(other)
-        ans = hpn_mul(x.digits, y.digits)
+    def __mul__(self, other):
+        other_digits = self._get_digits_for_op(other)
+        self_digits = Hpn._extend_precision(self.digits, len(other_digits))
+        ans = hpn_mul(self_digits, other_digits)
         hpn_normalize_in_place(ans)
         return Hpn(ans)
 
@@ -104,16 +99,17 @@ class Hpn:
         return Hpn(_hpn_from_str(s, prec=prec, extra_power_10=extra_power_10))
 
     @staticmethod
-    def from_number(value: int | float, prec: int = DEFAULT_PRECISION) -> 'Hpn':
+    def from_number(value: int | float, prec: int = None) -> 'Hpn':
         """Creates HPN from number."""
         return Hpn.from_str(str(value), prec=prec)
 
     @staticmethod
-    def equalize_precisions(args: list['Hpn'], min_prec=2) -> list['Hpn']:
+    def equalize_precisions(*args: 'Hpn', min_prec=2):
         prec = min_prec
         for arg in args:
             prec = max(prec, arg.prec())
-        return [Hpn.extend_precision(arg, prec) for arg in args]
+        for arg in args:
+            arg.digits = Hpn._extend_precision(arg.digits, prec)
 
 
 @numba.jit("void(i8[:])", nopython=True, inline="always")

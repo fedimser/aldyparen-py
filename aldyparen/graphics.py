@@ -8,7 +8,6 @@ import numpy as np
 from PyQt5.QtCore import QThread
 from matplotlib import pyplot as plt
 
-from aldyparen.math.complex_hpn import ComplexHpn
 from aldyparen.math.hpn import Hpn
 
 
@@ -108,7 +107,8 @@ LN_10 = np.log(10)
 
 @dataclass(frozen=True)
 class Transform:
-    center: ComplexHpn  # Point displayed at the center of the frame.
+    center_x: Hpn  # Point displayed at the center of the frame.
+    center_y: Hpn
     scale_log10: float  # Base-10 logarithm of the frame width (in math units).
     rotation: float  # Radians, about frame center, counterclockwise.
 
@@ -116,49 +116,45 @@ class Transform:
     def create(*, center=None, center_x: float | str | Hpn = None, center_y: float | str | Hpn = None,
                scale_log10=None, scale=None,
                rotation=None, rotation_deg=None) -> 'Transform':
-        if center_x is not None:
-            assert center is None
-            assert type(center_x) is type(center_y)
-            center_x, center_y = Hpn.equalize_precisions([Hpn.create(center_x), Hpn.create(center_y)])
-            center = ComplexHpn(center_x, center_y)
-        elif center is not None:
-            assert center_x is None
-            assert center_y is None
-            if type(center) is not ComplexHpn:
-                center = ComplexHpn.from_number(center)
-        else:
-            center = ComplexHpn.from_number(0)
-
         if scale is not None:
             scale_log10 = np.log10(scale)
-        scale_log10 = scale_log10 or 0.0
-
         if rotation_deg is not None:
             rotation = (rotation_deg / 180) * np.pi
-        rotation = rotation or 0.0
+        if center is not None:
+            center_x = np.real(center)
+            center_y = np.imag(center)
 
-        transform = Transform(center, scale_log10, rotation)
+        center_x = center_x or 0.0
+        center_y = center_y or 0.0
+        scale_log10 = scale_log10 or 0.0
+        rotation = rotation or 0.0
+        transform = Transform(Hpn(center_x), Hpn(center_y), scale_log10 or 0.0, rotation or 0.0)
         return transform
 
-    def translate(self, delta: np.complex128) -> 'Transform':
-        center_delta = ComplexHpn.from_complex(-delta) * self._k()
-        return Transform(self.center + center_delta, self.scale_log10, self.rotation)
+    def translate(self, delta) -> 'Transform':
+        center_delta = - delta * self._k()
+        new_center_x = self.center_x + np.real(center_delta)
+        new_center_y = self.center_y + np.imag(center_delta)
+        return Transform(new_center_x, new_center_y, self.scale_log10, self.rotation)
 
-    def rotate_and_scale_at(self, rel_screen_point: np.complex128, scale_factor=1.0, angle=0.0) -> 'Transform':
+    def rotate_and_scale_at(self, rel_screen_point, scale_factor=1.0, angle=0.0) -> 'Transform':
         old_k = self._k()
         new_scale_log_10 = self.scale_log10 + np.log10(scale_factor)
         new_rotation = self.rotation + angle
-        new_k = ComplexHpn.from_complex(np.exp(LN_10 * new_scale_log_10 - 1j * new_rotation))
-        center_delta = (old_k - new_k) * ComplexHpn.from_complex(rel_screen_point)
-        new_center = self.center + center_delta
-        return Transform(new_center, new_scale_log_10, new_rotation)
+        new_k = np.exp(LN_10 * new_scale_log_10 - 1j * new_rotation)
+        center_delta = (old_k - new_k) * rel_screen_point
+        new_center_x = self.center_x + np.real(center_delta)
+        new_center_y = self.center_y + np.imag(center_delta)
+        return Transform(new_center_x, new_center_y, new_scale_log_10, new_rotation)
 
-    def _k(self) -> ComplexHpn:
-        # TODO: make it more precise for very small numbers.
-        return ComplexHpn.from_complex(np.exp(LN_10 * self.scale_log10 - 1j * self.rotation))
+    def _k(self):
+        return np.exp(LN_10 * self.scale_log10 - 1j * self.rotation)
+
+    def _center(self):
+        return self.center_x.to_float() + 1j * self.center_y.to_float()
 
     def map_screen_to_math(self, screen_point: np.complex128) -> np.complex128:
-        return self.center.approx + screen_point * self._k().approx
+        return self._center() + screen_point * self._k()
 
     def __str__(self):
         rot_deg = (self.rotation / np.pi * 180) % 360
@@ -166,10 +162,10 @@ class Transform:
         scale_base = np.power(10, self.scale_log10 - scale_exp)
         scale_str = "%.2fe%d" % (scale_base, scale_exp)
         return "c=(%.5e %.5e) s=%s r=%.1f°" % (
-            self.center.real.to_float(), self.center.imag.to_float(), scale_str, rot_deg)
+            self.center_x.to_float(), self.center_y.to_float(), scale_str, rot_deg)
 
-    def serialize(self) -> List[str | float]:
-        return [str(self.center.real), str(self.center.imag), self.scale_log10, self.rotation]
+    def serialize(self) -> List[float]:
+        return [str(self.center_x), str(self.center_y), self.scale_log10, self.rotation]
 
     @staticmethod
     def deserialize(data: List) -> 'Transform':
@@ -177,7 +173,8 @@ class Transform:
         return Transform.create(center_x=data[0], center_y=data[1], scale_log10=data[2], rotation=data[3])
 
     def __eq__(self, other: 'Transform'):
-        return np.isclose((self.center - other.center).approx, 0.0) and (
+        return (np.isclose(self.center_x.to_float(), other.center_x.to_float())) and (
+            np.isclose(self.center_y.to_float(), other.center_y.to_float())) and (
             np.isclose(self.scale_log10, other.scale_log10)) and (
             np.isclose(self.rotation, other.rotation))
 
@@ -246,15 +243,14 @@ class Renderer:
         h = self.height_pxl
 
         if hasattr(frame.painter, "paint_high_precision"):
-            # TODO: derive precision from scale to not have unnecessarily large precision.
             scale_exp = int(np.floor(tr.scale_log10))
             scale_base = np.power(10, tr.scale_log10 - scale_exp)
-            cx = tr.center.real
-            cy = tr.center.imag
+            cx = tr.center_x
+            cy = tr.center_y
             uphp = scale_base / (2 * self.width_pxl)  # Units per half-pixel.
             k1 = Hpn.from_str(str(uphp * np.cos(tr.rotation)), extra_power_10=scale_exp)
             k2 = Hpn.from_str(str(uphp * np.sin(tr.rotation)), extra_power_10=scale_exp)
-            cx, cy, k1, k2 = Hpn.equalize_precisions([cx, cy, k1, k2], min_prec=7)
+            Hpn.equalize_precisions(cx, cy, k1, k2, min_prec=7)
 
             mgrid_x = 2 * mgrid_x - (w - 1)
             mgrid_y = 2 * mgrid_y - (h - 1)

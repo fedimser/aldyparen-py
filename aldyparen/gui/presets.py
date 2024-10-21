@@ -18,7 +18,9 @@ PRESETS = {
                      Transform.create(center=-1.769 - 0.035j, scale_log10=-0.8, rotation_deg=180),
                      BS_PALETTE),
     "burning_ship_hp": (
-        MandelbroidHighPrecisionPainter(gen_function="abscw(z)**2+c", radius=2, max_iter=100),
+        MandelbroidHighPrecisionPainter(gen_function="abscw(z)**2+c",
+                                        max_iter=100,
+                                        precision=4),
         Transform.create(center=-1.769 - 0.035j, scale_log10=-0.8, rotation_deg=180),
         BS_PALETTE),
 }  # type: dict[str, tuple[Any, Transform, ColorPalette]]
