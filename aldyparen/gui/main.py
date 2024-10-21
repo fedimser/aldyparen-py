@@ -73,7 +73,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         else:
             tr = self.app.work_frame.transform.rotate_and_scale_at(self.cursor_rel_screen_pos,
                                                                    scale_factor=10 ** (0.02 * delta))
-            self.app.update_work_frame_transform(tr)
+        self.app.update_work_frame_transform(tr)
 
     def apply_drag(self, dx_pxl, dy_pxl):
         delta = np.complex128(dx_pxl - 1j * dy_pxl) / self.frame_width_pxl
