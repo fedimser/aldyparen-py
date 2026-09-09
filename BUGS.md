@@ -5,12 +5,6 @@
    - Confirmed runtime state after clearing: `frames=[]`, `selected_frame_idx=0`, `have_unsaved_changes=False`.
    - A user can clear a previously saved movie and exit without an unsaved-changes warning.
 
-2. **Critical — video rendering is broken with supported MoviePy versions**
-   - `video.py:22` imports `moviepy.editor`, which was removed in MoviePy 2.x.
-   - `requirements.txt:2` permits every version `>=1.0.3`, including 2.x.
-   - Confirmed in the selected environment with MoviePy 2.2.1: `ModuleNotFoundError: No module named 'moviepy.editor'`.
-   - Every video render fails on a normal fresh installation resolving to current MoviePy.
-
 3. **High — asynchronous preview races with frame deletion**
    - `async_runners.py:33-36` indexes the current frame after rendering without checking whether the movie was cleared or changed meanwhile.
    - Confirmed with an emptied frame list: `IndexError: list index out of range`.

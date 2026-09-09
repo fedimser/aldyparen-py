@@ -370,7 +370,7 @@ class MainWindow(QtWidgets.QMainWindow):
         fps = self.app.settings.get_video_fps()
         filters = "MP4 video files (*.mp4);;All files (*.*)"
         file_name = select_file(self, 'Choose video location', self.app.settings.work_dir,
-                                filters, QFileDialog.AcceptSave)
+                                filters, QFileDialog.AcceptSave, default_suffix="mp4")
         if len(file_name) == 0:
             return
         dur_sec = math.ceil(len(self.app.frames) / fps)

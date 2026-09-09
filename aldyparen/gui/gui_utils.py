@@ -25,6 +25,7 @@ def select_file(
     directory: str,
     filters: str,
     accept_mode: QFileDialog.AcceptMode,
+    default_suffix: str = "",
 ) -> str:
     """Selects file using dialog."""
     dialog = QFileDialog(parent)
@@ -38,6 +39,7 @@ def select_file(
     dialog.setWindowTitle(title)
     dialog.setNameFilter(filters)
     dialog.setAcceptMode(accept_mode)
+    dialog.setDefaultSuffix(default_suffix)
     if accept_mode == QFileDialog.AcceptOpen:
         dialog.setFileMode(QFileDialog.ExistingFile)
     else:
