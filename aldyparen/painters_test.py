@@ -1,15 +1,18 @@
 import json
-import random
 
 import numpy as np
 import pytest
 
-from aldyparen.graphics import Frame, StaticRenderer, Transform, ColorPalette
-from aldyparen.gui.presets import PRESETS
-from aldyparen.math.complex_hpn import ComplexHpn
-from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter, \
-    MandelbrotHighPrecisionPainter, \
-    JuliaPainter, ALL_PAINTERS, MandelbroidHighPrecisionPainter
+from aldyparen.graphics import ColorPalette, Frame, StaticRenderer, Transform
+from aldyparen.gui.presets import PRESET_NAMES, load_preset
+from aldyparen.painters import (
+    ALL_PAINTERS,
+    JuliaPainter,
+    MandelbroidHighPrecisionPainter,
+    MandelbroidPainter,
+    MandelbrotHighPrecisionPainter,
+    SierpinskiCarpetPainter,
+)
 from aldyparen.test_util import _assert_picture
 from aldyparen.util import SUPPORTED_FUNCTIONS
 
@@ -35,12 +38,12 @@ def test_mandelbroid_rejects_bad_functions():
 
 
 def test_mandelbroid_supports_all_functions():
-    gen_function = '+'.join(func + '(c+z+1j)' for func in SUPPORTED_FUNCTIONS)
+    gen_function = "+".join(func + "(c+z+1j)" for func in SUPPORTED_FUNCTIONS)
     MandelbroidPainter(gen_function=gen_function)
 
 
 def test_renders_mandelbroids():
-    palette = ColorPalette.gradient('yellow', 'black', size=21)
+    palette = ColorPalette.gradient("yellow", "black", size=21)
     renderer = StaticRenderer(200, 200)
     transform = Transform.create(scale=4)
     funcs = ["z*z+c", "z*z*z+c", "z*z*z+3**z+c"]
@@ -51,27 +54,28 @@ def test_renders_mandelbroids():
 
 def test_renders_mandelbrot_high_precision():
     renderer = StaticRenderer(100, 100)
-    palette = ColorPalette.gradient('white', 'black', size=10)
+    palette = ColorPalette.gradient("white", "black", size=10)
     p1 = MandelbrotHighPrecisionPainter(max_iter=100)
     p2 = MandelbroidHighPrecisionPainter(gen_function="z*z+c", max_iter=100, radius=2)
     frame1 = Frame(p1, Transform.create(scale=4), palette)
-    _assert_picture(renderer.render(frame1), f"mandelbrot_hp")
+    _assert_picture(renderer.render(frame1), "mandelbrot_hp")
     frame2 = Frame(p2, Transform.create(scale=4), palette)
-    _assert_picture(renderer.render(frame2), f"mandelbrot_hp")
+    _assert_picture(renderer.render(frame2), "mandelbrot_hp")
 
     center = np.complex128(-1.99977406013629035931 - 0.00000000329004032147j)
     tr2 = Transform.create(center=center, scale_log10=-6, rotation=1.0)
     frame1 = Frame(p1, tr2, palette)
-    _assert_picture(renderer.render(frame1), f"mandelbrot_hp_zoom")
+    _assert_picture(renderer.render(frame1), "mandelbrot_hp_zoom")
     frame2 = Frame(p2, tr2, palette)
-    _assert_picture(renderer.render(frame2), f"mandelbrot_hp_zoom")
+    _assert_picture(renderer.render(frame2), "mandelbrot_hp_zoom")
 
 
-def test_renders_presets():
+@pytest.mark.parametrize("preset_name", PRESET_NAMES)
+def test_renders_presets(preset_name):
     renderer = StaticRenderer(256, 256)
-    for preset_name, (painter, transform, palette) in PRESETS.items():
-        frame = Frame(painter, transform, palette)
-        _assert_picture(renderer.render(frame), "preset_" + preset_name)
+    painter, transform, palette = load_preset(preset_name)
+    frame = Frame(painter, transform, palette)
+    _assert_picture(renderer.render(frame), "preset_" + preset_name, max_mismatched_pixels=20)
 
 
 def test_renders_julia_set():
@@ -82,26 +86,45 @@ def test_renders_julia_set():
     _assert_picture(renderer.render(frame), "newton_z3m1")
 
     # Newton fractal for P(z)=(z-1)(z-2)(z-3).
-    frame = Frame(JuliaPainter(func="z-(z**3-6*z**2+11*z-6)/(3*z**2-12*z+11)"),
-                  Transform.create(center=2, scale=5),
-                  ColorPalette.default())
+    frame = Frame(
+        JuliaPainter(func="z-(z**3-6*z**2+11*z-6)/(3*z**2-12*z+11)"),
+        Transform.create(center=2, scale=5),
+        ColorPalette.default(),
+    )
     _assert_picture(renderer.render(frame), "newton_poly3")
+
+
+def test_julia_paint_handles_iteration_errors():
+    painter = JuliaPainter(iters=1)
+
+    def fail(_):
+        raise RuntimeError("iteration failed")
+
+    painter.iterate_func = fail
+    ans = np.full(2, 99, dtype=np.uint32)
+    painter.paint(np.array([0j, 1j]), ans)
+
+    np.testing.assert_array_equal(ans, [0, 0])
+    assert painter.warning == "Error: iteration failed"
+
+
+def test_julia_paint_warns_when_color_limit_is_exceeded():
+    painter = JuliaPainter(iters=1, tolerance=1e-6, max_colors=1)
+    painter.iterate_func = lambda points: points
+    ans = np.zeros(2, dtype=np.uint32)
+
+    painter.paint(np.array([1 + 0j, 2 + 0j]), ans)
+
+    np.testing.assert_array_equal(ans, [1, 2])
+    assert painter.warning == "Warning! Color limit exceeded, extra colors were mapped to 2."
 
 
 def test_renders_sierpinski_carpet():
     renderer = StaticRenderer(200, 200)
     transform = Transform.create(center=0.5 + 0.5j)
-    palette = ColorPalette.gradient('black', 'white', size=2)
+    palette = ColorPalette.gradient("black", "white", size=2)
     frame = Frame(SierpinskiCarpetPainter(depth=4), transform, palette)
     _assert_picture(renderer.render(frame), "sierpinski_carpet")
-
-
-@pytest.mark.parametrize("preset_name", list(PRESETS.keys()))
-def test_renders_presets(preset_name):
-    renderer = StaticRenderer(256, 256)
-    painter, transform, palette = PRESETS[preset_name]
-    frame = Frame(painter, transform, palette)
-    _assert_picture(renderer.render(frame), "preset_" + preset_name, max_mismatched_pixels=20)
 
 
 def _verify_serialization(frame1: Frame):
@@ -119,16 +142,21 @@ def _verify_serialization(frame1: Frame):
 
 
 def test_serialization():
+    _verify_serialization(Frame(SierpinskiCarpetPainter(depth=4), Transform.create(), ColorPalette.default()))
     _verify_serialization(
-        Frame(SierpinskiCarpetPainter(depth=4), Transform.create(), ColorPalette.default()))
+        Frame(
+            MandelbroidPainter(gen_function="z**3+sin(z)+c"),
+            Transform.create(center=2 + 3j, scale=10, rotation=3.1),
+            ColorPalette.random(),
+        )
+    )
     _verify_serialization(
-        Frame(MandelbroidPainter(gen_function="z**3+sin(z)+c"),
-              Transform.create(center=2 + 3j, scale=10, rotation=3.1),
-              ColorPalette.random()))
+        Frame(
+            MandelbrotHighPrecisionPainter(),
+            Transform.create(center=2j, scale=1e-3, rotation=-6),
+            ColorPalette.grayscale(20),
+        )
+    )
     _verify_serialization(
-        Frame(MandelbrotHighPrecisionPainter(),
-              Transform.create(center=2j, scale=1e-3, rotation=-6),
-              ColorPalette.grayscale(20)))
-    _verify_serialization(
-        Frame(JuliaPainter(func="z-(z**2-1)/(2*z)", iters=10), Transform.create(scale=5),
-              ColorPalette.random(3)))
+        Frame(JuliaPainter(func="z-(z**2-1)/(2*z)", iters=10), Transform.create(scale=5), ColorPalette.random(3))
+    )

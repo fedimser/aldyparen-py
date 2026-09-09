@@ -4,9 +4,17 @@ HPCNs are represented as Numba tuples of 2 HPNs.
 """
 import numba
 import numpy as np
+from numpy.typing import NDArray
 
-from aldyparen.math.hpn import hpn_normalize_in_place, Hpn, hpn_mul_inplace_noclear, hpn_abs, \
-    HPN_TYPE, HPN_MUT, DEFAULT_PRECISION
+from aldyparen.math.hpn import (
+    DEFAULT_PRECISION,
+    HPN_MUT,
+    HPN_TYPE,
+    Hpn,
+    hpn_abs,
+    hpn_mul_inplace_noclear,
+    hpn_normalize_in_place,
+)
 
 # Numba types
 HPCN_TYPE = numba.types.UniTuple(HPN_TYPE, 2)
@@ -44,8 +52,12 @@ class ComplexHpn:
         return ComplexHpn.from_raw(mul(self.to_raw(), other.to_raw()))
 
 
-@numba.jit(HPCN_MUT(HPCN_TYPE, HPCN_TYPE), nopython=True)
-def add(x, y):
+# HPCN_MUT(HPCN_TYPE, HPCN_TYPE)
+@numba.jit(nopython=True)
+def add(
+    x: tuple[NDArray[np.int64], NDArray[np.int64]],
+    y: tuple[NDArray[np.int64], NDArray[np.int64]],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Multiply two HPCNs."""
     ans_real = x[0] + y[0]
     ans_imag = x[1] + y[1]
@@ -54,8 +66,12 @@ def add(x, y):
     return ans_real, ans_imag
 
 
-@numba.jit(HPCN_MUT(HPCN_TYPE, HPCN_TYPE), nopython=True)
-def sub(x, y):
+# HPCN_MUT(HPCN_TYPE, HPCN_TYPE)
+@numba.jit(nopython=True)
+def sub(
+    x: tuple[NDArray[np.int64], NDArray[np.int64]],
+    y: tuple[NDArray[np.int64], NDArray[np.int64]],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Multiply two HPCNs."""
     ans_real = x[0] - y[0]
     ans_imag = x[1] - y[1]
@@ -65,8 +81,12 @@ def sub(x, y):
 
 
 # Warning: this can overflow for prec>450. To avoid, need to normalize after each multiplication.
-@numba.jit(HPCN_MUT(HPCN_TYPE, HPCN_TYPE), nopython=True)
-def mul(x, y):
+# HPCN_MUT(HPCN_TYPE, HPCN_TYPE)
+@numba.jit(nopython=True)
+def mul(
+    x: tuple[NDArray[np.int64], NDArray[np.int64]],
+    y: tuple[NDArray[np.int64], NDArray[np.int64]],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Multiply two HPCNs."""
     ans_real = np.zeros_like(x[0])
     ans_imag = np.zeros_like(x[0])
@@ -80,8 +100,9 @@ def mul(x, y):
     return ans_real, ans_imag
 
 
-@numba.jit(HPCN_MUT(HPCN_TYPE), nopython=True)
-def sqr(x):
+# HPCN_MUT(HPCN_TYPE)
+@numba.jit(nopython=True)
+def sqr(x: tuple[NDArray[np.int64], NDArray[np.int64]]) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Square HPCN."""
     ans_real = np.zeros_like(x[0])
     ans_imag = np.zeros_like(x[0])
@@ -95,14 +116,19 @@ def sqr(x):
     return ans_real, ans_imag
 
 
-@numba.jit(HPCN_MUT(HPCN_TYPE), nopython=True)
-def abscw(x):
+# HPCN_MUT(HPCN_TYPE)
+@numba.jit(nopython=True)
+def abscw(x: tuple[NDArray[np.int64], NDArray[np.int64]]) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Component-wise modulus."""
     return hpn_abs(x[0]), hpn_abs(x[1])
 
 
-@numba.jit(numba.types.boolean(HPCN_TYPE, HPN_TYPE), nopython=True)
-def is_on_or_outside_circle(z, radius_squared):
+# boolean(HPCN_TYPE, HPN_TYPE)
+@numba.jit(nopython=True)
+def is_on_or_outside_circle(
+    z: tuple[NDArray[np.int64], NDArray[np.int64]],
+    radius_squared: NDArray[np.int64],
+) -> bool:
     """Returns abs(z)>radius."""
     buf = np.zeros_like(radius_squared)
     hpn_mul_inplace_noclear(z[0], z[0], buf)

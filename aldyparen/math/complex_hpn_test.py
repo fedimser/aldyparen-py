@@ -1,8 +1,8 @@
+import random
+
 import numpy as np
 
 from aldyparen.math.complex_hpn import ComplexHpn, is_on_or_outside_circle
-import random
-
 from aldyparen.math.hpn import Hpn
 
 

@@ -5,14 +5,16 @@ from typing import Callable, Dict, List
 import matplotlib
 import numba
 import numpy as np
+from numpy.typing import NDArray
 from PyQt5.QtCore import QThread
 from matplotlib import pyplot as plt
 
 from aldyparen.math.hpn import Hpn
 
 
-@numba.jit("u1[:,:,:](u4[:,:],u1[:,:])", parallel=True, nogil=True, nopython=True)
-def _numba_remap(pic, colors):
+# u1[:,:,:](u4[:,:],u1[:,:])
+@numba.jit(parallel=True, nogil=True, nopython=True)
+def _numba_remap(pic: NDArray[np.uint32], colors: NDArray[np.uint8]) -> NDArray[np.uint8]:
     h, w = pic.shape
     colors_num = colors.shape[0]
     assert colors.shape == (colors_num, 3)
@@ -301,8 +303,14 @@ class ChunkingRenderer(Renderer):
         plt.imsave(file_name, pic)
 
 
-@numba.jit("(u4[:],i2[:],i2[:],u4[:,:])", parallel=True, nogil=True, nopython=True)
-def _rearrange_points(points, x, y, output):
+# (u4[:],i2[:],i2[:],u4[:,:])
+@numba.jit(parallel=True, nogil=True, nopython=True)
+def _rearrange_points(
+    points: NDArray[np.uint32],
+    x: NDArray[np.int16],
+    y: NDArray[np.int16],
+    output: NDArray[np.uint32],
+) -> None:
     for i in numba.prange(len(points)):
         output[y[i]][x[i]] = points[i]
 
@@ -385,6 +393,7 @@ class InteractiveRenderer(Renderer):
 
     def halt(self):
         self.renderer_thread.requestInterruption()
+        self.renderer_thread.wait()
 
 
 class RenderLoop(QThread):

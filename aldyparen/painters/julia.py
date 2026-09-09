@@ -1,12 +1,21 @@
-import numpy as np
-import numba
 import warnings
+
+import numba
+import numpy as np
+from numpy.typing import NDArray
 
 from aldyparen.util import prepare_function
 
 
-@numba.jit("i4(c16[:],c16[:],i4,f8,u4[:])", nopython=True)
-def paint_converged(points_after, attractors, used_colors, tolerance, ans):
+# i4(c16[:],c16[:],i4,f8,u4[:])
+@numba.jit(nopython=True)
+def paint_converged(
+    points_after: NDArray[np.complex64],
+    attractors: NDArray[np.complex64],
+    used_colors: int,
+    tolerance: float,
+    ans: NDArray[np.uint32],
+) -> int:
     max_colors = len(attractors)  # Equals to JuliaPainter.max_colors+2.
     n = len(points_after)
 

@@ -7,23 +7,34 @@ from typing import List
 
 import numpy as np
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QTimer, QThreadPool, QCoreApplication
+from PyQt5.QtCore import QCoreApplication, QThreadPool, QTimer
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMessageBox
 
+from ..graphics import (
+    ChunkingRenderer,
+    ColorPalette,
+    Frame,
+    InteractiveRenderer,
+    StaticRenderer,
+    Transform,
+)
+from ..mixing import make_animation
+from ..painters import (
+    ALL_PAINTERS,
+    PAINTERS_INDEX,
+    MandelbroidHighPrecisionPainter,
+    MandelbroidPainter,
+    Painter,
+)
+from ..video import VideoRenderer, deserialize_movie
 from .async_runners import ImageRenderRunnable, render_movie_preview_async
 from .main import MainWindow
-from .presets import PRESETS
+from .presets import PRESET_NAMES, load_preset
 from .settings import AldyparenSettings
-from ..graphics import InteractiveRenderer, StaticRenderer, Transform, Frame, ColorPalette, \
-    ChunkingRenderer
-from ..mixing import make_animation
-from ..painters import MandelbroidPainter, ALL_PAINTERS, PAINTERS_INDEX, \
-    MandelbroidHighPrecisionPainter
-from ..video import VideoRenderer, deserialize_movie
 
 APP_NAME = "Aldyparen"
-VERSION = "3.1"
+VERSION = "3.2"
 
 
 class AldyparenApp:
@@ -49,12 +60,15 @@ class AldyparenApp:
 
         self.main_window = MainWindow(self)
         self.settings = AldyparenSettings(self)
-        self.work_frame_renderer = InteractiveRenderer(self.settings.get_work_view_width(),
-                                                       self.settings.get_work_view_height(),
-                                                       self.main_window.set_work_frame,
-                                                       downsample_factor=self.settings.get_downsample_factor())
-        self.movie_frame_renderer = StaticRenderer(self.settings.get_movie_view_width(),
-                                                   self.settings.get_movie_view_height())
+        self.work_frame_renderer = InteractiveRenderer(
+            self.settings.get_work_view_width(),
+            self.settings.get_work_view_height(),
+            self.main_window.set_work_frame,
+            downsample_factor=self.settings.get_downsample_factor(),
+        )
+        self.movie_frame_renderer = StaticRenderer(
+            self.settings.get_movie_view_width(), self.settings.get_movie_view_height()
+        )
 
         self.timer = QTimer()
         self.timer.timeout.connect(self.tick)
@@ -117,12 +131,12 @@ class AldyparenApp:
         self.main_window.set_painter_config(json.dumps(config))
 
     def load_preset(self, preset_name: str):
-        painter, transform, palette = PRESETS[preset_name]
+        painter, transform, palette = load_preset(preset_name)
         self.set_painter(painter)
         self.update_work_frame_transform(transform)
         self.update_work_frame_palette(palette)
 
-    def set_painter(self, painter: 'Painter'):
+    def set_painter(self, painter: "Painter"):
         self.is_loading_project = True
         self.main_window.combo_painter_type.setCurrentIndex(PAINTERS_INDEX[painter.__class__.__name__])
         self.main_window.set_painter_config(json.dumps(painter.to_object()))
@@ -132,15 +146,18 @@ class AldyparenApp:
 
     def reset_work_frame(self):
         self.work_frame_renderer.halt()
-        self.work_frame_renderer = InteractiveRenderer(self.settings.get_work_view_width(),
-                                                       self.settings.get_work_view_height(),
-                                                       self.main_window.set_work_frame,
-                                                       downsample_factor=self.settings.get_downsample_factor())
+        self.work_frame_renderer = InteractiveRenderer(
+            self.settings.get_work_view_width(),
+            self.settings.get_work_view_height(),
+            self.main_window.set_work_frame,
+            downsample_factor=self.settings.get_downsample_factor(),
+        )
         self.on_work_frame_changed()
 
     def reset_video_preview(self):
-        self.movie_frame_renderer = StaticRenderer(self.settings.get_movie_view_width(),
-                                                   self.settings.get_movie_view_height())
+        self.movie_frame_renderer = StaticRenderer(
+            self.settings.get_movie_view_width(), self.settings.get_movie_view_height()
+        )
         if 0 <= self.selected_frame_idx < len(self.frames):
             frame = self.frames[self.selected_frame_idx]
             object.__setattr__(frame, "cached_movie_preview", None)
@@ -222,7 +239,7 @@ class AldyparenApp:
         if len(self.frames) == 0:
             return
         cur_idx = self.selected_frame_idx
-        self.frames = self.frames[:cur_idx] + self.frames[cur_idx + 1:]
+        self.frames = self.frames[:cur_idx] + self.frames[cur_idx + 1 :]
         if cur_idx >= len(self.frames):
             self.selected_frame_idx = len(self.frames) - 1
         self.have_unsaved_changes = True
@@ -251,7 +268,7 @@ class AldyparenApp:
         assert len(anim_frames) == length + 1
         assert anim_frames[0] == begin_frame
         assert anim_frames[-1] == end_frame
-        self.frames = self.frames[0:cur_idx] + anim_frames + self.frames[cur_idx + 1:]
+        self.frames = self.frames[0:cur_idx] + anim_frames + self.frames[cur_idx + 1 :]
         self.selected_frame_idx += length
         self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
@@ -334,12 +351,14 @@ class AldyparenApp:
 
     def get_selected_frame_info(self):
         cur_frame = self.frames[self.selected_frame_idx]
-        return "\n".join([
-            "Frame %d of %d" % (self.selected_frame_idx + 1, len(self.frames)),
-            cur_frame.painter.__class__.__name__,
-            json.dumps(cur_frame.painter.to_object()),
-            "Transform: " + str(cur_frame.transform)
-        ])
+        return "\n".join(
+            [
+                "Frame %d of %d" % (self.selected_frame_idx + 1, len(self.frames)),
+                cur_frame.painter.__class__.__name__,
+                json.dumps(cur_frame.painter.to_object()),
+                "Transform: " + str(cur_frame.transform),
+            ]
+        )
 
     def show_error_message_async(self, msg):
         self.error_messages_to_show.append(msg)

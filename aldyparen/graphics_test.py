@@ -29,6 +29,22 @@ def test_transform_serialization_high_precision():
     assert str(t2.center_y) == y
 
 
+def test_frame_serialization_reuses_previous_painter_and_palette():
+    painter = MandelbroidPainter(gen_function="z*z+c")
+    palette = ColorPalette.grayscale(3)
+    previous = Frame(painter, Transform.create(), palette)
+    current = Frame(painter, Transform.create(center=1 + 2j), palette)
+
+    data = current.serialize(prev=previous)
+    restored = Frame.deserialize(data, prev=previous)
+
+    assert data["pn"] == "prev"
+    assert data["pl"] == "prev"
+    assert restored.painter is painter
+    assert restored.palette is palette
+    assert restored.transform == current.transform
+
+
 def _render_with_interactive_renderer(w: int, h: int, frame: Frame) -> np.ndarray:
     results = []
     r = InteractiveRenderer(w, h, lambda pic: results.append(pic), downsample_factor=3)
@@ -37,7 +53,7 @@ def _render_with_interactive_renderer(w: int, h: int, frame: Frame) -> np.ndarra
         time.sleep(0.01)
         r.tick()
     r.halt()
-    r.renderer_thread.quit()
+    assert not r.renderer_thread.isRunning()
     return results[-1]
 
 

@@ -1,8 +1,14 @@
 import numpy as np
+import pytest
 
-from aldyparen.graphics import Frame, Transform, ColorPalette
-from aldyparen.mixing import mix_functions, make_animation
-from aldyparen.painters import MandelbroidPainter
+from aldyparen.graphics import ColorPalette, Frame, Transform
+from aldyparen.mixing import make_animation, mix_functions, mix_painters, mix_palettes
+from aldyparen.painters import (
+    JuliaPainter,
+    MandelbroidPainter,
+    MandelbrotHighPrecisionPainter,
+    SierpinskiCarpetPainter,
+)
 
 
 def test_mix_functions():
@@ -17,6 +23,46 @@ def test_mix_functions_fractional():
     f2 = "2.5*x+3.5*x**2.0"
     f3 = mix_functions(f1, f2, 0.5)
     assert (f3 == '2.25*x+3.25*x**2.0')
+
+
+def test_mix_functions_scientific_notation():
+    assert mix_functions("z+0.0000000001", "z+0.0000000003", 0.5) == "z+0.0000000002"
+
+
+@pytest.mark.parametrize(("f1", "f2"), [
+    ("z+1", "z+1+2"),
+    ("z+1", "z+x"),
+    ("z+1", "c+2"),
+])
+def test_mix_functions_rejects_incompatible_expressions(f1, f2):
+    with pytest.raises(ValueError):
+        mix_functions(f1, f2, 0.5)
+
+
+def test_mix_palettes_extends_second_palette():
+    palette1 = ColorPalette(np.array([[0, 10, 20], [20, 30, 40]], dtype=np.uint8))
+    palette2 = ColorPalette(np.array([[100, 110, 120]], dtype=np.uint8))
+
+    mixed = mix_palettes(palette1, palette2, 0.5)
+
+    np.testing.assert_array_equal(mixed.colors, [[50, 60, 70], [60, 70, 80]])
+
+
+def test_mix_supported_and_unsupported_painters():
+    julia = mix_painters(
+        JuliaPainter(func="z+1", iters=10, tolerance=0.01, max_colors=2),
+        JuliaPainter(func="z+3", iters=20, tolerance=0.03, max_colors=4),
+        0.5,
+    )
+    assert julia.to_object() == {"func": "z+2.0", "iters": 15, "tolerance": 0.02, "max_colors": 3}
+
+    mandelbrot = mix_painters(MandelbrotHighPrecisionPainter(10), MandelbrotHighPrecisionPainter(20), 0.5)
+    assert mandelbrot.max_iter == 15
+
+    painter = SierpinskiCarpetPainter(depth=2)
+    assert mix_painters(painter, painter, 0.5) is painter
+    with pytest.raises(ValueError, match="Cannot mix painters"):
+        mix_painters(painter, SierpinskiCarpetPainter(depth=3), 0.5)
 
 
 def test_make_animation():

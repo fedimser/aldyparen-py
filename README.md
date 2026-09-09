@@ -80,7 +80,7 @@ as high-resolution images or videos.
 
 Requirements:
 * OS: Windows/Linux/MacOS.
-* Python 3.10 or higher.
+* Python 3.12, 3.13 or 3.14.
 * Git.
 
 Run from command line:
@@ -103,11 +103,17 @@ This app has all the functionality of the old Aldyparen, plus some extra feature
 
 To start development, create virtualenv and install dependencies:
 ```
-pip3 install -r requirements.txt
-pip3 install -r requirements-dev.txt
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 To run tests and validate style before commit, run:
 ```
 pycodestyle --max-line-length=120 ./aldyparen && python3 -m pytest .
+```
+
+To check test coverage:
+
+```
+python -m coverage run -m pytest . && python -m coverage report -m
 ```

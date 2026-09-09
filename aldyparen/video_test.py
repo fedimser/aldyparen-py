@@ -1,0 +1,31 @@
+import pytest
+from moviepy import VideoFileClip
+
+from aldyparen.graphics import ColorPalette, Frame, Transform
+from aldyparen.painters import SierpinskiCarpetPainter
+from aldyparen.video import VideoRenderer
+
+
+@pytest.mark.filterwarnings(
+    "ignore:Setting the shape on a NumPy array has been deprecated:DeprecationWarning:moviepy.video.io.ffmpeg_reader"
+)
+def test_render_video_with_current_moviepy(tmp_path):
+    renderer = VideoRenderer(8, 8, fps=1)
+    palette = ColorPalette.categorical(["black", "white"])
+    frames = [
+        Frame(SierpinskiCarpetPainter(depth=1), Transform.create(scale=1), palette),
+        Frame(SierpinskiCarpetPainter(depth=2), Transform.create(scale=1), palette),
+    ]
+    output_file = tmp_path / "video.mp4"
+
+    renderer.render_video(frames, str(output_file))
+
+    mp4_file = output_file
+    assert mp4_file.stat().st_size > 0
+    clip = VideoFileClip(str(mp4_file))
+    try:
+        decoded_frames = list(clip.iter_frames(fps=1))
+        assert clip.size == [8, 8]
+        assert len(decoded_frames) == 2
+    finally:
+        clip.close()
