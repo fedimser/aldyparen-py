@@ -10,7 +10,7 @@ from ..video import VideoRenderer
 
 def render_movie_preview_async(app: 'AldyparenApp', frame: Frame) -> np.ndarray | str:
     if hasattr(frame, "cached_movie_preview") and frame.cached_movie_preview is not None:
-        if frame.cached_movie_preview == "wait":
+        if isinstance(frame.cached_movie_preview, str) and frame.cached_movie_preview == "wait":
             return "Rendering..."
         else:
             return frame.cached_movie_preview
