@@ -135,3 +135,5 @@ Run the focused painter and mixing tests while developing, then run the complete
 ./lint.sh
 python3 -m pytest .
 ```
+
+Do not add painter tests to painters_test.py. Instead, add them to painters/<painter_name>_test.py, see lyapunov_test.py as example.
