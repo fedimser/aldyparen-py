@@ -2,10 +2,11 @@ import copy
 from typing import TYPE_CHECKING, List
 
 import numpy as np
-from PyQt5.QtCore import QRunnable, QThreadPool
+from PyQt5.QtCore import QRunnable
 
-from ..graphics import Frame, ChunkingRenderer
+from ..graphics import ChunkingRenderer, Frame
 from ..video import VideoRenderer
+from .gui_utils import global_thread_pool
 
 if TYPE_CHECKING:
     from .app import AldyparenApp
@@ -21,7 +22,7 @@ def render_movie_preview_async(app: "AldyparenApp", frame: Frame) -> np.ndarray 
         object.__setattr__(frame, "cached_movie_preview", "wait")
         task = MoviePreviewRenderRunnable(app, frame)
         task.setAutoDelete(True)
-        QThreadPool.globalInstance().start(task)
+        global_thread_pool().start(task)
         return "Rendering..."
 
 
@@ -61,7 +62,7 @@ def render_video_async(app: "AldyparenApp", width: int, height: int, fps: int, f
     thread.setAutoDelete(True)
     app.active_video_renderer = renderer
     app.video_rendering_tasks_count += 1
-    QThreadPool.globalInstance().start(thread)
+    global_thread_pool().start(thread)
 
 
 class VideoRenderRunnable(QRunnable):

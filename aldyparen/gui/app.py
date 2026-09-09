@@ -3,11 +3,10 @@ import os
 import sys
 from dataclasses import replace
 from datetime import datetime
-from typing import List
 
 import numpy as np
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QCoreApplication, QThreadPool, QTimer
+from PyQt5.QtCore import QCoreApplication, QTimer
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMessageBox
 
@@ -29,6 +28,7 @@ from ..painters import (
 )
 from ..video import VideoRenderer, deserialize_movie
 from .async_runners import ImageRenderRunnable, render_movie_preview_async
+from .gui_utils import global_thread_pool
 from .main import MainWindow
 from .presets import PRESET_NAMES, load_preset
 from .settings import AldyparenSettings
@@ -176,7 +176,7 @@ class AldyparenApp:
             status += f" 🎥({self.active_video_renderer.status_string})"
         else:
             self.active_video_renderer = None
-        thread_count = QThreadPool.globalInstance().activeThreadCount()
+        thread_count = global_thread_pool().activeThreadCount()
         if thread_count > 0:
             status += f"🧵({thread_count})"
         if hasattr(self.work_frame.painter, "warning") and type(self.work_frame.painter.warning) is str:
@@ -289,7 +289,7 @@ class AldyparenApp:
         renderer = ChunkingRenderer(width, height, is_aborted=lambda: self.is_exiting)
         task = ImageRenderRunnable(self, self.work_frame, renderer, file_name)
         task.setAutoDelete(True)
-        QThreadPool.globalInstance().start(task)
+        global_thread_pool().start(task)
 
     def save_project(self):
         assert self.opened_file_name is not None

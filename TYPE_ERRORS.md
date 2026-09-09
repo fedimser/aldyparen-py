@@ -1,10 +1,10 @@
-### Remaining 67 errors
+### Remaining 18 errors
 
 | Category | Count | Description |
 |---|---:|---|
-| PyQt5 typing deficiencies | **13** | PyQt stubs treat `QThreadPool.globalInstance()` and `QApplication.style()` as optional and omit enum attributes such as `ShiftModifier`, `SP_DirIcon`, and `SP_FileIcon`. |
 | Numba typing deficiencies | **6** | Pyright reports `numba.types` as private even though it is used as part of Numba runtime signatures. |
 | Renderer state narrowing | **2** | `frame_rendered` is optional because it begins as `None`; Pyright cannot derive the cross-thread state invariants before it is accessed. |
-| Isolated correctness/typing issues | **3** | Raising a string, optional test error text, and the conditional return type of `tokenize.untokenize()`. |
+| Painter type narrowing | **8** | `mix_painters` checks runtime classes, but Pyright does not narrow the two `Painter` arguments to matching concrete painter types. |
+| Isolated correctness/typing issues | **2** | Raising a string and calling `decode` on the string returned by `tokenize.untokenize()`. |
 
-The dominant remaining problem is the painter hierarchy, beginning with `__init__.py` and propagating through `mixing.py`, `graphics.py`, and their tests.
+All PyQt5 typing deficiencies have been resolved through explicit singleton narrowing and typed enum classes.

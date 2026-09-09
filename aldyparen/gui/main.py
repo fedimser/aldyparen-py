@@ -4,25 +4,28 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtCore import QCoreApplication, QPointF, QSize, QThreadPool, QUrl
+from PyQt5.QtCore import QCoreApplication, QPointF, QSize, QUrl
 from PyQt5.QtGui import QColor, QDesktopServices, QIcon
 from PyQt5.QtWidgets import (
     QApplication,
     QColorDialog,
+    QComboBox,
     QFileDialog,
     QGraphicsSceneMouseEvent,
     QGraphicsSceneWheelEvent,
+    QLabel,
     QMessageBox,
+    QPlainTextEdit,
+    QScrollBar,
+    QSpinBox,
 )
 
 from ..graphics import ColorPalette, Transform
 from ..painters import ALL_PAINTERS
 from .async_runners import render_video_async
-from .gui_utils import select_file
+from .gui_utils import global_thread_pool, select_file
 
 if TYPE_CHECKING:
-    from PyQt5.QtWidgets import QLabel, QComboBox, QPlainTextEdit, QScrollBar, QSpinBox
-
     from .app import AldyparenApp
 
 
@@ -68,13 +71,13 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
     def wheelEvent(self, event: QGraphicsSceneWheelEvent):
         modifiers = QApplication.keyboardModifiers()
         delta = -event.delta() / 120
-        if bool(modifiers & QtCore.Qt.ShiftModifier):
+        if bool(modifiers & QtCore.Qt.KeyboardModifier.ShiftModifier):
             delta *= 25
 
         self.calculate_cursor_pos(event.scenePos())
         if self.cursor_math_pos is None:
             return
-        if bool(modifiers & QtCore.Qt.ControlModifier):
+        if bool(modifiers & QtCore.Qt.KeyboardModifier.ControlModifier):
             # 2 degrees minimal increment (for standard mouse).
             angle = delta * (np.pi / 90)
             tr = self.app.work_frame.transform.rotate_and_scale_at(self.cursor_rel_screen_pos, angle=angle)
@@ -133,13 +136,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMouseTracking(True)
 
         # Initialize painter list.
-        combo = self.combo_painter_type  # type: QComboBox
+        combo: QComboBox = self.combo_painter_type
         for painter_class in ALL_PAINTERS:
             combo.addItem(painter_class.__name__)
         combo.activated.connect(lambda idx: app.select_painter_type(idx))
 
         # Initialize palette list.
-        combo = self.combo_palette_type  # type: QComboBox
+        combo: QComboBox = self.combo_palette_type
         combo.addItem("Grayscale")
         combo.addItem("Random")
         combo.addItem("Gradient")
@@ -229,19 +232,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.set_movie_frame(pic)
 
     def set_painter_config(self, text):
-        edit = self.edit_painter_config  # type: QPlainTextEdit
+        edit: QPlainTextEdit = self.edit_painter_config
         edit.setPlainText(text)
 
     def on_config_text_changed(self):
         if self.app.is_loading_project or self.ui_handlers_locked:
             return
-        edit = self.edit_painter_config  # type: QPlainTextEdit
+        edit: QPlainTextEdit = self.edit_painter_config
         self.ui_handlers_locked = True
         self.app.set_painter_config(edit.toPlainText())
         self.ui_handlers_locked = False
 
     def set_label_painter_status(self, status):
-        label = self.label_config_status  # type: QLabel
+        label: QLabel = self.label_config_status
         label.setText(status)
         if status == "OK":
             label.setStyleSheet("color: green;")
@@ -269,9 +272,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.app.update_work_frame_palette(palette)
 
     def generate_palette(self) -> ColorPalette:
-        combo = self.combo_palette_type  # type: QComboBox
+        combo: QComboBox = self.combo_palette_type
         palette_type = combo.itemText(combo.currentIndex())
-        spin_box = self.spin_box_palette_size  # type: QSpinBox
+        spin_box: QSpinBox = self.spin_box_palette_size
         size = spin_box.value()
         c1 = self.edit_color1.text()
         c2 = self.edit_color2.text()
@@ -315,7 +318,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_movie_updated(self):
         mov_len = len(self.app.frames)
         cur_idx = self.app.selected_frame_idx
-        sb = self.scroll_bar_movie  # type: QScrollBar
+        sb: QScrollBar = self.scroll_bar_movie
         if mov_len == 0:
             self.scene_movie.clear()
             self.label_frame_info.setText("Movie is empty")
@@ -343,11 +346,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.app.is_exiting = True
         self.app.work_frame_renderer.halt()
-        QThreadPool.globalInstance().clear()  # Cancels not yet started tasks.
+        thread_pool = global_thread_pool()
+        thread_pool.clear()  # Cancels not yet started tasks.
         self.app.settings.save()
-        if not QThreadPool.globalInstance().waitForDone(msecs=500):
+        if not thread_pool.waitForDone(msecs=500):
             show_alert("Please wait for active tasks to be finished or stopped.")
-        QThreadPool.globalInstance().waitForDone()
+        thread_pool.waitForDone()
 
         QCoreApplication.exit(0)
 
