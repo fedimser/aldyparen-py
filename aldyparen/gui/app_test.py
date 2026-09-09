@@ -3,7 +3,7 @@ import os
 import time
 
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QApplication, QFileDialog, QGraphicsPixmapItem
+from PyQt5.QtWidgets import QApplication, QFileDialog
 
 from aldyparen.gui.app import AldyparenApp
 
@@ -13,7 +13,6 @@ def test_app_runs_and_closes(monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     app = AldyparenApp()
-    pixmap_item_type = QGraphicsPixmapItem().type()
     project_file = os.path.abspath("examples/example_project_1.json")
     expected_config = {
         "gen_function": "1*z**4+1*z**3+1*z**2+1.0*z+1*sin(z)+c",
