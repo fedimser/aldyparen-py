@@ -29,7 +29,7 @@ def test_defaults():
 
 
 def test_mandelbroid_rejects_bad_functions():
-    error_msg = None
+    error_msg = ""
     try:
         MandelbroidPainter(gen_function="f(c,z)")
     except ValueError as err:

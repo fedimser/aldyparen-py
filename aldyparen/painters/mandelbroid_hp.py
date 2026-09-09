@@ -1,6 +1,7 @@
+from typing import Any
+
 import numba
 import numpy as np
-from typing import Any
 from numpy.typing import NDArray
 
 from aldyparen.math.complex_hpn import is_on_or_outside_circle
