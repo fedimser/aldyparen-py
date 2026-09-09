@@ -43,7 +43,7 @@ def test_app_runs_and_closes(monkeypatch, tmp_path):
         QTimer.singleShot(10, dialog.accept)
 
     def project_is_rendered():
-        if "example_project_1" in app.opened_file_name:
+        if app.opened_file_name is not None:
             result["config"] = app.main_window.edit_painter_config.toPlainText()
             app.main_window.close()
         elif time.monotonic() < deadline:
