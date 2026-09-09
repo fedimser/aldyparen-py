@@ -1,6 +1,10 @@
 import os
+from typing import TYPE_CHECKING
 
 from PyQt5.QtCore import QSettings
+
+if TYPE_CHECKING:
+    from .app import AldyparenApp
 
 
 class AldyparenSettings:

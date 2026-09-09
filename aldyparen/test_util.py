@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 GOLDEN_DIR = os.path.join(os.getcwd(), "goldens")
 
 
-def _match_pictures(x: np.ndarray, y: np.ndarray, max_mismatched_pixels: int):
+def _match_pictures(x: np.ndarray, y: np.ndarray | None, max_mismatched_pixels: int):
     if x is None or y is None or x.shape != y.shape:
         return False
     mismatch_count = np.sum(x != y)

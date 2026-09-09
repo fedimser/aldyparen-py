@@ -1,13 +1,16 @@
 import numba
 import numpy as np
+from typing import Any
 from numpy.typing import NDArray
 
 from aldyparen.math.complex_hpn import is_on_or_outside_circle
 from aldyparen.math.hpn import Hpn
 from aldyparen.math.hpn_compiler import compile_expression_hpcn
 
+from .base import HighPrecisionPainter
 
-class MandelbroidHighPrecisionPainter:
+
+class MandelbroidHighPrecisionPainter(HighPrecisionPainter):
     """Renders mandelbrot-like fractal with high precision."""
 
     def __init__(
@@ -28,7 +31,7 @@ class MandelbroidHighPrecisionPainter:
 
         # u4(i8[:],i8[:])
         @numba.njit(nogil=True, inline="always")
-        def _paint_func(c_re: NDArray[np.int64], c_im: NDArray[np.int64]) -> np.uint32:
+        def _paint_func(c_re: NDArray[np.int64], c_im: NDArray[np.int64]) -> int:
             z_re = np.zeros_like(c_re)
             z_im = np.zeros_like(c_im)
             # assert len(radius_squared) == len(z_re)
@@ -53,7 +56,7 @@ class MandelbroidHighPrecisionPainter:
 
         self.paint_func = _paint_func_2
 
-    def to_object(self):
+    def to_object(self) -> dict[str, Any]:
         return {
             "gen_function": self.gen_function,
             "radius": self.radius,
@@ -61,5 +64,10 @@ class MandelbroidHighPrecisionPainter:
             "precision": self.precision,
         }
 
-    def paint_high_precision(self, points_x: np.ndarray, points_y: np.ndarray, ans: np.ndarray):
+    def paint_high_precision(
+        self,
+        points_x: NDArray[np.int64],
+        points_y: NDArray[np.int64],
+        ans: NDArray[np.uint32],
+    ) -> None:
         self.paint_func(points_x, points_y, ans)

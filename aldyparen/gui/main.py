@@ -21,6 +21,8 @@ from .async_runners import render_video_async
 from .gui_utils import select_file
 
 if TYPE_CHECKING:
+    from PyQt5.QtWidgets import QLabel, QComboBox, QPlainTextEdit, QScrollBar, QSpinBox
+
     from .app import AldyparenApp
 
 

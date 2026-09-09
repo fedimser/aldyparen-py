@@ -37,7 +37,7 @@ HPN_MUT = numba.types.Array(numba.types.int64, 1, "A")
 
 
 class Hpn:
-    def __init__(self, digits, prec=None):
+    def __init__(self, digits, prec: int | None = None):
         if type(digits) is not np.ndarray:
             digits = _hpn_from_str(str(digits), prec=prec)
         assert digits.dtype == np.int64
@@ -92,7 +92,7 @@ class Hpn:
         return _hpn_to_str(self.digits)
 
     @staticmethod
-    def from_str(s: str, prec: int = None, extra_power_10=0) -> "Hpn":
+    def from_str(s: str, prec: int | None = None, extra_power_10=0) -> "Hpn":
         """Creates HPN from string representation with given precision.
         :param prec: Precision.
         :param extra_power_10: Multiplies result by 10^extra_power_10.
@@ -100,7 +100,7 @@ class Hpn:
         return Hpn(_hpn_from_str(s, prec=prec, extra_power_10=extra_power_10))
 
     @staticmethod
-    def from_number(value: int | float, prec: int = None) -> "Hpn":
+    def from_number(value: int | float, prec: int | None = None) -> "Hpn":
         """Creates HPN from number."""
         return Hpn.from_str(str(value), prec=prec)
 
@@ -131,7 +131,7 @@ def hpn_normalize_in_place_vec(x: NDArray[np.int64]):
         x[:, i] %= DIG_RANGE
 
 
-def _hpn_from_str(s, prec: int = None, extra_power_10=0) -> np.ndarray:
+def _hpn_from_str(s, prec: int | None = None, extra_power_10=0) -> np.ndarray:
     match = NUMBER_PATTERN.match(s)
     assert match is not None, f"Invalid syntax: {s}"
     int_part, _, frac_part, _, exp_part = match.groups()

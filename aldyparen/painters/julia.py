@@ -1,4 +1,5 @@
 import warnings
+from typing import Any, Callable
 
 import numba
 import numpy as np
@@ -6,12 +7,14 @@ from numpy.typing import NDArray
 
 from aldyparen.util import prepare_function
 
+from .base import Painter
+
 
 # i4(c16[:],c16[:],i4,f8,u4[:])
 @numba.jit(nopython=True)
 def paint_converged(
-    points_after: NDArray[np.complex64],
-    attractors: NDArray[np.complex64],
+    points_after: NDArray[np.complex128],
+    attractors: NDArray[np.complex128],
     used_colors: int,
     tolerance: float,
     ans: NDArray[np.uint32],
@@ -38,7 +41,7 @@ def paint_converged(
     return used_colors
 
 
-class JuliaPainter:
+class JuliaPainter(Painter):
     """Paints points of the complex plane based on where they get by applying `func` many times.
 
     Points z1 and z2 will be painted the same color if `abs(F(z1),F(z2))<tolerance`, where F(z)=f(f(f...(z)..))`, where
@@ -70,17 +73,21 @@ class JuliaPainter:
         self.func_prepared = prepare_function(func, variables=["z", "c"])
         assert 1 <= max_colors <= 1000000, "bad max_colors"
         self.max_colors = max_colors
-        self.iterate_func = None
+        self.iterate_func: Callable[[np.ndarray], np.ndarray] | None = None
         self.warning = None
         self.attractors = np.full((max_colors + 2,), np.inf + 0j, dtype=np.complex128)
         self.used_colors = 1
 
-    def to_object(self):
+    def to_object(self) -> dict[str, Any]:
         return {"func": self.func, "iters": self.iters, "tolerance": self.tolerance, "max_colors": self.max_colors}
 
-    def paint(self, points: np.ndarray, ans: np.ndarray):
+    def paint(
+        self,
+        points: NDArray[np.complex128],
+        ans: NDArray[np.uint32],
+    ) -> None:
         if self.iterate_func is None:
-            numba_namespace = {"numba": numba, "np": np}
+            numba_namespace: dict[str, Any] = {"numba": numba, "np": np}
             stop_tolerance = self.tolerance / 10
             source = "\n".join(
                 [
@@ -97,6 +104,7 @@ class JuliaPainter:
             exec(source, numba_namespace)
             self.iterate_func = numba_namespace["_iterate"]
 
+        assert self.iterate_func is not None
         warnings.filterwarnings("ignore", message="overflow")
         try:
             points_after = self.iterate_func(points)

@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 import numpy as np
 
@@ -41,7 +42,7 @@ def prepare_function(function, variables=[]):
             raise ValueError(f"Unexpected token: {token}")
 
     # Check that this is valid mathematical function by evaluating it.
-    env = {var: np.complex128(1) for var in variables}
+    env: dict[str, Any] = {var: np.complex128(1) for var in variables}
     env["np"] = np
     test_value = eval(result, env)
     if type(test_value) is not np.complex128:
@@ -50,5 +51,5 @@ def prepare_function(function, variables=[]):
     return result
 
 
-def prepare_eval_env():
+def prepare_eval_env() -> dict[str, Any]:
     return {"locals": None, "globals": None, "__name__": None, "__file__": None, "__builtins__": None}

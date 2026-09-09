@@ -1,26 +1,30 @@
 import warnings
+from typing import Any, Callable
 
 import numba
 import numpy as np
+from numpy.typing import NDArray
 
 from aldyparen.util import prepare_function
 
+from .base import Painter
 
-class MandelbroidPainter:
-    def __init__(self, gen_function="z*z+c", max_iter=100, radius=2):
+
+class MandelbroidPainter(Painter):
+    def __init__(self, gen_function="z*z+c", max_iter=100, radius: float = 2):
         assert 1 <= max_iter <= 1000000, "bad max_iter"
         self.gen_function = gen_function
         self.max_iter = max_iter
         self.radius = radius
         self.gen_function_prepared = prepare_function(gen_function, variables=["c", "z"])
-        self.paint_func = None
+        self.paint_func: Callable[[np.ndarray], np.ndarray] | None = None
 
-    def to_object(self):
+    def to_object(self) -> dict[str, Any]:
         return {"gen_function": self.gen_function, "radius": self.radius, "max_iter": self.max_iter}
 
-    def paint(self, points, ans):
+    def paint(self, points: NDArray[np.complex128], ans: NDArray[np.uint32]) -> None:
         if self.paint_func is None:
-            numba_namespace = {"numba": numba, "np": np}
+            numba_namespace: dict[str, Any] = {"numba": numba, "np": np}
             source = "\n".join(
                 [
                     f'@numba.vectorize("u4(c16)", target="parallel")',
@@ -35,6 +39,7 @@ class MandelbroidPainter:
             exec(source, numba_namespace)
             self.paint_func = numba_namespace["painter__"]
 
+        assert self.paint_func is not None
         warnings.filterwarnings("ignore", message="overflow")
         try:
             ans[:] = self.paint_func(points)

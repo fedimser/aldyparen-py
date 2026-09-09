@@ -33,7 +33,7 @@ class VideoRenderer:
             0, self.MAX_MEMORY_USAGE_BYTES // (self.image_renderer.width_pxl * self.image_renderer.height_pxl * 3)
         )
         parts_num = (n + frames_per_part - 1) // frames_per_part
-        parts = []  # type: List[Tuple[str, List[int]]]
+        parts: list[tuple[str, list[int]]] = []
         if frames_per_part >= n:
             parts.append((file_name, list(range(n))))
         else:

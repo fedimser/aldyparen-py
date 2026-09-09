@@ -1,15 +1,19 @@
 import time
 from dataclasses import dataclass
-from typing import Callable, Dict, List
+from typing import TYPE_CHECKING, Callable, ClassVar, Dict, List, overload
 
-import matplotlib
 import numba
 import numpy as np
+from matplotlib import colors
+from matplotlib import pyplot as plt
 from numpy.typing import NDArray
 from PyQt5.QtCore import QThread
-from matplotlib import pyplot as plt
 
 from aldyparen.math.hpn import Hpn
+from aldyparen.painters.base import HighPrecisionPainter
+
+if TYPE_CHECKING:
+    from aldyparen.painters import Painter
 
 
 # u1[:,:,:](u4[:,:],u1[:,:])
@@ -30,7 +34,7 @@ def _numba_remap(pic: NDArray[np.uint32], colors: NDArray[np.uint8]) -> NDArray[
 def _to_numpy_color(color) -> np.ndarray:
     """Converts string or RGB list to numpy uint8 array representing RGB"""
     if type(color) is str:
-        color = 255 * np.array(matplotlib.colors.to_rgb(color))
+        color = 255 * np.array(colors.to_rgb(color))
     ans = np.array(color, dtype=np.uint8)
     if not ans.shape == (3,):
         raise ValueError("Wrong shape")
@@ -119,8 +123,8 @@ class Transform:
     def create(
         *,
         center=None,
-        center_x: float | str | Hpn = None,
-        center_y: float | str | Hpn = None,
+        center_x: float | str | Hpn | None = None,
+        center_y: float | str | Hpn | None = None,
         scale_log10=None,
         scale=None,
         rotation=None,
@@ -163,7 +167,13 @@ class Transform:
     def _center(self):
         return self.center_x.to_float() + 1j * self.center_y.to_float()
 
-    def map_screen_to_math(self, screen_point: np.complex128) -> np.complex128:
+    @overload
+    def map_screen_to_math(self, screen_point: np.complex128) -> np.complex128: ...
+
+    @overload
+    def map_screen_to_math(self, screen_point: np.ndarray) -> np.ndarray: ...
+
+    def map_screen_to_math(self, screen_point: np.complex128 | np.ndarray) -> np.complex128 | np.ndarray:
         return self._center() + screen_point * self._k()
 
     def __str__(self):
@@ -173,7 +183,7 @@ class Transform:
         scale_str = "%.2fe%d" % (scale_base, scale_exp)
         return "c=(%.5e %.5e) s=%s r=%.1f°" % (self.center_x.to_float(), self.center_y.to_float(), scale_str, rot_deg)
 
-    def serialize(self) -> List[float]:
+    def serialize(self) -> list[str | float]:
         return [str(self.center_x), str(self.center_y), self.scale_log10, self.rotation]
 
     @staticmethod
@@ -199,8 +209,11 @@ class Frame:
     transform: Transform
     palette: ColorPalette
 
-    def serialize(self, prev: "Frame" = None):
-        data = {
+    if TYPE_CHECKING:
+        cached_movie_preview: ClassVar[np.ndarray | str | None]
+
+    def serialize(self, prev: "Frame | None" = None):
+        data: dict[str, object] = {
             "tr": self.transform.serialize(),
         }
         if prev is not None and prev.painter == self.painter:
@@ -215,14 +228,16 @@ class Frame:
         return data
 
     @staticmethod
-    def deserialize(data: Dict, prev: "Frame" = None) -> "Frame":
+    def deserialize(data: Dict, prev: "Frame | None" = None) -> "Frame":
         from aldyparen.painters import Painter
 
         if data["pn"] == "prev":
+            assert prev is not None
             painter = prev.painter
         else:
             painter = Painter.deserialize(data["pn"], data["pt"])
         if data["pl"] == "prev":
+            assert prev is not None
             palette = prev.palette
         else:
             palette = ColorPalette.deserialize(data["pl"])
@@ -250,7 +265,7 @@ class Renderer:
         w = self.width_pxl
         h = self.height_pxl
 
-        if hasattr(frame.painter, "paint_high_precision"):
+        if isinstance(frame.painter, HighPrecisionPainter):
             scale_exp = int(np.floor(tr.scale_log10))
             scale_base = np.power(10, tr.scale_log10 - scale_exp)
             cx = tr.center_x

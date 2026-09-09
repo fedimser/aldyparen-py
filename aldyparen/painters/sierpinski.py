@@ -1,5 +1,10 @@
+from typing import Any
+
 import numba
 import numpy as np
+from numpy.typing import NDArray
+
+from .base import Painter
 
 
 # If point is inside, returns 0.
@@ -28,12 +33,12 @@ def sierpinski_numba(p, depth):
         return 0
 
 
-class SierpinskiCarpetPainter:
+class SierpinskiCarpetPainter(Painter):
     def __init__(self, depth=3):
         self.depth = depth
 
-    def to_object(self):
+    def to_object(self) -> dict[str, Any]:
         return {"depth": self.depth}
 
-    def paint(self, points, ans):
+    def paint(self, points: NDArray[np.complex128], ans: NDArray[np.uint32]) -> None:
         ans[:] = sierpinski_numba(points, self.depth)

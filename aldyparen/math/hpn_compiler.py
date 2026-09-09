@@ -90,7 +90,7 @@ def compile_expression_hpcn(expr: str, var_names: list[str], precision=16) -> Ca
     numba_arg_types = ",".join([numba_ret_type for _ in range(len(var_names))])
     numba_signature = f"{numba_ret_type}({numba_arg_types})"
 
-    numba_env = {
+    numba_env: dict[str, Any] = {
         "numba": numba,
         "complex_hpn": complex_hpn,
     }

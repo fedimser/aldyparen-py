@@ -1,11 +1,14 @@
 import copy
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import numpy as np
 from PyQt5.QtCore import QRunnable, QThreadPool
 
 from ..graphics import Frame, ChunkingRenderer
 from ..video import VideoRenderer
+
+if TYPE_CHECKING:
+    from .app import AldyparenApp
 
 
 def render_movie_preview_async(app: "AldyparenApp", frame: Frame) -> np.ndarray | str:
