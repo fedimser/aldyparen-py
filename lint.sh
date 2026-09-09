@@ -4,12 +4,8 @@ echo "Running black..."
 black --check ./aldyparen
 result+=$?
 
-echo "Running pylint..."
-pylint ./aldyparen
-result+=$?
-
-echo "Running mypy..."
-mypy ./aldyparen
+echo "Running pyright..."
+pyright ./aldyparen
 result+=$?
 
 exit $result
