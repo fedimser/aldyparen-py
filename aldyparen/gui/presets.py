@@ -1,5 +1,3 @@
-from typing import Any
-
 from aldyparen import Transform
 from aldyparen.graphics import ColorPalette
 from aldyparen.painters import (
@@ -24,7 +22,7 @@ def load_preset(name: str) -> tuple[Painter, Transform, ColorPalette]:
             painter = MandelbrotHighPrecisionPainter(max_iter=100)
             transform = Transform.create(scale=4)
         case "burning_ship":
-            painter = (MandelbroidPainter(gen_function="(abs(real(z))+1j*abs(imag(z)))**2+c"),)
+            painter = MandelbroidPainter(gen_function="(abs(real(z))+1j*abs(imag(z)))**2+c")
             transform = Transform.create(center=-1.769 - 0.035j, scale_log10=-0.8, rotation_deg=180)
         case "burning_ship_hp":
             painter = MandelbroidHighPrecisionPainter(gen_function="abscw(z)**2+c", max_iter=100, precision=4)
