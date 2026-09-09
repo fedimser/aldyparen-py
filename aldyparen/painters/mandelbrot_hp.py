@@ -82,7 +82,7 @@ def _count_iters_vec_v2(
 class MandelbrotHighPrecisionPainter(HighPrecisionPainter):
     """Mandelbrot set with high precision."""
 
-    def __init__(self, max_iter=10):
+    def __init__(self, max_iter: int = 10):
         assert 1 <= max_iter <= 1000000000, "bad max_iter"
         self.max_iter = max_iter
 

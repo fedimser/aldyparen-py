@@ -29,25 +29,25 @@ class CompilerExpression:
         self.constant = constant
         self.function = function
 
-    def __add__(self, other):
+    def __add__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.add", [self, _ce(other)]))
 
-    def __radd__(self, other):
+    def __radd__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.add", [_ce(other), self]))
 
-    def __sub__(self, other):
+    def __sub__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.sub", [self, _ce(other)]))
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.sub", [_ce(other), self]))
 
-    def __mul__(self, other):
+    def __mul__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.mul", [self, _ce(other)]))
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.mul", [_ce(other), self]))
 
-    def __pow__(self, other):
+    def __pow__(self, other: Any):
         if type(other) is int and other == 2:
             return CompilerExpression(function=("complex_hpn.sqr", [self]))
         raise ValueError(f"Power of {other} is not supported")
@@ -67,7 +67,7 @@ class CompilerExpression:
 
 # Returns function that evaluates operates on raw HPCNs (i.e. pairs of 1D arrays).
 # Resulting function takes N values of type (i8[:],i8[:]) and returns Tuple (i8[:],i8[:]).
-def compile_expression_hpcn(expr: str, var_names: list[str], precision=16) -> Callable:
+def compile_expression_hpcn(expr: str, var_names: list[str], precision: int = 16) -> Callable:
     for char in expr:
         assert char in ALLOWED_CHARS, f"Invalid character {char}"
 

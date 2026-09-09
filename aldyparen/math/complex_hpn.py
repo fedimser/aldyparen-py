@@ -26,7 +26,7 @@ class ComplexHpn:
         self.imag = imag
 
     @staticmethod
-    def from_number(x: int | float | complex, prec=DEFAULT_PRECISION) -> "ComplexHpn":
+    def from_number(x: int | float | complex, prec: int = DEFAULT_PRECISION) -> "ComplexHpn":
         x = complex(x)
         return ComplexHpn(Hpn.from_number(x.real, prec=prec), Hpn.from_number(x.imag, prec=prec))
 

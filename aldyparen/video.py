@@ -72,14 +72,14 @@ class VideoRenderer:
 
         self.log("Done")
 
-    def render_movie_from_file(self, input_file, output_file):
+    def render_movie_from_file(self, input_file: str, output_file: str):
         with open(input_file, "r", encoding="utf-8") as f:
             data = json.load(f)
         frames = deserialize_movie(data["frames"])
         self.verbose = True
         self.render_video(frames, output_file)
 
-    def log(self, text):
+    def log(self, text: str):
         self.status_string = text
         if self.verbose:
             print(text)

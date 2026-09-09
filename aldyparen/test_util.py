@@ -17,7 +17,12 @@ def _match_pictures(x: np.ndarray, y: np.ndarray | None, max_mismatched_pixels: 
     return True
 
 
-def _assert_picture(picture, golden_name, overwrite=False, max_mismatched_pixels=0):
+def _assert_picture(
+    picture: np.ndarray,
+    golden_name: str,
+    overwrite: bool = False,
+    max_mismatched_pixels: int = 0,
+):
     golden_path = os.path.join(GOLDEN_DIR, golden_name + ".bmp")
     if overwrite:
         plt.imsave(golden_path, picture)

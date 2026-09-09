@@ -71,7 +71,7 @@ def test_renders_mandelbrot_high_precision():
 
 
 @pytest.mark.parametrize("preset_name", PRESET_NAMES)
-def test_renders_presets(preset_name):
+def test_renders_presets(preset_name: str):
     renderer = StaticRenderer(256, 256)
     painter, transform, palette = load_preset(preset_name)
     frame = Frame(painter, transform, palette)

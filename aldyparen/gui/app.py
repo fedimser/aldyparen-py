@@ -93,7 +93,7 @@ class AldyparenApp:
         """Notifies that work frame needs to be re-rendered."""
         self.work_frame_renderer.render_async(self.work_frame)
 
-    def select_painter_type(self, idx):
+    def select_painter_type(self, idx: int):
         painter_class = ALL_PAINTERS[idx]
         if self.is_loading_project:
             return
@@ -103,7 +103,7 @@ class AldyparenApp:
         self.work_frame = replace(self.work_frame, painter=painter_class(**config))
         self.on_work_frame_changed()
 
-    def set_painter_config(self, config_json):
+    def set_painter_config(self, config_json: str):
         config = {}
         try:
             config = json.loads(config_json)
@@ -228,7 +228,7 @@ class AldyparenApp:
         self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
 
-    def remove_last_frames(self, count):
+    def remove_last_frames(self, count: int):
         count = min(count, len(self.frames))
         self.frames = self.frames[:-count]
         self.selected_frame_idx = len(self.frames) - 1
@@ -273,7 +273,7 @@ class AldyparenApp:
         self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
 
-    def render_image(self, width, height, file_name=None):
+    def render_image(self, width: int, height: int, file_name: str | None = None):
         if file_name is None:
             dir = os.path.join(os.getcwd(), "images")
             if not os.path.exists(dir):
@@ -360,7 +360,7 @@ class AldyparenApp:
             ]
         )
 
-    def show_error_message_async(self, msg):
+    def show_error_message_async(self, msg: str):
         self.error_messages_to_show.append(msg)
 
     def set_palette_color(self, color_idx: int, color: QColor):

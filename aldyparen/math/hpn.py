@@ -20,6 +20,7 @@ Calculations:
 """
 
 import re
+from typing import Any
 
 import numba
 import numpy as np
@@ -37,7 +38,7 @@ DEFAULT_PRECISION = 16
 
 
 class Hpn:
-    def __init__(self, digits, prec: int | None = None):
+    def __init__(self, digits: Any, prec: int | None = None):
         if type(digits) is not np.ndarray:
             digits = _hpn_from_str(str(digits), prec=prec)
         assert digits.dtype == np.int64
@@ -51,14 +52,14 @@ class Hpn:
         return _hpn_to_float(self.digits)
 
     @staticmethod
-    def _extend_precision(digits, new_prec):
+    def _extend_precision(digits: NDArray[np.int64], new_prec: int):
         old_prec = len(digits)
         assert new_prec >= old_prec
         if new_prec > old_prec:
             return np.pad(digits, (0, new_prec - old_prec), "constant", constant_values=(0, 0))
         return digits
 
-    def _get_digits_for_op(self, other):
+    def _get_digits_for_op(self, other: Any):
         if type(other) is Hpn:
             digits = other.digits
         else:
@@ -67,21 +68,21 @@ class Hpn:
             digits = Hpn._extend_precision(other.digits, self.prec())
         return digits
 
-    def __add__(self, other):
+    def __add__(self, other: Any):
         other_digits = self._get_digits_for_op(other)
         self_digits = Hpn._extend_precision(self.digits, len(other_digits))
         ans = self_digits + other_digits
         hpn_normalize_in_place(ans)
         return Hpn(ans)
 
-    def __sub__(self, other):
+    def __sub__(self, other: Any):
         other_digits = self._get_digits_for_op(other)
         self_digits = Hpn._extend_precision(self.digits, len(other_digits))
         ans = self_digits - other_digits
         hpn_normalize_in_place(ans)
         return Hpn(ans)
 
-    def __mul__(self, other):
+    def __mul__(self, other: Any):
         other_digits = self._get_digits_for_op(other)
         self_digits = Hpn._extend_precision(self.digits, len(other_digits))
         ans = hpn_mul(self_digits, other_digits)
@@ -92,7 +93,7 @@ class Hpn:
         return _hpn_to_str(self.digits)
 
     @staticmethod
-    def from_str(s: str, prec: int | None = None, extra_power_10=0) -> "Hpn":
+    def from_str(s: str, prec: int | None = None, extra_power_10: int = 0) -> "Hpn":
         """Creates HPN from string representation with given precision.
         :param prec: Precision.
         :param extra_power_10: Multiplies result by 10^extra_power_10.
@@ -105,7 +106,7 @@ class Hpn:
         return Hpn.from_str(str(value), prec=prec)
 
     @staticmethod
-    def equalize_precisions(*args: "Hpn", min_prec=2):
+    def equalize_precisions(*args: "Hpn", min_prec: int = 2):
         prec = min_prec
         for arg in args:
             prec = max(prec, arg.prec())
@@ -131,7 +132,7 @@ def hpn_normalize_in_place_vec(x: NDArray[np.int64]):
         x[:, i] %= DIG_RANGE
 
 
-def _hpn_from_str(s, prec: int | None = None, extra_power_10=0) -> np.ndarray:
+def _hpn_from_str(s: str, prec: int | None = None, extra_power_10: int = 0) -> np.ndarray:
     match = NUMBER_PATTERN.match(s)
     assert match is not None, f"Invalid syntax: {s}"
     int_part, _, frac_part, _, exp_part = match.groups()
@@ -180,12 +181,12 @@ def _hpn_from_str(s, prec: int | None = None, extra_power_10=0) -> np.ndarray:
     return result
 
 
-def _hpn_from_number(x, prec=DEFAULT_PRECISION) -> np.ndarray:
+def _hpn_from_number(x: Any, prec: int = DEFAULT_PRECISION) -> np.ndarray:
     """Creates HPN from number (can be any numeric type)."""
     return _hpn_from_str(str(x), prec=prec)
 
 
-def hpn_from_numpy_vec(x, prec=DEFAULT_PRECISION):
+def hpn_from_numpy_vec(x: np.ndarray, prec: int = DEFAULT_PRECISION):
     """Creates vector of HPNs from vector of numbers."""
     assert len(x.shape) == 1
     return np.array([_hpn_from_str(str(num), prec=prec) for num in x], dtype=np.int64)
@@ -202,11 +203,11 @@ def hpn_to_numpy_vec(x: np.ndarray) -> np.ndarray:
     return ans
 
 
-def _frac_to_str(x):
+def _frac_to_str(x: np.ndarray):
     return "".join(str(x).zfill(DIG_GROUP_LENGTH) for x in x[1:]).rstrip("0")
 
 
-def _hpn_to_str(x) -> str:
+def _hpn_to_str(x: np.ndarray) -> str:
     """String representation of HPN, with full precision."""
     hpn_normalize_in_place(x)
     if x[0] < 0 and not np.all(x[1:] == 0):

@@ -11,7 +11,7 @@ from .base import Painter
 
 
 class MandelbroidPainter(Painter):
-    def __init__(self, gen_function="z*z+c", max_iter=100, radius: float = 2):
+    def __init__(self, gen_function: str = "z*z+c", max_iter: int = 100, radius: float = 2):
         assert 1 <= max_iter <= 1000000, "bad max_iter"
         self.gen_function = gen_function
         self.max_iter = max_iter

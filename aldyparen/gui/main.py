@@ -1,11 +1,12 @@
 import math
 import os
-from typing import TYPE_CHECKING
+from collections.abc import Callable, Sequence
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtCore import QCoreApplication, QPointF, QSize, QUrl
-from PyQt5.QtGui import QColor, QDesktopServices, QIcon
+from PyQt5.QtGui import QColor, QCloseEvent, QDesktopServices, QIcon
 from PyQt5.QtWidgets import (
     QApplication,
     QColorDialog,
@@ -13,6 +14,8 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QGraphicsSceneMouseEvent,
     QGraphicsSceneWheelEvent,
+    QGraphicsScene,
+    QGraphicsView,
     QLabel,
     QMessageBox,
     QPlainTextEdit,
@@ -29,7 +32,7 @@ if TYPE_CHECKING:
     from .app import AldyparenApp
 
 
-def show_alert(text, title=""):
+def show_alert(text: str, title: str = ""):
     alert = QMessageBox()
     alert.setWindowTitle(title)
     alert.setText(text)
@@ -37,7 +40,7 @@ def show_alert(text, title=""):
 
 
 class WorkFrameScene(QtWidgets.QGraphicsScene):
-    def __init__(self, parent, app: "AldyparenApp"):
+    def __init__(self, parent: QtCore.QObject | None, app: "AldyparenApp"):
         super().__init__(parent)
         self.app = app
         self.is_dragging = False
@@ -77,6 +80,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         self.calculate_cursor_pos(event.scenePos())
         if self.cursor_math_pos is None:
             return
+        assert self.cursor_rel_screen_pos is not None
         if bool(modifiers & QtCore.Qt.KeyboardModifier.ControlModifier):
             # 2 degrees minimal increment (for standard mouse).
             angle = delta * (np.pi / 90)
@@ -88,7 +92,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
             )
         self.app.update_work_frame_transform(tr)
 
-    def apply_drag(self, dx_pxl, dy_pxl):
+    def apply_drag(self, dx_pxl: float, dy_pxl: float):
         delta = np.complex128(dx_pxl - 1j * dy_pxl) / self.frame_width_pxl
         self.app.update_work_frame_transform(self.app.work_frame.transform.translate(delta))
 
@@ -106,7 +110,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
 
 
 class PalettePreviewScene(QtWidgets.QGraphicsScene):
-    def __init__(self, parent, app: "AldyparenApp"):
+    def __init__(self, parent: QtCore.QObject | None, app: "AldyparenApp"):
         super().__init__(parent)
         self.app = app
 
@@ -203,35 +207,47 @@ class MainWindow(QtWidgets.QMainWindow):
         self.transform_text_is_invalid = True
         self.ui_handlers_locked = False
 
-    def set_image(self, view, scene, image):
+    def set_image(
+        self,
+        view: QGraphicsView,
+        scene: QGraphicsScene,
+        image: np.ndarray | str,
+    ):
         if type(image) is str:
             scene.clear()
             scene.addText(image)
             return
-        image = QtGui.QImage(image, image.shape[1], image.shape[0], image.shape[1] * 3, QtGui.QImage.Format_RGB888)
-        pix = QtGui.QPixmap(image)
+        image_array = cast(Any, image)
+        qt_image = QtGui.QImage(
+            image_array,
+            image_array.shape[1],
+            image_array.shape[0],
+            image_array.shape[1] * 3,
+            QtGui.QImage.Format_RGB888,
+        )
+        pix = QtGui.QPixmap(qt_image)
         if not (pix.width() == view.width() and pix.height() == view.height()):
             scale = min(view.width() / pix.width(), view.height() / pix.height())
             pix = pix.scaled(int(pix.width() * scale), int(pix.height() * scale))
         scene.clear()
         scene.addPixmap(pix)
-        if hasattr(scene, "frame_width_pxl"):
+        if isinstance(scene, WorkFrameScene):
             scene.frame_width_pxl = pix.width()
 
-    def set_movie_frame(self, image):
+    def set_movie_frame(self, image: np.ndarray | str):
         self.set_image(self.view_movie, self.scene_movie, image)
 
-    def set_work_frame(self, image):
+    def set_work_frame(self, image: np.ndarray | str):
         self.set_image(self.view_work_frame, self.scene_work_frame, image)
 
-    def set_mono_color(self, color):
+    def set_mono_color(self, color: Sequence[int]):
         pic = np.zeros((100, 100, 3), dtype=np.ubyte)
         for i in range(100):
             for j in range(100):
                 pic[i, j, :] = color
         self.set_movie_frame(pic)
 
-    def set_painter_config(self, text):
+    def set_painter_config(self, text: str):
         edit: QPlainTextEdit = self.edit_painter_config
         edit.setPlainText(text)
 
@@ -243,7 +259,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.app.set_painter_config(edit.toPlainText())
         self.ui_handlers_locked = False
 
-    def set_label_painter_status(self, status):
+    def set_label_painter_status(self, status: str):
         label: QLabel = self.label_config_status
         label.setText(status)
         if status == "OK":
@@ -251,15 +267,15 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             label.setStyleSheet("color: red;")
 
-    def confirm(self, text) -> bool:
+    def confirm(self, text: str) -> bool:
         qm = QMessageBox
         return qm.question(self, "", text, qm.Yes | qm.No) == qm.Yes
 
-    def confirm_then(self, text, action):
+    def confirm_then(self, text: str, action: Callable[[], None]):
         if self.confirm(text):
             action()
 
-    def show_status(self, status):
+    def show_status(self, status: str):
         self.statusbar.showMessage(status)
 
     def on_generate_palette_click(self):
@@ -332,7 +348,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.app.shown_movie_frame_is_invalid = True
         self.update_title()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent):
         event.ignore()
         self.on_exit()
 

@@ -57,7 +57,13 @@ class JuliaPainter(Painter):
     function P, use `JuliaPainter` with `f(z)=z-P(z)/P'(z)`.
     """
 
-    def __init__(self, func="z-(z*z*z-1)/(3*z*z)", iters=100, tolerance=1e-9, max_colors=20):
+    def __init__(
+        self,
+        func: str = "z-(z*z*z-1)/(3*z*z)",
+        iters: int = 100,
+        tolerance: float = 1e-9,
+        max_colors: int = 20,
+    ):
         """
         :param func: function of variable `z`.
         :param iters: maximal number of iterations for convergence.

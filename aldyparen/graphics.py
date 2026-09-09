@@ -1,4 +1,5 @@
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Callable, ClassVar, Dict, List, overload
 
@@ -6,7 +7,7 @@ import numba
 import numpy as np
 from matplotlib import colors
 from matplotlib import pyplot as plt
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 from PyQt5.QtCore import QThread
 
 from aldyparen.math.hpn import Hpn
@@ -31,7 +32,7 @@ def _numba_remap(pic: NDArray[np.uint32], colors: NDArray[np.uint8]) -> NDArray[
     return ans
 
 
-def _to_numpy_color(color) -> np.ndarray:
+def _to_numpy_color(color: str | ArrayLike) -> np.ndarray:
     """Converts string or RGB list to numpy uint8 array representing RGB"""
     if type(color) is str:
         color = 255 * np.array(colors.to_rgb(color))
@@ -48,11 +49,11 @@ class ColorPalette:
     def __post_init__(self):
         assert self.colors.shape == (self.colors.shape[0], 3)
 
-    def remap(self, pic):
+    def remap(self, pic: NDArray[np.uint32]) -> NDArray[np.uint8]:
         return _numba_remap(pic, self.colors)
 
     @staticmethod
-    def gradient(start_color, end_color, size=256):
+    def gradient(start_color: str | ArrayLike, end_color: str | ArrayLike, size: int = 256):
         colors = np.empty((size, 3), dtype=np.uint8)
         start_color = _to_numpy_color(start_color)
         end_color = _to_numpy_color(end_color)
@@ -62,14 +63,19 @@ class ColorPalette:
         return ColorPalette(colors)
 
     @staticmethod
-    def gradient_plus_one(start_color, end_color, extra_color, size=256):
+    def gradient_plus_one(
+        start_color: str | ArrayLike,
+        end_color: str | ArrayLike,
+        extra_color: str | ArrayLike,
+        size: int = 256,
+    ):
         colors = np.empty((size, 3), dtype=np.uint8)
         colors[: size - 1, :] = ColorPalette.gradient(start_color, end_color, size=size - 1).colors
         colors[-1, :] = _to_numpy_color(extra_color)
         return ColorPalette(colors)
 
     @staticmethod
-    def categorical(colors_html):
+    def categorical(colors_html: Sequence[str | ArrayLike]):
         size = len(colors_html)
         colors = np.empty((size, 3), dtype=np.uint8)
         for i in range(size):
@@ -83,16 +89,16 @@ class ColorPalette:
         )
 
     @staticmethod
-    def random(size=256):
+    def random(size: int = 256):
         return ColorPalette(np.random.randint(0, 256, (size, 3), dtype=np.uint8))
 
     @staticmethod
-    def grayscale(size=256):
+    def grayscale(size: int = 256):
         return ColorPalette.gradient([0, 0, 0], [255, 255, 255], size=size)
 
     @staticmethod
-    def color_to_html(color):
-        return "#{:02X}{:02X}{:02X}".format(color[0], color[1], color[2])
+    def color_to_html(color: Sequence[int] | NDArray[np.uint8]):
+        return f"#{color[0]:02X}{color[1]:02X}{color[2]:02X}"
 
     def serialize(self) -> str:
         return self.colors.tobytes().hex()
@@ -122,13 +128,13 @@ class Transform:
     @staticmethod
     def create(
         *,
-        center=None,
+        center: complex | np.number | None = None,
         center_x: float | str | Hpn | None = None,
         center_y: float | str | Hpn | None = None,
-        scale_log10=None,
-        scale=None,
-        rotation=None,
-        rotation_deg=None,
+        scale_log10: float | None = None,
+        scale: float | None = None,
+        rotation: float | None = None,
+        rotation_deg: float | None = None,
     ) -> "Transform":
         if scale is not None:
             scale_log10 = np.log10(scale)
@@ -145,13 +151,18 @@ class Transform:
         transform = Transform(Hpn(center_x), Hpn(center_y), scale_log10 or 0.0, rotation or 0.0)
         return transform
 
-    def translate(self, delta) -> "Transform":
+    def translate(self, delta: complex | np.complexfloating) -> "Transform":
         center_delta = -delta * self._k()
         new_center_x = self.center_x + np.real(center_delta)
         new_center_y = self.center_y + np.imag(center_delta)
         return Transform(new_center_x, new_center_y, self.scale_log10, self.rotation)
 
-    def rotate_and_scale_at(self, rel_screen_point, scale_factor=1.0, angle=0.0) -> "Transform":
+    def rotate_and_scale_at(
+        self,
+        rel_screen_point: complex | np.complexfloating,
+        scale_factor: float = 1.0,
+        angle: float = 0.0,
+    ) -> "Transform":
         old_k = self._k()
         new_scale_log_10 = self.scale_log10 + np.log10(scale_factor)
         new_rotation = self.rotation + angle
@@ -245,7 +256,7 @@ class Frame:
 
 
 class Renderer:
-    def __init__(self, width_pxl, height_pxl):
+    def __init__(self, width_pxl: int, height_pxl: int):
         self.width_pxl = width_pxl
         self.height_pxl = height_pxl
 
@@ -287,11 +298,11 @@ class Renderer:
 
 
 class StaticRenderer(Renderer):
-    def __init__(self, width_pxl, height_pxl):
+    def __init__(self, width_pxl: int, height_pxl: int):
         super().__init__(width_pxl, height_pxl)
         self.mgrid_y, self.mgrid_x = np.mgrid[0:height_pxl, 0:width_pxl]
 
-    def render(self, frame):
+    def render(self, frame: Frame) -> NDArray[np.uint8]:
         pic = np.empty((self.height_pxl, self.width_pxl), dtype=np.uint32)
         self.render_meshgrid_mono(frame, self.mgrid_x, self.mgrid_y, pic)
         return frame.palette.remap(pic)
@@ -300,7 +311,13 @@ class StaticRenderer(Renderer):
 class ChunkingRenderer(Renderer):
     """Renders picture in chunks of `chunk_size` pixels. Can be aborted between chunks."""
 
-    def __init__(self, width_pxl, height_pxl, chunk_size=100000, is_aborted: Callable[[], bool] = lambda: False):
+    def __init__(
+        self,
+        width_pxl: int,
+        height_pxl: int,
+        chunk_size: int = 100000,
+        is_aborted: Callable[[], bool] = lambda: False,
+    ):
         super().__init__(width_pxl, height_pxl)
         self.chunk_size = chunk_size
         self.chunks_count = int(np.ceil((width_pxl * height_pxl) / self.chunk_size))
@@ -319,7 +336,7 @@ class ChunkingRenderer(Renderer):
             self.render_meshgrid_mono(frame, self.mgrid_x[st : st + cs], self.mgrid_y[st : st + cs], pic[st : st + cs])
         return frame.palette.remap(pic.reshape(self.height_pxl, self.width_pxl))
 
-    def render_picture(self, frame, file_name):
+    def render_picture(self, frame: Frame, file_name: str):
         pic = self.render(frame)
         plt.imsave(file_name, pic)
 
@@ -337,7 +354,13 @@ def _rearrange_points(
 
 
 class InteractiveRenderer(Renderer):
-    def __init__(self, width_pxl, height_pxl, ui_callback: Callable[[np.ndarray], None], downsample_factor=2):
+    def __init__(
+        self,
+        width_pxl: int,
+        height_pxl: int,
+        ui_callback: Callable[[np.ndarray], None],
+        downsample_factor: int = 2,
+    ):
         super().__init__(width_pxl, height_pxl)
         self.ui_callback = ui_callback
         self.downsample_factor = downsample_factor

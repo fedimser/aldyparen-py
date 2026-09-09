@@ -1,4 +1,5 @@
 import re
+from collections.abc import Sequence
 from typing import Any
 
 import numpy as np
@@ -24,7 +25,7 @@ SUPPORTED_FUNCTIONS = {
 OK_TOKEN_REGEX = re.compile(r"[+\-*/().0123456789]+")
 
 
-def prepare_function(function, variables=[]):
+def prepare_function(function: str, variables: Sequence[str] = ()):
     """Validates and prepares function for evaluation with numpy."""
     assert function.isascii(), "Bad character"
     tokens = re.findall("[a-zA-Z]+|[^a-zA-Z]+", function)

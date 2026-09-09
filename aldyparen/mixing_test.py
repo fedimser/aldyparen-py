@@ -39,7 +39,7 @@ def test_mix_functions_scientific_notation():
         ("z+1", "c+2"),
     ],
 )
-def test_mix_functions_rejects_incompatible_expressions(f1, f2):
+def test_mix_functions_rejects_incompatible_expressions(f1: str, f2: str):
     with pytest.raises(ValueError):
         mix_functions(f1, f2, 0.5)
 
