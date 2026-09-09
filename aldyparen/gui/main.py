@@ -202,6 +202,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.menu_mandelbrot_hp.triggered.connect(lambda: self.app.load_preset("mandelbrot_hp"))
         self.menu_burning_ship.triggered.connect(lambda: self.app.load_preset("burning_ship"))
         self.menu_burning_ship_hp.triggered.connect(lambda: self.app.load_preset("burning_ship_hp"))
+        self.menu_lyapunov.triggered.connect(lambda: self.app.load_preset("lyapunov"))
+        self.menu_magnetic_pendulum.triggered.connect(lambda: self.app.load_preset("magnetic_pendulum"))
         self.menu_docs.triggered.connect(self.open_docs)
 
         self.scroll_bar_movie.sliderMoved.connect(self.on_movie_scroll)

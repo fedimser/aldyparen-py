@@ -73,6 +73,20 @@ as high-resolution images or videos.
             * `color_scale` - controls how exponent magnitude is mapped to palette indices.
         * Stable exponent bands use odd palette indices and chaotic bands use even indices. Index 0 is reserved for
           points where the exponent cannot be computed.
+    * `MagneticPendulumPainter` - simulates the [basins of attraction](https://en.wikipedia.org/wiki/Attractor) of a
+      damped pendulum moving above three or more magnets.
+        * Each image coordinate is the pendulum's initial horizontal position. The painter numerically integrates its
+          motion under magnetic attraction, a restoring force, and damping until it settles near a magnet or reaches
+          the step limit. The interwoven boundaries between magnets' attraction basins form a fractal and can exhibit
+          the [Wada property](https://en.wikipedia.org/wiki/Wada_basin).
+        * `magnets` is a list of objects containing `x`, `y`, and positive `strength` values. `height`, `damping`, and
+          `gravity` control the physical model, while `time_step` and `max_steps` control numerical integration.
+          `settle_distance` and `settle_speed` define when the pendulum is considered captured.
+        * Palette index 0 represents trajectories that do not settle. Settled trajectories are colored primarily by
+          the magnet reached and secondarily by settling time; the Magnetic pendulum preset supplies a matching
+          structured palette.
+        * Animation can smoothly move magnets and vary their strengths and simulation parameters. Both key frames
+          must contain the same number of magnets, whose list order determines their correspondence.
 * Configurable color palette.
     * Painters are supposed to return numbers of colors (0,1,2...). Then they are mapped
       to RGB colors using palette. If palette is smaller than number of colors, it's
