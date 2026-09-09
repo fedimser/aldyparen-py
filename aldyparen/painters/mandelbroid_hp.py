@@ -23,9 +23,7 @@ class MandelbroidHighPrecisionPainter:
         self.radius = radius
         self.precision = precision
 
-        gen_func = compile_expression_hpcn(
-            gen_function, var_names=["z", "c"], precision=precision
-        )
+        gen_func = compile_expression_hpcn(gen_function, var_names=["z", "c"], precision=precision)
         radius_squared = Hpn.from_number(radius**2, prec=precision).digits
 
         # u4(i8[:],i8[:])
@@ -63,7 +61,5 @@ class MandelbroidHighPrecisionPainter:
             "precision": self.precision,
         }
 
-    def paint_high_precision(
-        self, points_x: np.ndarray, points_y: np.ndarray, ans: np.ndarray
-    ):
+    def paint_high_precision(self, points_x: np.ndarray, points_y: np.ndarray, ans: np.ndarray):
         self.paint_func(points_x, points_y, ans)

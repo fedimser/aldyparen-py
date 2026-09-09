@@ -12,12 +12,12 @@ class Painter:
     """
 
     @staticmethod
-    def deserialize(class_name: str, data: dict) -> 'Painter':
+    def deserialize(class_name: str, data: dict) -> "Painter":
         assert class_name in PAINTERS_INDEX
         painter_class = ALL_PAINTERS[PAINTERS_INDEX[class_name]]
         return painter_class(**data)
 
-    def paint(self, points: 'np.ndarray', ans: 'np.ndarray') -> 'np.ndarray':
+    def paint(self, points: "np.ndarray", ans: "np.ndarray") -> "np.ndarray":
         """Paints given points. Must be implemented (unless this is a high-precision painter).
 
         May set `self.warning` to a message string if there was some problem.
@@ -33,6 +33,11 @@ class Painter:
 
 
 # All supported painters.
-ALL_PAINTERS = [MandelbroidPainter, MandelbroidHighPrecisionPainter, MandelbrotHighPrecisionPainter,
-                JuliaPainter, SierpinskiCarpetPainter]
+ALL_PAINTERS = [
+    MandelbroidPainter,
+    MandelbroidHighPrecisionPainter,
+    MandelbrotHighPrecisionPainter,
+    JuliaPainter,
+    SierpinskiCarpetPainter,
+]
 PAINTERS_INDEX = {ALL_PAINTERS[i].__name__: i for i in range(len(ALL_PAINTERS))}

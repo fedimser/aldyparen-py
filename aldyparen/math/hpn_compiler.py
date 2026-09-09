@@ -18,12 +18,13 @@ def _ce(value: Any) -> "CompilerExpression":
 
 
 class CompilerExpression:
-    def __init__(self,
-                 variable: Optional[str] = None,
-                 constant: Optional[Any] = None,
-                 function: Optional[tuple[str, list["CompilerExpression"]]] = None):
-        assert int(variable is not None) + int(constant is not None) + int(
-            function is not None) == 1
+    def __init__(
+        self,
+        variable: Optional[str] = None,
+        constant: Optional[Any] = None,
+        function: Optional[tuple[str, list["CompilerExpression"]]] = None,
+    ):
+        assert int(variable is not None) + int(constant is not None) + int(function is not None) == 1
         self.variable = variable
         self.constant = constant
         self.function = function
@@ -60,7 +61,7 @@ class CompilerExpression:
             return const_name
         assert self.function is not None
         func_name, args = self.function
-        args = ','.join(expr.to_hpn_expression(constants, prec) for expr in args)
+        args = ",".join(expr.to_hpn_expression(constants, prec) for expr in args)
         return f"{func_name}({args})"
 
 
@@ -97,10 +98,12 @@ def compile_expression_hpcn(expr: str, var_names: list[str], precision=16) -> Ca
     for const_name, const_value in constants.items():
         numba_env[const_name] = const_value.to_raw()
         numba_source += f"{const_name}={const_name}\n"
-    numba_source += "\n".join([
-        f'@numba.jit("{numba_signature}",nopython=True)',
-        f'def __func({numba_args}):',
-        f'  return {numba_expr}',
-    ])
+    numba_source += "\n".join(
+        [
+            f'@numba.jit("{numba_signature}",nopython=True)',
+            f"def __func({numba_args}):",
+            f"  return {numba_expr}",
+        ]
+    )
     exec(numba_source, numba_env)
     return numba_env["__func"]  # type: ignore

@@ -67,7 +67,7 @@ class JuliaPainter:
         assert 0 < tolerance, "Tolerance must be positive"
         assert tolerance < 0.1, "Tolerance too high"
         self.tolerance = tolerance
-        self.func_prepared = prepare_function(func, variables=['z', 'c'])
+        self.func_prepared = prepare_function(func, variables=["z", "c"])
         assert 1 <= max_colors <= 1000000, "bad max_colors"
         self.max_colors = max_colors
         self.iterate_func = None
@@ -76,25 +76,24 @@ class JuliaPainter:
         self.used_colors = 1
 
     def to_object(self):
-        return {"func": self.func,
-                "iters": self.iters,
-                "tolerance": self.tolerance,
-                "max_colors": self.max_colors}
+        return {"func": self.func, "iters": self.iters, "tolerance": self.tolerance, "max_colors": self.max_colors}
 
     def paint(self, points: np.ndarray, ans: np.ndarray):
         if self.iterate_func is None:
             numba_namespace = {"numba": numba, "np": np}
             stop_tolerance = self.tolerance / 10
-            source = "\n".join([
-                f'@numba.vectorize("c16(c16)", target="parallel")',
-                f'def _iterate(c):',
-                f'  z = c',
-                f'  for i in range({self.iters}):',
-                f'    z2 = {self.func_prepared}',
-                f'    if np.abs(z-z2) < {stop_tolerance}: return z2',
-                f'    z = z2',
-                f'  return z',
-            ])
+            source = "\n".join(
+                [
+                    f'@numba.vectorize("c16(c16)", target="parallel")',
+                    f"def _iterate(c):",
+                    f"  z = c",
+                    f"  for i in range({self.iters}):",
+                    f"    z2 = {self.func_prepared}",
+                    f"    if np.abs(z-z2) < {stop_tolerance}: return z2",
+                    f"    z = z2",
+                    f"  return z",
+                ]
+            )
             exec(source, numba_namespace)
             self.iterate_func = numba_namespace["_iterate"]
 

@@ -4,7 +4,7 @@ from PyQt5.QtCore import QSettings
 
 
 class AldyparenSettings:
-    def __init__(self, app: 'AldyparenApp'):
+    def __init__(self, app: "AldyparenApp"):
         self.app = app
         self.qsettings = QSettings("aldyparen", "aldyparen-py")
 

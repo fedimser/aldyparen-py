@@ -32,7 +32,7 @@ def show_alert(text, title=""):
 
 
 class WorkFrameScene(QtWidgets.QGraphicsScene):
-    def __init__(self, parent, app: 'AldyparenApp'):
+    def __init__(self, parent, app: "AldyparenApp"):
         super().__init__(parent)
         self.app = app
         self.is_dragging = False
@@ -78,14 +78,14 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
             tr = self.app.work_frame.transform.rotate_and_scale_at(self.cursor_rel_screen_pos, angle=angle)
 
         else:
-            tr = self.app.work_frame.transform.rotate_and_scale_at(self.cursor_rel_screen_pos,
-                                                                   scale_factor=10 ** (0.02 * delta))
+            tr = self.app.work_frame.transform.rotate_and_scale_at(
+                self.cursor_rel_screen_pos, scale_factor=10 ** (0.02 * delta)
+            )
         self.app.update_work_frame_transform(tr)
 
     def apply_drag(self, dx_pxl, dy_pxl):
         delta = np.complex128(dx_pxl - 1j * dy_pxl) / self.frame_width_pxl
-        self.app.update_work_frame_transform(
-            self.app.work_frame.transform.translate(delta))
+        self.app.update_work_frame_transform(self.app.work_frame.transform.translate(delta))
 
     def calculate_cursor_pos(self, pos: QPointF):
         x = pos.x()
@@ -101,7 +101,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
 
 
 class PalettePreviewScene(QtWidgets.QGraphicsScene):
-    def __init__(self, parent, app: 'AldyparenApp'):
+    def __init__(self, parent, app: "AldyparenApp"):
         super().__init__(parent)
         self.app = app
 
@@ -117,15 +117,15 @@ class PalettePreviewScene(QtWidgets.QGraphicsScene):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, app: 'AldyparenApp'):
+    def __init__(self, app: "AldyparenApp"):
         super(MainWindow, self).__init__()
         self.ui_handlers_locked = True
         self.app = app
-        uic.loadUi('layout/main.xml', self)
+        uic.loadUi("layout/main.xml", self)
 
         app_icon = QIcon()
-        app_icon.addFile('layout/icon16.png', QSize(16, 16))
-        app_icon.addFile('layout/icon64.png', QSize(64, 64))
+        app_icon.addFile("layout/icon16.png", QSize(16, 16))
+        app_icon.addFile("layout/icon64.png", QSize(64, 64))
         self.setWindowIcon(app_icon)
 
         self.setMouseTracking(True)
@@ -151,10 +151,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.edit_rotation_deg.textChanged.connect(self.on_transform_text_edited)
 
         # Buttons.
-        self.button_reset_transform.clicked.connect(
-            lambda: self.app.reset_transform())
+        self.button_reset_transform.clicked.connect(lambda: self.app.reset_transform())
         self.button_reset_painter_config.clicked.connect(
-            lambda: self.confirm_then("Reset painter config?", self.app.reset_painter_config))
+            lambda: self.confirm_then("Reset painter config?", self.app.reset_painter_config)
+        )
         self.button_generate_palette.clicked.connect(self.on_generate_palette_click)
         self.button_reset_work_frame.clicked.connect(self.app.reset_work_frame)
         self.button_reset_video_preview.clicked.connect(self.app.reset_video_preview)
@@ -203,14 +203,11 @@ class MainWindow(QtWidgets.QMainWindow):
             scene.clear()
             scene.addText(image)
             return
-        image = QtGui.QImage(
-            image, image.shape[1], image.shape[0], image.shape[1] * 3, QtGui.QImage.Format_RGB888)
+        image = QtGui.QImage(image, image.shape[1], image.shape[0], image.shape[1] * 3, QtGui.QImage.Format_RGB888)
         pix = QtGui.QPixmap(image)
         if not (pix.width() == view.width() and pix.height() == view.height()):
-            scale = min(view.width() / pix.width(),
-                        view.height() / pix.height())
-            pix = pix.scaled(int(pix.width() * scale),
-                             int(pix.height() * scale))
+            scale = min(view.width() / pix.width(), view.height() / pix.height())
+            pix = pix.scaled(int(pix.width() * scale), int(pix.height() * scale))
         scene.clear()
         scene.addPixmap(pix)
         if hasattr(scene, "frame_width_pxl"):
@@ -251,7 +248,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def confirm(self, text) -> bool:
         qm = QMessageBox
-        return qm.question(self, '', text, qm.Yes | qm.No) == qm.Yes
+        return qm.question(self, "", text, qm.Yes | qm.No) == qm.Yes
 
     def confirm_then(self, text, action):
         if self.confirm(text):
@@ -276,14 +273,14 @@ class MainWindow(QtWidgets.QMainWindow):
         size = spin_box.value()
         c1 = self.edit_color1.text()
         c2 = self.edit_color2.text()
-        if palette_type == 'Grayscale':
+        if palette_type == "Grayscale":
             return ColorPalette.grayscale(size=size)
-        elif palette_type == 'Random':
+        elif palette_type == "Random":
             return ColorPalette.random(size=size)
-        if palette_type == 'Gradient':
+        if palette_type == "Gradient":
             return ColorPalette.gradient(c1, c2, size=size)
-        elif palette_type == 'Gradient+Black':
-            return ColorPalette.gradient_plus_one(c1, c2, 'black', size=size)
+        elif palette_type == "Gradient+Black":
+            return ColorPalette.gradient_plus_one(c1, c2, "black", size=size)
         else:
             raise ValueError(f"Unrecognized palette type: {palette_type}")
 
@@ -369,18 +366,26 @@ class MainWindow(QtWidgets.QMainWindow):
         height = self.spin_box_video_resolution_2.value()
         fps = self.app.settings.get_video_fps()
         filters = "MP4 video files (*.mp4);;All files (*.*)"
-        file_name = select_file(self, 'Choose video location', self.app.settings.work_dir,
-                                filters, QFileDialog.AcceptSave, default_suffix="mp4")
+        file_name = select_file(
+            self,
+            "Choose video location",
+            self.app.settings.work_dir,
+            filters,
+            QFileDialog.AcceptSave,
+            default_suffix="mp4",
+        )
         if len(file_name) == 0:
             return
         dur_sec = math.ceil(len(self.app.frames) / fps)
-        prompt = "\n".join([
-            "Confirm video render.",
-            f"Resolution: {width}x{height}",
-            f"Frame rate: {fps} FPS",
-            f"Location: {file_name}",
-            f"Duration: {len(self.app.frames)} frames, {dur_sec} seconds."
-        ])
+        prompt = "\n".join(
+            [
+                "Confirm video render.",
+                f"Resolution: {width}x{height}",
+                f"Frame rate: {fps} FPS",
+                f"Location: {file_name}",
+                f"Duration: {len(self.app.frames)} frames, {dur_sec} seconds.",
+            ]
+        )
         if not self.confirm(prompt):
             return
         render_video_async(self.app, width, height, fps, file_name)
@@ -398,8 +403,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_project(self):
         filters = "JSON files (*.json);;All files (*.*)"
-        file_name = select_file(self, 'Open Aldyparen project', self.app.settings.work_dir,
-                                filters, QFileDialog.AcceptOpen)
+        file_name = select_file(
+            self, "Open Aldyparen project", self.app.settings.work_dir, filters, QFileDialog.AcceptOpen
+        )
         if len(file_name) == 0:
             return
         self.app.load_project(file_name)
@@ -415,8 +421,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def save_project_as(self):
         filters = "JSON files (*.json);;All files (*.*)"
-        file_name = select_file(self, 'Save Aldyparen project', self.app.settings.work_dir,
-                                filters, QFileDialog.AcceptSave)
+        file_name = select_file(
+            self, "Save Aldyparen project", self.app.settings.work_dir, filters, QFileDialog.AcceptSave
+        )
         if len(file_name) == 0:
             show_alert("File not selected - nothing was saved.")
             return
@@ -448,7 +455,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tr = self.app.work_frame.transform
         self.edit_center_x.setText(str(tr.center_x))
         self.edit_center_y.setText(str(tr.center_y))
-        self.edit_scale_log10.setText(f'{tr.scale_log10:.5f}')
+        self.edit_scale_log10.setText(f"{tr.scale_log10:.5f}")
         self.edit_rotation_deg.setText(str(tr.rotation_deg()))
         self.transform_text_is_invalid = False
         self.ui_handlers_locked = False
@@ -460,9 +467,12 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             scale_log10 = float(self.edit_scale_log10.text())
             rotation_deg = float(self.edit_rotation_deg.text())
-            new_transform = Transform.create(center_x=self.edit_center_x.text(),
-                                             center_y=self.edit_center_y.text(),
-                                             scale_log10=scale_log10, rotation_deg=rotation_deg)
+            new_transform = Transform.create(
+                center_x=self.edit_center_x.text(),
+                center_y=self.edit_center_y.text(),
+                scale_log10=scale_log10,
+                rotation_deg=rotation_deg,
+            )
         except Exception as e:
             self.transform_text_is_invalid = True
             return

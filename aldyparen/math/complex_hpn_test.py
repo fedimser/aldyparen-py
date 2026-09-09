@@ -29,5 +29,5 @@ def test_is_on_or_outside_circle():
         z = random.uniform(-100, 100) + 1j * random.uniform(-100, 100)
         z_raw = ComplexHpn.from_number(z).to_raw()
         r = np.abs(z)
-        assert is_on_or_outside_circle(z_raw, Hpn.from_number(r ** 2 - 1e-5).digits) is True
-        assert is_on_or_outside_circle(z_raw, Hpn.from_number(r ** 2 + 1e-5).digits) is False
+        assert is_on_or_outside_circle(z_raw, Hpn.from_number(r**2 - 1e-5).digits) is True
+        assert is_on_or_outside_circle(z_raw, Hpn.from_number(r**2 + 1e-5).digits) is False

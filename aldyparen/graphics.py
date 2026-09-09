@@ -60,7 +60,7 @@ class ColorPalette:
     @staticmethod
     def gradient_plus_one(start_color, end_color, extra_color, size=256):
         colors = np.empty((size, 3), dtype=np.uint8)
-        colors[:size - 1, :] = ColorPalette.gradient(start_color, end_color, size=size - 1).colors
+        colors[: size - 1, :] = ColorPalette.gradient(start_color, end_color, size=size - 1).colors
         colors[-1, :] = _to_numpy_color(extra_color)
         return ColorPalette(colors)
 
@@ -75,7 +75,8 @@ class ColorPalette:
     @staticmethod
     def default():
         return ColorPalette.categorical(
-            ['white', 'yellow', 'purple', 'orange', 'lightblue', 'red', 'gray', 'green', 'black'])
+            ["white", "yellow", "purple", "orange", "lightblue", "red", "gray", "green", "black"]
+        )
 
     @staticmethod
     def random(size=256):
@@ -87,20 +88,20 @@ class ColorPalette:
 
     @staticmethod
     def color_to_html(color):
-        return '#{:02X}{:02X}{:02X}'.format(color[0], color[1], color[2])
+        return "#{:02X}{:02X}{:02X}".format(color[0], color[1], color[2])
 
     def serialize(self) -> str:
         return self.colors.tobytes().hex()
 
     @staticmethod
-    def deserialize(data: str) -> 'ColorPalette':
+    def deserialize(data: str) -> "ColorPalette":
         colors = np.frombuffer(bytes.fromhex(data), dtype=np.uint8).reshape((-1, 3))
         return ColorPalette(np.array(colors))
 
-    def __eq__(self, other: 'ColorPalette'):
+    def __eq__(self, other: "ColorPalette"):
         return np.array_equal(self.colors, other.colors)
 
-    def __add__(self, other: 'ColorPalette'):
+    def __add__(self, other: "ColorPalette"):
         return ColorPalette(np.concatenate([self.colors, other.colors]))
 
 
@@ -115,9 +116,16 @@ class Transform:
     rotation: float  # Radians, about frame center, counterclockwise.
 
     @staticmethod
-    def create(*, center=None, center_x: float | str | Hpn = None, center_y: float | str | Hpn = None,
-               scale_log10=None, scale=None,
-               rotation=None, rotation_deg=None) -> 'Transform':
+    def create(
+        *,
+        center=None,
+        center_x: float | str | Hpn = None,
+        center_y: float | str | Hpn = None,
+        scale_log10=None,
+        scale=None,
+        rotation=None,
+        rotation_deg=None,
+    ) -> "Transform":
         if scale is not None:
             scale_log10 = np.log10(scale)
         if rotation_deg is not None:
@@ -133,13 +141,13 @@ class Transform:
         transform = Transform(Hpn(center_x), Hpn(center_y), scale_log10 or 0.0, rotation or 0.0)
         return transform
 
-    def translate(self, delta) -> 'Transform':
-        center_delta = - delta * self._k()
+    def translate(self, delta) -> "Transform":
+        center_delta = -delta * self._k()
         new_center_x = self.center_x + np.real(center_delta)
         new_center_y = self.center_y + np.imag(center_delta)
         return Transform(new_center_x, new_center_y, self.scale_log10, self.rotation)
 
-    def rotate_and_scale_at(self, rel_screen_point, scale_factor=1.0, angle=0.0) -> 'Transform':
+    def rotate_and_scale_at(self, rel_screen_point, scale_factor=1.0, angle=0.0) -> "Transform":
         old_k = self._k()
         new_scale_log_10 = self.scale_log10 + np.log10(scale_factor)
         new_rotation = self.rotation + angle
@@ -163,22 +171,23 @@ class Transform:
         scale_exp = int(np.floor(self.scale_log10))
         scale_base = np.power(10, self.scale_log10 - scale_exp)
         scale_str = "%.2fe%d" % (scale_base, scale_exp)
-        return "c=(%.5e %.5e) s=%s r=%.1f°" % (
-            self.center_x.to_float(), self.center_y.to_float(), scale_str, rot_deg)
+        return "c=(%.5e %.5e) s=%s r=%.1f°" % (self.center_x.to_float(), self.center_y.to_float(), scale_str, rot_deg)
 
     def serialize(self) -> List[float]:
         return [str(self.center_x), str(self.center_y), self.scale_log10, self.rotation]
 
     @staticmethod
-    def deserialize(data: List) -> 'Transform':
+    def deserialize(data: List) -> "Transform":
         assert len(data) == 4
         return Transform.create(center_x=data[0], center_y=data[1], scale_log10=data[2], rotation=data[3])
 
-    def __eq__(self, other: 'Transform'):
-        return (np.isclose(self.center_x.to_float(), other.center_x.to_float())) and (
-            np.isclose(self.center_y.to_float(), other.center_y.to_float())) and (
-            np.isclose(self.scale_log10, other.scale_log10)) and (
-            np.isclose(self.rotation, other.rotation))
+    def __eq__(self, other: "Transform"):
+        return (
+            (np.isclose(self.center_x.to_float(), other.center_x.to_float()))
+            and (np.isclose(self.center_y.to_float(), other.center_y.to_float()))
+            and (np.isclose(self.scale_log10, other.scale_log10))
+            and (np.isclose(self.rotation, other.rotation))
+        )
 
     def rotation_deg(self):
         return 180 * self.rotation / np.pi
@@ -186,11 +195,11 @@ class Transform:
 
 @dataclass(frozen=True)
 class Frame:
-    painter: 'Painter'
+    painter: "Painter"
     transform: Transform
     palette: ColorPalette
 
-    def serialize(self, prev: 'Frame' = None):
+    def serialize(self, prev: "Frame" = None):
         data = {
             "tr": self.transform.serialize(),
         }
@@ -206,8 +215,9 @@ class Frame:
         return data
 
     @staticmethod
-    def deserialize(data: Dict, prev: 'Frame' = None) -> 'Frame':
+    def deserialize(data: Dict, prev: "Frame" = None) -> "Frame":
         from aldyparen.painters import Painter
+
         if data["pn"] == "prev":
             painter = prev.painter
         else:
@@ -216,11 +226,7 @@ class Frame:
             palette = prev.palette
         else:
             palette = ColorPalette.deserialize(data["pl"])
-        return Frame(
-            painter=painter,
-            transform=Transform.deserialize(data["tr"]),
-            palette=palette
-        )
+        return Frame(painter=painter, transform=Transform.deserialize(data["tr"]), palette=palette)
 
 
 class Renderer:
@@ -295,7 +301,7 @@ class ChunkingRenderer(Renderer):
             if self.is_aborted():
                 break
             st = i * cs
-            self.render_meshgrid_mono(frame, self.mgrid_x[st: st + cs], self.mgrid_y[st:st + cs], pic[st: st + cs])
+            self.render_meshgrid_mono(frame, self.mgrid_x[st : st + cs], self.mgrid_y[st : st + cs], pic[st : st + cs])
         return frame.palette.remap(pic.reshape(self.height_pxl, self.width_pxl))
 
     def render_picture(self, frame, file_name):
@@ -366,12 +372,12 @@ class InteractiveRenderer(Renderer):
             pic = np.empty((self.height_pxl, self.width_pxl), dtype=np.uint32)
             _rearrange_points(self.mono_pic, self.mgrid_x, self.mgrid_y, pic)
         else:
-            small_pic = self.mono_pic[0:self.chunk_size].reshape((self.height_mini, self.width_mini))
+            small_pic = self.mono_pic[0 : self.chunk_size].reshape((self.height_mini, self.width_mini))
             if self.chunks_rendered == 1:
                 pic = small_pic
             else:
                 pic = small_pic.repeat(self.downsample_factor, axis=0).repeat(self.downsample_factor, axis=1)
-                pic = pic[:self.height_pxl, :self.width_pxl]
+                pic = pic[: self.height_pxl, : self.width_pxl]
                 assert pic.shape == (self.height_pxl, self.width_pxl)
                 length = self.chunks_rendered * self.chunk_size
                 _rearrange_points(self.mono_pic[:length], self.mgrid_x[:length], self.mgrid_y[:length], pic)
@@ -414,10 +420,12 @@ class RenderLoop(QThread):
                 continue
             if not (self.renderer.frame_to_display is self.renderer.frame_rendered):
                 self.is_idle = False
-                self.renderer.render_meshgrid_mono(self.renderer.frame_to_display,
-                                                   self.renderer.mgrid_x[:cs],
-                                                   self.renderer.mgrid_y[:cs],
-                                                   self.renderer.mono_pic[:cs])
+                self.renderer.render_meshgrid_mono(
+                    self.renderer.frame_to_display,
+                    self.renderer.mgrid_x[:cs],
+                    self.renderer.mgrid_y[:cs],
+                    self.renderer.mono_pic[:cs],
+                )
                 self.renderer.frame_rendered = self.renderer.frame_to_display
                 self.renderer.chunks_rendered = 1
                 self.renderer.need_immediate_update = True
@@ -429,10 +437,12 @@ class RenderLoop(QThread):
                 continue
 
             cr = self.renderer.chunks_rendered * self.renderer.chunk_size
-            self.renderer.render_meshgrid_mono(self.renderer.frame_rendered,
-                                               self.renderer.mgrid_x[cr:cr + cs],
-                                               self.renderer.mgrid_y[cr:cr + cs],
-                                               self.renderer.mono_pic[cr: cr + cs])
+            self.renderer.render_meshgrid_mono(
+                self.renderer.frame_rendered,
+                self.renderer.mgrid_x[cr : cr + cs],
+                self.renderer.mgrid_y[cr : cr + cs],
+                self.renderer.mono_pic[cr : cr + cs],
+            )
             self.renderer.chunks_rendered += 1
         assert self.renderer.chunks_rendered == self.renderer.chunks_count
         self.renderer.need_immediate_update = True

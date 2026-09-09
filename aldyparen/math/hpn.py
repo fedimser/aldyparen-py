@@ -26,14 +26,14 @@ import numpy as np
 from numpy.typing import NDArray
 
 DIG_GROUP_LENGTH = 8
-DIG_RANGE = 10 ** DIG_GROUP_LENGTH
+DIG_RANGE = 10**DIG_GROUP_LENGTH
 MAX_PRECISION = 900
 NUMBER_PATTERN = re.compile(r"^([-]?\d+)([.](\d*))?(e([-+]?\d+))?$")
 DEFAULT_PRECISION = 16
 
 # Numba types
-HPN_TYPE = numba.types.Array(numba.types.int64, 1, 'A', readonly=True)
-HPN_MUT = numba.types.Array(numba.types.int64, 1, 'A')
+HPN_TYPE = numba.types.Array(numba.types.int64, 1, "A", readonly=True)
+HPN_MUT = numba.types.Array(numba.types.int64, 1, "A")
 
 
 class Hpn:
@@ -55,7 +55,7 @@ class Hpn:
         old_prec = len(digits)
         assert new_prec >= old_prec
         if new_prec > old_prec:
-            return np.pad(digits, (0, new_prec - old_prec), 'constant', constant_values=(0, 0))
+            return np.pad(digits, (0, new_prec - old_prec), "constant", constant_values=(0, 0))
         return digits
 
     def _get_digits_for_op(self, other):
@@ -92,7 +92,7 @@ class Hpn:
         return _hpn_to_str(self.digits)
 
     @staticmethod
-    def from_str(s: str, prec: int = None, extra_power_10=0) -> 'Hpn':
+    def from_str(s: str, prec: int = None, extra_power_10=0) -> "Hpn":
         """Creates HPN from string representation with given precision.
         :param prec: Precision.
         :param extra_power_10: Multiplies result by 10^extra_power_10.
@@ -100,12 +100,12 @@ class Hpn:
         return Hpn(_hpn_from_str(s, prec=prec, extra_power_10=extra_power_10))
 
     @staticmethod
-    def from_number(value: int | float, prec: int = None) -> 'Hpn':
+    def from_number(value: int | float, prec: int = None) -> "Hpn":
         """Creates HPN from number."""
         return Hpn.from_str(str(value), prec=prec)
 
     @staticmethod
-    def equalize_precisions(*args: 'Hpn', min_prec=2):
+    def equalize_precisions(*args: "Hpn", min_prec=2):
         prec = min_prec
         for arg in args:
             prec = max(prec, arg.prec())
@@ -153,8 +153,8 @@ def _hpn_from_str(s, prec: int = None, extra_power_10=0) -> np.ndarray:
     result = np.zeros(prec, dtype=np.int64)
     result[0] = np.int64(int_part)
     for i in range(frac_digits):
-        result[i + 1] = int(frac_part[i * DIG_GROUP_LENGTH: (i + 1) * DIG_GROUP_LENGTH])
-    if int_part[0] == '-':
+        result[i + 1] = int(frac_part[i * DIG_GROUP_LENGTH : (i + 1) * DIG_GROUP_LENGTH])
+    if int_part[0] == "-":
         result[1:] *= -1
 
     if exp_val < 0:
@@ -171,8 +171,8 @@ def _hpn_from_str(s, prec: int = None, extra_power_10=0) -> np.ndarray:
             result = np.roll(result, -1)
         if exp_val > 20:
             raise ValueError("Exponent too large")
-        mul_factor = 10 ** exp_val
-        if abs(int(result[0]) * mul_factor) >= (2 ** 63):
+        mul_factor = 10**exp_val
+        if abs(int(result[0]) * mul_factor) >= (2**63):
             raise ValueError("Integer part outside of int64 range")
         result *= mul_factor
 
@@ -229,7 +229,7 @@ def hpn_mul(x: NDArray[np.int64], y: NDArray[np.int64]) -> NDArray[np.int64]:
     prec = x.shape[0]
     ans = np.zeros_like(x)
     for i in range(prec):
-        ans[i:] += x[i] * y[:prec - i]
+        ans[i:] += x[i] * y[: prec - i]
     return ans
 
 
@@ -242,7 +242,7 @@ def hpn_mul_inplace_noclear(
 ) -> None:
     prec = x.shape[0]
     for i in range(prec):
-        ans[i:] += x[i] * y[:prec - i]
+        ans[i:] += x[i] * y[: prec - i]
 
 
 # void(i8[:,:],i8[:,:],i8[:,:])
@@ -256,7 +256,7 @@ def hpn_mul_vec_inplace(
     ans[:] = 0
     for j in numba.prange(n):
         for i in range(prec):
-            ans[j, i:] += x[j, i] * y[j, :prec - i]
+            ans[j, i:] += x[j, i] * y[j, : prec - i]
 
 
 # i8[:](i8[:])

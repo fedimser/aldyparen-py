@@ -12,26 +12,26 @@ class MandelbroidPainter:
         self.gen_function = gen_function
         self.max_iter = max_iter
         self.radius = radius
-        self.gen_function_prepared = prepare_function(gen_function, variables=['c', 'z'])
+        self.gen_function_prepared = prepare_function(gen_function, variables=["c", "z"])
         self.paint_func = None
 
     def to_object(self):
-        return {"gen_function": self.gen_function,
-                "radius": self.radius,
-                "max_iter": self.max_iter}
+        return {"gen_function": self.gen_function, "radius": self.radius, "max_iter": self.max_iter}
 
     def paint(self, points, ans):
         if self.paint_func is None:
             numba_namespace = {"numba": numba, "np": np}
-            source = "\n".join([
-                f'@numba.vectorize("u4(c16)", target="parallel")',
-                f'def painter__(c):',
-                f'  z = 0',
-                f'  for i in range({self.max_iter}):',
-                f'    z = {self.gen_function_prepared}',
-                f'    if np.abs(z) > {self.radius}: return i',
-                f'  return {self.max_iter}',
-            ])
+            source = "\n".join(
+                [
+                    f'@numba.vectorize("u4(c16)", target="parallel")',
+                    f"def painter__(c):",
+                    f"  z = 0",
+                    f"  for i in range({self.max_iter}):",
+                    f"    z = {self.gen_function_prepared}",
+                    f"    if np.abs(z) > {self.radius}: return i",
+                    f"  return {self.max_iter}",
+                ]
+            )
             exec(source, numba_namespace)
             self.paint_func = numba_namespace["painter__"]
 

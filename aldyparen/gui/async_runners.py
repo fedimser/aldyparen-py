@@ -8,7 +8,7 @@ from ..graphics import Frame, ChunkingRenderer
 from ..video import VideoRenderer
 
 
-def render_movie_preview_async(app: 'AldyparenApp', frame: Frame) -> np.ndarray | str:
+def render_movie_preview_async(app: "AldyparenApp", frame: Frame) -> np.ndarray | str:
     if hasattr(frame, "cached_movie_preview") and frame.cached_movie_preview is not None:
         if isinstance(frame.cached_movie_preview, str) and frame.cached_movie_preview == "wait":
             return "Rendering..."
@@ -25,7 +25,7 @@ def render_movie_preview_async(app: 'AldyparenApp', frame: Frame) -> np.ndarray 
 class MoviePreviewRenderRunnable(QRunnable):
     """Renders frame preview in a separate thread, caches it in Frame object and displays."""
 
-    def __init__(self, app: 'AldyparenApp', frame: Frame):
+    def __init__(self, app: "AldyparenApp", frame: Frame):
         super().__init__()
         self.app = app
         self.frame = frame
@@ -39,7 +39,7 @@ class MoviePreviewRenderRunnable(QRunnable):
 
 class ImageRenderRunnable(QRunnable):
 
-    def __init__(self, app: 'AldyparenApp', frame: Frame, renderer: ChunkingRenderer, file_name: str):
+    def __init__(self, app: "AldyparenApp", frame: Frame, renderer: ChunkingRenderer, file_name: str):
         super().__init__()
         self.app = app
         self.frame = frame
@@ -52,7 +52,7 @@ class ImageRenderRunnable(QRunnable):
         self.app.photo_rendering_tasks_count -= 1
 
 
-def render_video_async(app: 'AldyparenApp', width: int, height: int, fps: int, file_name: str):
+def render_video_async(app: "AldyparenApp", width: int, height: int, fps: int, file_name: str):
     renderer = VideoRenderer(width, height, fps, is_aborted=lambda: app.is_exiting)
     thread = VideoRenderRunnable(app, app.frames, renderer, file_name)
     thread.setAutoDelete(True)
@@ -63,7 +63,7 @@ def render_video_async(app: 'AldyparenApp', width: int, height: int, fps: int, f
 
 class VideoRenderRunnable(QRunnable):
 
-    def __init__(self, app: 'AldyparenApp', frames: List[Frame], renderer: VideoRenderer, file_name: str):
+    def __init__(self, app: "AldyparenApp", frames: List[Frame], renderer: VideoRenderer, file_name: str):
         super().__init__()
         self.app = app
         self.frames = copy.copy(frames)

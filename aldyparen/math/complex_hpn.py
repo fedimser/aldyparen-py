@@ -2,6 +2,7 @@
 
 HPCNs are represented as Numba tuples of 2 HPNs.
 """
+
 import numba
 import numpy as np
 from numpy.typing import NDArray
