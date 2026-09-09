@@ -16,11 +16,11 @@ def test_render_video_with_current_moviepy(tmp_path):
         Frame(SierpinskiCarpetPainter(depth=1), Transform.create(scale=1), palette),
         Frame(SierpinskiCarpetPainter(depth=2), Transform.create(scale=1), palette),
     ]
-    output_file = tmp_path / "video"
+    output_file = tmp_path / "video.mp4"
 
     renderer.render_video(frames, str(output_file))
 
-    mp4_file = output_file.with_suffix(".mp4")
+    mp4_file = output_file
     assert mp4_file.stat().st_size > 0
     clip = VideoFileClip(str(mp4_file))
     try:

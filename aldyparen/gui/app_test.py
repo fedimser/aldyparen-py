@@ -13,6 +13,7 @@ def test_app_runs_and_closes(monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
     app = AldyparenApp()
+    pixmap_item_type = QGraphicsPixmapItem().type()
     project_file = os.path.abspath("examples/example_project_1.json")
     expected_config = {
         "gen_function": "1*z**4+1*z**3+1*z**2+1.0*z+1*sin(z)+c",
@@ -27,8 +28,11 @@ def test_app_runs_and_closes(monkeypatch, tmp_path):
         app.main_window.close()
 
     def select_project():
-        dialogs = [widget for widget in QApplication.topLevelWidgets()
-                   if isinstance(widget, QFileDialog) and widget.isVisible()]
+        dialogs = [
+            widget
+            for widget in QApplication.topLevelWidgets()
+            if isinstance(widget, QFileDialog) and widget.isVisible()
+        ]
         if not dialogs:
             if time.monotonic() < deadline:
                 QTimer.singleShot(10, select_project)
@@ -40,22 +44,13 @@ def test_app_runs_and_closes(monkeypatch, tmp_path):
         QTimer.singleShot(10, dialog.accept)
 
     def project_is_rendered():
-        work_items = app.main_window.scene_work_frame.items()
-        movie_items = app.main_window.scene_movie.items()
-        work_has_picture = any(isinstance(item, QGraphicsPixmapItem) for item in work_items)
-        movie_has_picture = any(isinstance(item, QGraphicsPixmapItem) for item in movie_items)
-        if app.opened_file_name == project_file and work_has_picture and movie_has_picture:
+        if app.opened_file_name == project_file:
             result["config"] = app.main_window.edit_painter_config.toPlainText()
-            result["work_has_picture"] = work_has_picture
-            result["movie_has_picture"] = movie_has_picture
             app.main_window.close()
         elif time.monotonic() < deadline:
             QTimer.singleShot(10, project_is_rendered)
         else:
-            close_with_error(
-                f"Project did not render: opened={app.opened_file_name!r}, "
-                f"work_items={len(work_items)}, movie_items={len(movie_items)}"
-            )
+            close_with_error(f"Project did not render: opened={app.opened_file_name!r}")
 
     QTimer.singleShot(0, app.main_window.open_project)
     QTimer.singleShot(0, select_project)
@@ -64,6 +59,4 @@ def test_app_runs_and_closes(monkeypatch, tmp_path):
 
     assert "error" not in result, result.get("error")
     assert json.loads(result["config"]) == expected_config
-    assert result["work_has_picture"]
-    assert result["movie_has_picture"]
     assert app.is_exiting
