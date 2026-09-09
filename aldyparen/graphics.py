@@ -108,7 +108,9 @@ class ColorPalette:
         colors = np.frombuffer(bytes.fromhex(data), dtype=np.uint8).reshape((-1, 3))
         return ColorPalette(np.array(colors))
 
-    def __eq__(self, other: "ColorPalette"):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ColorPalette):
+            return False
         return np.array_equal(self.colors, other.colors)
 
     def __add__(self, other: "ColorPalette"):
@@ -198,12 +200,14 @@ class Transform:
         return [str(self.center_x), str(self.center_y), self.scale_log10, self.rotation]
 
     @staticmethod
-    def deserialize(data: List) -> "Transform":
+    def deserialize(data: list) -> "Transform":
         assert len(data) == 4
         return Transform.create(center_x=data[0], center_y=data[1], scale_log10=data[2], rotation=data[3])
 
-    def __eq__(self, other: "Transform"):
-        return (
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Transform):
+            return False
+        return bool(
             (np.isclose(self.center_x.to_float(), other.center_x.to_float()))
             and (np.isclose(self.center_y.to_float(), other.center_y.to_float()))
             and (np.isclose(self.scale_log10, other.scale_log10))

@@ -24,7 +24,7 @@ class SafeFileIconProvider(QtWidgets.QFileIconProvider):
         self.directory_icon = style.standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DirIcon)
         self.file_icon = style.standardIcon(QtWidgets.QStyle.StandardPixmap.SP_FileIcon)
 
-    def icon(self, file_info: object):
+    def icon(self, file_info: object):  # pyright: ignore[reportIncompatibleMethodOverride]
         if isinstance(file_info, QtCore.QFileInfo) and file_info.isDir():
             return self.directory_icon
         if file_info == self.Folder:

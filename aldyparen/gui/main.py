@@ -50,7 +50,9 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         self.cursor_math_pos: np.complex128 | None = None
         self.cursor_rel_screen_pos = None
 
-    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent):
+    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent | None):
+        if event is None:
+            return
         self.calculate_cursor_pos(event.scenePos())
         if self.is_dragging:
             if self.cursor_math_pos is None:
@@ -63,15 +65,21 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
                 self.drag_start_x = x
                 self.drag_start_y = y
 
-    def mousePressEvent(self, event: QGraphicsSceneMouseEvent):
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent | None):
+        if event is None:
+            return
         self.is_dragging = True
         self.drag_start_x = event.scenePos().x()
         self.drag_start_y = event.scenePos().y()
 
-    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent):
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent | None):
+        if event is None:
+            return
         self.is_dragging = False
 
-    def wheelEvent(self, event: QGraphicsSceneWheelEvent):
+    def wheelEvent(self, event: QGraphicsSceneWheelEvent | None):
+        if event is None:
+            return
         modifiers = QApplication.keyboardModifiers()
         delta = -event.delta() / 120
         if bool(modifiers & QtCore.Qt.KeyboardModifier.ShiftModifier):
@@ -114,7 +122,9 @@ class PalettePreviewScene(QtWidgets.QGraphicsScene):
         super().__init__(parent)
         self.app = app
 
-    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent):
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent | None):
+        if event is None:
+            return
         num_colors = self.app.work_frame.palette.colors.shape[0]
         color_idx = int(np.floor((event.scenePos().x() / self.width()) * num_colors))
         cur_clr = self.app.work_frame.palette.colors[color_idx]
@@ -348,8 +358,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.app.shown_movie_frame_is_invalid = True
         self.update_title()
 
-    def closeEvent(self, event: QCloseEvent):
-        event.ignore()
+    def closeEvent(self, a0: QCloseEvent | None):
+        if a0 is not None:
+            a0.ignore()
         self.on_exit()
 
     def on_exit(self):

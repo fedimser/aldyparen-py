@@ -1,6 +1,6 @@
 {
   "pythonVersion": "3.14",
   "include": ["aldyparen"],
-  "typeCheckingMode": "basic",
+  "typeCheckingMode": "standard",
   "reportMissingParameterType": "error"
 }
