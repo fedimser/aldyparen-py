@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 from moviepy import VideoFileClip
 
 from aldyparen.graphics import ColorPalette, Frame, Transform
@@ -9,7 +10,7 @@ from aldyparen.video import VideoRenderer
 @pytest.mark.filterwarnings(
     "ignore:Setting the shape on a NumPy array has been deprecated:DeprecationWarning:moviepy.video.io.ffmpeg_reader"
 )
-def test_render_video_with_current_moviepy(tmp_path):
+def test_render_video_with_current_moviepy(tmp_path: Path):
     renderer = VideoRenderer(8, 8, fps=1)
     palette = ColorPalette.categorical(["black", "white"])
     frames = [

@@ -1,14 +1,16 @@
 import json
 import os
 import time
+from pathlib import Path
 
+import pytest
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QFileDialog
 
 from aldyparen.gui.app import AldyparenApp
 
 
-def test_app_runs_and_closes(monkeypatch, tmp_path):
+def test_app_runs_and_closes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     monkeypatch.setenv("QT_QPA_PLATFORM", "offscreen")
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
 
@@ -22,7 +24,7 @@ def test_app_runs_and_closes(monkeypatch, tmp_path):
     deadline = time.monotonic() + 30
     result = {}
 
-    def close_with_error(message):
+    def close_with_error(message: str):
         result["error"] = message
         app.main_window.close()
 

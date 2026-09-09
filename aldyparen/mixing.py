@@ -1,16 +1,20 @@
 from io import BytesIO
-from tokenize import tokenize, untokenize, NUMBER
-from typing import List
+from tokenize import NUMBER, tokenize, untokenize
+from typing import cast
 
 import numpy as np
 
-from aldyparen.graphics import Frame, ColorPalette, Transform
+from aldyparen.graphics import ColorPalette, Frame, Transform
 from aldyparen.math.hpn import Hpn
-from aldyparen.painters import MandelbroidPainter, JuliaPainter, Painter, MandelbrotHighPrecisionPainter, \
-    MandelbroidHighPrecisionPainter
+from aldyparen.painters import (
+    JuliaPainter,
+    MandelbroidPainter,
+    MandelbrotHighPrecisionPainter,
+    Painter,
+)
 
 
-def make_animation(frame1: Frame, frame2: Frame, length: int) -> List[Frame]:
+def make_animation(frame1: Frame, frame2: Frame, length: int) -> list[Frame]:
     """Continuously transforms frame1 to frame2.
     Returns list of `length+1` frames, where first is frame1, last is frame2.
     """
@@ -23,25 +27,24 @@ def mix_frames(frame1: Frame, frame2: Frame, w: float) -> Frame:
     return Frame(
         painter=mix_painters(frame1.painter, frame2.painter, w),
         transform=mix_transforms(frame1.transform, frame2.transform, w),
-        palette=mix_palettes(frame1.palette, frame2.palette, w)
+        palette=mix_palettes(frame1.palette, frame2.palette, w),
     )
 
 
-def mix_painters(p1: 'Painter', p2: 'Painter', w: float) -> Painter:
+def mix_painters[PainterT: Painter](p1: PainterT, p2: PainterT, w: float) -> PainterT:
     if p1 == p2:
         return p1
-    cl = p1.__class__
-    assert p2.__class__ == cl
-    if cl == MandelbroidPainter:
-        return mix_mandelbroid(p1, p2, w)
-    if cl == JuliaPainter:
-        return mix_julia(p1, p2, w)
-    if cl == MandelbrotHighPrecisionPainter:
-        return mix_mandelbrot_hp(p1, p2, w)
-    else:
-        if p1 != p2:
-            raise ValueError("Cannot mix painters.")
-        return p1
+    assert type(p2) is type(p1)
+    if isinstance(p1, MandelbroidPainter):
+        assert isinstance(p2, MandelbroidPainter)
+        return cast(PainterT, mix_mandelbroid(p1, p2, w))
+    if isinstance(p1, JuliaPainter):
+        assert isinstance(p2, JuliaPainter)
+        return cast(PainterT, mix_julia(p1, p2, w))
+    if isinstance(p1, MandelbrotHighPrecisionPainter):
+        assert isinstance(p2, MandelbrotHighPrecisionPainter)
+        return cast(PainterT, mix_mandelbrot_hp(p1, p2, w))
+    raise ValueError("Cannot mix painters.")
 
 
 def mix_transforms(x: Transform, y: Transform, w: float) -> Transform:
@@ -49,7 +52,7 @@ def mix_transforms(x: Transform, y: Transform, w: float) -> Transform:
         center_x=mix_hpn(x.center_x, y.center_x, w),
         center_y=mix_hpn(x.center_y, y.center_y, w),
         scale_log10=(1 - w) * x.scale_log10 + w * y.scale_log10,
-        rotation=(1 - w) * x.rotation + w * y.rotation
+        rotation=(1 - w) * x.rotation + w * y.rotation,
     )
 
 
@@ -71,8 +74,7 @@ def mix_palettes(x: ColorPalette, y: ColorPalette, w: float) -> ColorPalette:
     elif c1.shape[0] > c2.shape[0]:
         c2 = extend_palette(c2, c1.shape[0])
     assert c1.shape == c2.shape
-    return ColorPalette(
-        colors=np.array(np.round((1 - w) * c1 + w * c2), dtype=np.uint8))
+    return ColorPalette(colors=np.array(np.round((1 - w) * c1 + w * c2), dtype=np.uint8))
 
 
 def mix_mandelbroid(p1: MandelbroidPainter, p2: MandelbroidPainter, w: float) -> MandelbroidPainter:
@@ -93,8 +95,8 @@ def mix_julia(p1: JuliaPainter, p2: JuliaPainter, w: float) -> JuliaPainter:
 def mix_functions(f1: str, f2: str, w: float):
     if f1 == f2:
         return f1
-    tokens1 = list(tokenize(BytesIO(f1.encode('utf-8')).readline))
-    tokens2 = list(tokenize(BytesIO(f2.encode('utf-8')).readline))
+    tokens1 = list(tokenize(BytesIO(f1.encode("utf-8")).readline))
+    tokens2 = list(tokenize(BytesIO(f2.encode("utf-8")).readline))
     n = len(tokens1)
     if n != len(tokens2):
         raise ValueError("Functions have different number of tokens")
@@ -109,7 +111,7 @@ def mix_functions(f1: str, f2: str, w: float):
         if type1 == NUMBER:
             new_val = (1 - w) * float(val1) + w * float(val2)
             new_val_str = str(new_val)
-            if 'e' in new_val_str:
+            if "e" in new_val_str:
                 new_val_str = "%.10f" % new_val
             result.append((NUMBER, new_val_str))
         else:
@@ -118,10 +120,14 @@ def mix_functions(f1: str, f2: str, w: float):
                 result.append((type1, val1))
             else:
                 raise ValueError("Incompatible tokens: %s %s" % (val1, val2))
-    return untokenize(result).decode('utf-8').replace(' ', '')
+    mixed = untokenize(result)
+    if isinstance(mixed, bytes):
+        mixed = mixed.decode("utf-8")
+    return mixed.replace(" ", "")
 
 
-def mix_mandelbrot_hp(p1: MandelbrotHighPrecisionPainter, p2: MandelbrotHighPrecisionPainter,
-                      w: float) -> MandelbrotHighPrecisionPainter:
+def mix_mandelbrot_hp(
+    p1: MandelbrotHighPrecisionPainter, p2: MandelbrotHighPrecisionPainter, w: float
+) -> MandelbrotHighPrecisionPainter:
     max_iter = int(np.round((1 - w) * p1.max_iter + w * p2.max_iter))
     return MandelbrotHighPrecisionPainter(max_iter=max_iter)

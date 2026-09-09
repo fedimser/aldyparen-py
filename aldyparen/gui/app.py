@@ -3,11 +3,10 @@ import os
 import sys
 from dataclasses import replace
 from datetime import datetime
-from typing import List
 
 import numpy as np
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QCoreApplication, QThreadPool, QTimer
+from PyQt5.QtCore import QCoreApplication, QTimer
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMessageBox
 
@@ -29,6 +28,7 @@ from ..painters import (
 )
 from ..video import VideoRenderer, deserialize_movie
 from .async_runners import ImageRenderRunnable, render_movie_preview_async
+from .gui_utils import global_thread_pool
 from .main import MainWindow
 from .presets import PRESET_NAMES, load_preset
 from .settings import AldyparenSettings
@@ -47,7 +47,7 @@ class AldyparenApp:
         self.is_loading_project = False
         self.is_exiting = False
         self.shown_movie_frame_is_invalid = True
-        self.error_messages_to_show = []  # type: List[str]
+        self.error_messages_to_show: list[str] = []
 
         self.saved_painter_configs = dict()  # TODO: this better store actual painters.
         for painter_class in ALL_PAINTERS:
@@ -73,12 +73,12 @@ class AldyparenApp:
         self.timer = QTimer()
         self.timer.timeout.connect(self.tick)
 
-        self.frames = []  # type: List[Frame]
+        self.frames: list[Frame] = []
         self.selected_frame_idx = -1
 
         self.photo_rendering_tasks_count = 0
         self.video_rendering_tasks_count = 0
-        self.active_video_renderer = None  # type: VideoRenderer | None
+        self.active_video_renderer: VideoRenderer | None = None
 
     def run(self):
         self.main_window.show()
@@ -93,7 +93,7 @@ class AldyparenApp:
         """Notifies that work frame needs to be re-rendered."""
         self.work_frame_renderer.render_async(self.work_frame)
 
-    def select_painter_type(self, idx):
+    def select_painter_type(self, idx: int):
         painter_class = ALL_PAINTERS[idx]
         if self.is_loading_project:
             return
@@ -103,7 +103,7 @@ class AldyparenApp:
         self.work_frame = replace(self.work_frame, painter=painter_class(**config))
         self.on_work_frame_changed()
 
-    def set_painter_config(self, config_json):
+    def set_painter_config(self, config_json: str):
         config = {}
         try:
             config = json.loads(config_json)
@@ -176,7 +176,7 @@ class AldyparenApp:
             status += f" 🎥({self.active_video_renderer.status_string})"
         else:
             self.active_video_renderer = None
-        thread_count = QThreadPool.globalInstance().activeThreadCount()
+        thread_count = global_thread_pool().activeThreadCount()
         if thread_count > 0:
             status += f"🧵({thread_count})"
         if hasattr(self.work_frame.painter, "warning") and type(self.work_frame.painter.warning) is str:
@@ -228,7 +228,7 @@ class AldyparenApp:
         self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
 
-    def remove_last_frames(self, count):
+    def remove_last_frames(self, count: int):
         count = min(count, len(self.frames))
         self.frames = self.frames[:-count]
         self.selected_frame_idx = len(self.frames) - 1
@@ -273,7 +273,7 @@ class AldyparenApp:
         self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
 
-    def render_image(self, width, height, file_name=None):
+    def render_image(self, width: int, height: int, file_name: str | None = None):
         if file_name is None:
             dir = os.path.join(os.getcwd(), "images")
             if not os.path.exists(dir):
@@ -289,7 +289,7 @@ class AldyparenApp:
         renderer = ChunkingRenderer(width, height, is_aborted=lambda: self.is_exiting)
         task = ImageRenderRunnable(self, self.work_frame, renderer, file_name)
         task.setAutoDelete(True)
-        QThreadPool.globalInstance().start(task)
+        global_thread_pool().start(task)
 
     def save_project(self):
         assert self.opened_file_name is not None
@@ -360,7 +360,7 @@ class AldyparenApp:
             ]
         )
 
-    def show_error_message_async(self, msg):
+    def show_error_message_async(self, msg: str):
         self.error_messages_to_show.append(msg)
 
     def set_palette_color(self, color_idx: int, color: QColor):

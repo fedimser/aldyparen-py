@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 GOLDEN_DIR = os.path.join(os.getcwd(), "goldens")
 
 
-def _match_pictures(x: np.ndarray, y: np.ndarray, max_mismatched_pixels: int):
+def _match_pictures(x: np.ndarray, y: np.ndarray | None, max_mismatched_pixels: int):
     if x is None or y is None or x.shape != y.shape:
         return False
     mismatch_count = np.sum(x != y)
@@ -17,7 +17,12 @@ def _match_pictures(x: np.ndarray, y: np.ndarray, max_mismatched_pixels: int):
     return True
 
 
-def _assert_picture(picture, golden_name, overwrite=False, max_mismatched_pixels=0):
+def _assert_picture(
+    picture: np.ndarray,
+    golden_name: str,
+    overwrite: bool = False,
+    max_mismatched_pixels: int = 0,
+):
     golden_path = os.path.join(GOLDEN_DIR, golden_name + ".bmp")
     if overwrite:
         plt.imsave(golden_path, picture)

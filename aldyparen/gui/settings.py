@@ -1,14 +1,18 @@
 import os
+from typing import TYPE_CHECKING
 
 from PyQt5.QtCore import QSettings
 
+if TYPE_CHECKING:
+    from .app import AldyparenApp
+
 
 class AldyparenSettings:
-    def __init__(self, app: 'AldyparenApp'):
+    def __init__(self, app: "AldyparenApp"):
         self.app = app
         self.qsettings = QSettings("aldyparen", "aldyparen-py")
 
-        def _load_int(name):
+        def _load_int(name: str):
             val = self.qsettings.value(name)
             return int(val) if val is not None else None
 

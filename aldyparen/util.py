@@ -1,25 +1,40 @@
 import re
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 
 SUPPORTED_FUNCTIONS = {
-    "exp", "log", "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh", "arcsin", "arccos", "arctan",
-    "real", "imag",
-    "abs", "angle"
+    "exp",
+    "log",
+    "sqrt",
+    "sin",
+    "cos",
+    "tan",
+    "sinh",
+    "cosh",
+    "tanh",
+    "arcsin",
+    "arccos",
+    "arctan",
+    "real",
+    "imag",
+    "abs",
+    "angle",
 }
 OK_TOKEN_REGEX = re.compile(r"[+\-*/().0123456789]+")
 
 
-def prepare_function(function, variables=[]):
+def prepare_function(function: str, variables: Sequence[str] = ()):
     """Validates and prepares function for evaluation with numpy."""
     assert function.isascii(), "Bad character"
-    tokens = re.findall('[a-zA-Z]+|[^a-zA-Z]+', function)
-    result = ''
+    tokens = re.findall("[a-zA-Z]+|[^a-zA-Z]+", function)
+    result = ""
     ok_tokens = set(variables)
-    ok_tokens.add('j')
+    ok_tokens.add("j")
     for token in tokens:
         if token in SUPPORTED_FUNCTIONS:
-            result += 'np.' + token
+            result += "np." + token
         elif token in ok_tokens:
             result += token
         elif OK_TOKEN_REGEX.match(token):
@@ -28,7 +43,7 @@ def prepare_function(function, variables=[]):
             raise ValueError(f"Unexpected token: {token}")
 
     # Check that this is valid mathematical function by evaluating it.
-    env = {var: np.complex128(1) for var in variables}
+    env: dict[str, Any] = {var: np.complex128(1) for var in variables}
     env["np"] = np
     test_value = eval(result, env)
     if type(test_value) is not np.complex128:
@@ -37,6 +52,5 @@ def prepare_function(function, variables=[]):
     return result
 
 
-def prepare_eval_env():
-    return {"locals": None, "globals": None, "__name__": None, "__file__": None,
-            "__builtins__": None}
+def prepare_eval_env() -> dict[str, Any]:
+    return {"locals": None, "globals": None, "__name__": None, "__file__": None, "__builtins__": None}

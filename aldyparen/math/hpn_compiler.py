@@ -18,38 +18,39 @@ def _ce(value: Any) -> "CompilerExpression":
 
 
 class CompilerExpression:
-    def __init__(self,
-                 variable: Optional[str] = None,
-                 constant: Optional[Any] = None,
-                 function: Optional[tuple[str, list["CompilerExpression"]]] = None):
-        assert int(variable is not None) + int(constant is not None) + int(
-            function is not None) == 1
+    def __init__(
+        self,
+        variable: Optional[str] = None,
+        constant: Optional[Any] = None,
+        function: Optional[tuple[str, list["CompilerExpression"]]] = None,
+    ):
+        assert int(variable is not None) + int(constant is not None) + int(function is not None) == 1
         self.variable = variable
         self.constant = constant
         self.function = function
 
-    def __add__(self, other):
+    def __add__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.add", [self, _ce(other)]))
 
-    def __radd__(self, other):
+    def __radd__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.add", [_ce(other), self]))
 
-    def __sub__(self, other):
+    def __sub__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.sub", [self, _ce(other)]))
 
-    def __rsub__(self, other):
+    def __rsub__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.sub", [_ce(other), self]))
 
-    def __mul__(self, other):
+    def __mul__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.mul", [self, _ce(other)]))
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: Any):
         return CompilerExpression(function=("complex_hpn.mul", [_ce(other), self]))
 
-    def __pow__(self, other):
+    def __pow__(self, other: Any):
         if type(other) is int and other == 2:
             return CompilerExpression(function=("complex_hpn.sqr", [self]))
-        raise f"Power of {other} is not supported"
+        raise ValueError(f"Power of {other} is not supported")
 
     def to_hpn_expression(self, constants: dict[str, ComplexHpn], prec: int) -> str:
         if self.variable is not None:
@@ -60,13 +61,13 @@ class CompilerExpression:
             return const_name
         assert self.function is not None
         func_name, args = self.function
-        args = ','.join(expr.to_hpn_expression(constants, prec) for expr in args)
+        args = ",".join(expr.to_hpn_expression(constants, prec) for expr in args)
         return f"{func_name}({args})"
 
 
 # Returns function that evaluates operates on raw HPCNs (i.e. pairs of 1D arrays).
 # Resulting function takes N values of type (i8[:],i8[:]) and returns Tuple (i8[:],i8[:]).
-def compile_expression_hpcn(expr: str, var_names: list[str], precision=16) -> Callable:
+def compile_expression_hpcn(expr: str, var_names: list[str], precision: int = 16) -> Callable:
     for char in expr:
         assert char in ALLOWED_CHARS, f"Invalid character {char}"
 
@@ -89,7 +90,7 @@ def compile_expression_hpcn(expr: str, var_names: list[str], precision=16) -> Ca
     numba_arg_types = ",".join([numba_ret_type for _ in range(len(var_names))])
     numba_signature = f"{numba_ret_type}({numba_arg_types})"
 
-    numba_env = {
+    numba_env: dict[str, Any] = {
         "numba": numba,
         "complex_hpn": complex_hpn,
     }
@@ -97,10 +98,12 @@ def compile_expression_hpcn(expr: str, var_names: list[str], precision=16) -> Ca
     for const_name, const_value in constants.items():
         numba_env[const_name] = const_value.to_raw()
         numba_source += f"{const_name}={const_name}\n"
-    numba_source += "\n".join([
-        f'@numba.jit("{numba_signature}",nopython=True)',
-        f'def __func({numba_args}):',
-        f'  return {numba_expr}',
-    ])
+    numba_source += "\n".join(
+        [
+            f'@numba.jit("{numba_signature}",nopython=True)',
+            f"def __func({numba_args}):",
+            f"  return {numba_expr}",
+        ]
+    )
     exec(numba_source, numba_env)
     return numba_env["__func"]  # type: ignore

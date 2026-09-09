@@ -2,14 +2,13 @@
 
 HPCNs are represented as Numba tuples of 2 HPNs.
 """
+
 import numba
 import numpy as np
 from numpy.typing import NDArray
 
 from aldyparen.math.hpn import (
     DEFAULT_PRECISION,
-    HPN_MUT,
-    HPN_TYPE,
     Hpn,
     hpn_abs,
     hpn_mul_inplace_noclear,
@@ -17,8 +16,8 @@ from aldyparen.math.hpn import (
 )
 
 # Numba types
-HPCN_TYPE = numba.types.UniTuple(HPN_TYPE, 2)
-HPCN_MUT = numba.types.UniTuple(HPN_MUT, 2)
+# HPCN_TYPE = numba.types.UniTuple(HPN_TYPE, 2)
+# HPCN_MUT = numba.types.UniTuple(HPN_MUT, 2)
 
 
 class ComplexHpn:
@@ -27,7 +26,7 @@ class ComplexHpn:
         self.imag = imag
 
     @staticmethod
-    def from_number(x: int | float | complex, prec=DEFAULT_PRECISION) -> "ComplexHpn":
+    def from_number(x: int | float | complex, prec: int = DEFAULT_PRECISION) -> "ComplexHpn":
         x = complex(x)
         return ComplexHpn(Hpn.from_number(x.real, prec=prec), Hpn.from_number(x.imag, prec=prec))
 

@@ -1,5 +1,17 @@
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import QThreadPool
 from PyQt5.QtWidgets import QApplication, QFileDialog, QWidget
+
+
+def global_thread_pool() -> QThreadPool:
+    """Return Qt's application-wide thread pool.
+
+    PyQt's type information marks ``globalInstance`` as optional, although Qt
+    provides the singleton while an application is running.
+    """
+    thread_pool = QThreadPool.globalInstance()
+    assert thread_pool is not None
+    return thread_pool
 
 
 class SafeFileIconProvider(QtWidgets.QFileIconProvider):
@@ -8,10 +20,11 @@ class SafeFileIconProvider(QtWidgets.QFileIconProvider):
     def __init__(self):
         super().__init__()
         style = QApplication.style()
-        self.directory_icon = style.standardIcon(QtWidgets.QStyle.SP_DirIcon)
-        self.file_icon = style.standardIcon(QtWidgets.QStyle.SP_FileIcon)
+        assert style is not None
+        self.directory_icon = style.standardIcon(QtWidgets.QStyle.StandardPixmap.SP_DirIcon)
+        self.file_icon = style.standardIcon(QtWidgets.QStyle.StandardPixmap.SP_FileIcon)
 
-    def icon(self, file_info):
+    def icon(self, file_info: object):  # pyright: ignore[reportIncompatibleMethodOverride]
         if isinstance(file_info, QtCore.QFileInfo) and file_info.isDir():
             return self.directory_icon
         if file_info == self.Folder:

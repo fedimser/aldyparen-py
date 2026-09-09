@@ -1,3 +1,5 @@
+from typing import cast
+
 import numpy as np
 import pytest
 
@@ -15,26 +17,29 @@ def test_mix_functions():
     f1 = "2*x+3*y-5"
     f2 = "1*x+4*y-10"
     f3 = mix_functions(f1, f2, 0.25)
-    assert (f3 == '1.75*x+3.25*y-6.25')
+    assert f3 == "1.75*x+3.25*y-6.25"
 
 
 def test_mix_functions_fractional():
     f1 = "2*x+3*x**2"
     f2 = "2.5*x+3.5*x**2.0"
     f3 = mix_functions(f1, f2, 0.5)
-    assert (f3 == '2.25*x+3.25*x**2.0')
+    assert f3 == "2.25*x+3.25*x**2.0"
 
 
 def test_mix_functions_scientific_notation():
     assert mix_functions("z+0.0000000001", "z+0.0000000003", 0.5) == "z+0.0000000002"
 
 
-@pytest.mark.parametrize(("f1", "f2"), [
-    ("z+1", "z+1+2"),
-    ("z+1", "z+x"),
-    ("z+1", "c+2"),
-])
-def test_mix_functions_rejects_incompatible_expressions(f1, f2):
+@pytest.mark.parametrize(
+    ("f1", "f2"),
+    [
+        ("z+1", "z+1+2"),
+        ("z+1", "z+x"),
+        ("z+1", "c+2"),
+    ],
+)
+def test_mix_functions_rejects_incompatible_expressions(f1: str, f2: str):
     with pytest.raises(ValueError):
         mix_functions(f1, f2, 0.5)
 
@@ -81,7 +86,7 @@ def test_make_animation():
     assert animation[10] == frame2
     mid_frame = animation[5]
     assert mid_frame.transform == Transform.create(center=1 + 2j, scale=5, rotation=1)
-    mid_painter = mid_frame.painter  # type: MandelbroidPainter
+    mid_painter = cast(MandelbroidPainter, mid_frame.painter)
     assert mid_painter.max_iter == 75
     assert np.allclose(mid_painter.radius, 15)
     assert mid_painter.gen_function == "z**6.0+c"

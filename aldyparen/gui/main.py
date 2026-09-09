@@ -1,30 +1,38 @@
 import math
 import os
-from typing import TYPE_CHECKING
+from collections.abc import Callable, Sequence
+from typing import TYPE_CHECKING, Any, cast
 
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from PyQt5.QtCore import QCoreApplication, QPointF, QSize, QThreadPool, QUrl
-from PyQt5.QtGui import QColor, QDesktopServices, QIcon
+from PyQt5.QtCore import QCoreApplication, QPointF, QSize, QUrl
+from PyQt5.QtGui import QColor, QCloseEvent, QDesktopServices, QIcon
 from PyQt5.QtWidgets import (
     QApplication,
     QColorDialog,
+    QComboBox,
     QFileDialog,
     QGraphicsSceneMouseEvent,
     QGraphicsSceneWheelEvent,
+    QGraphicsScene,
+    QGraphicsView,
+    QLabel,
     QMessageBox,
+    QPlainTextEdit,
+    QScrollBar,
+    QSpinBox,
 )
 
 from ..graphics import ColorPalette, Transform
 from ..painters import ALL_PAINTERS
 from .async_runners import render_video_async
-from .gui_utils import select_file
+from .gui_utils import global_thread_pool, select_file
 
 if TYPE_CHECKING:
     from .app import AldyparenApp
 
 
-def show_alert(text, title=""):
+def show_alert(text: str, title: str = ""):
     alert = QMessageBox()
     alert.setWindowTitle(title)
     alert.setText(text)
@@ -32,7 +40,7 @@ def show_alert(text, title=""):
 
 
 class WorkFrameScene(QtWidgets.QGraphicsScene):
-    def __init__(self, parent, app: 'AldyparenApp'):
+    def __init__(self, parent: QtCore.QObject | None, app: "AldyparenApp"):
         super().__init__(parent)
         self.app = app
         self.is_dragging = False
@@ -42,7 +50,9 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         self.cursor_math_pos: np.complex128 | None = None
         self.cursor_rel_screen_pos = None
 
-    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent):
+    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent | None):
+        if event is None:
+            return
         self.calculate_cursor_pos(event.scenePos())
         if self.is_dragging:
             if self.cursor_math_pos is None:
@@ -55,37 +65,44 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
                 self.drag_start_x = x
                 self.drag_start_y = y
 
-    def mousePressEvent(self, event: QGraphicsSceneMouseEvent):
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent | None):
+        if event is None:
+            return
         self.is_dragging = True
         self.drag_start_x = event.scenePos().x()
         self.drag_start_y = event.scenePos().y()
 
-    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent):
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent | None):
+        if event is None:
+            return
         self.is_dragging = False
 
-    def wheelEvent(self, event: QGraphicsSceneWheelEvent):
+    def wheelEvent(self, event: QGraphicsSceneWheelEvent | None):
+        if event is None:
+            return
         modifiers = QApplication.keyboardModifiers()
         delta = -event.delta() / 120
-        if bool(modifiers & QtCore.Qt.ShiftModifier):
+        if bool(modifiers & QtCore.Qt.KeyboardModifier.ShiftModifier):
             delta *= 25
 
         self.calculate_cursor_pos(event.scenePos())
         if self.cursor_math_pos is None:
             return
-        if bool(modifiers & QtCore.Qt.ControlModifier):
+        assert self.cursor_rel_screen_pos is not None
+        if bool(modifiers & QtCore.Qt.KeyboardModifier.ControlModifier):
             # 2 degrees minimal increment (for standard mouse).
             angle = delta * (np.pi / 90)
             tr = self.app.work_frame.transform.rotate_and_scale_at(self.cursor_rel_screen_pos, angle=angle)
 
         else:
-            tr = self.app.work_frame.transform.rotate_and_scale_at(self.cursor_rel_screen_pos,
-                                                                   scale_factor=10 ** (0.02 * delta))
+            tr = self.app.work_frame.transform.rotate_and_scale_at(
+                self.cursor_rel_screen_pos, scale_factor=10 ** (0.02 * delta)
+            )
         self.app.update_work_frame_transform(tr)
 
-    def apply_drag(self, dx_pxl, dy_pxl):
+    def apply_drag(self, dx_pxl: float, dy_pxl: float):
         delta = np.complex128(dx_pxl - 1j * dy_pxl) / self.frame_width_pxl
-        self.app.update_work_frame_transform(
-            self.app.work_frame.transform.translate(delta))
+        self.app.update_work_frame_transform(self.app.work_frame.transform.translate(delta))
 
     def calculate_cursor_pos(self, pos: QPointF):
         x = pos.x()
@@ -101,11 +118,13 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
 
 
 class PalettePreviewScene(QtWidgets.QGraphicsScene):
-    def __init__(self, parent, app: 'AldyparenApp'):
+    def __init__(self, parent: QtCore.QObject | None, app: "AldyparenApp"):
         super().__init__(parent)
         self.app = app
 
-    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent):
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent | None):
+        if event is None:
+            return
         num_colors = self.app.work_frame.palette.colors.shape[0]
         color_idx = int(np.floor((event.scenePos().x() / self.width()) * num_colors))
         cur_clr = self.app.work_frame.palette.colors[color_idx]
@@ -117,27 +136,27 @@ class PalettePreviewScene(QtWidgets.QGraphicsScene):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, app: 'AldyparenApp'):
+    def __init__(self, app: "AldyparenApp"):
         super(MainWindow, self).__init__()
         self.ui_handlers_locked = True
         self.app = app
-        uic.loadUi('layout/main.xml', self)
+        uic.loadUi("layout/main.xml", self)
 
         app_icon = QIcon()
-        app_icon.addFile('layout/icon16.png', QSize(16, 16))
-        app_icon.addFile('layout/icon64.png', QSize(64, 64))
+        app_icon.addFile("layout/icon16.png", QSize(16, 16))
+        app_icon.addFile("layout/icon64.png", QSize(64, 64))
         self.setWindowIcon(app_icon)
 
         self.setMouseTracking(True)
 
         # Initialize painter list.
-        combo = self.combo_painter_type  # type: QComboBox
+        combo: QComboBox = self.combo_painter_type
         for painter_class in ALL_PAINTERS:
             combo.addItem(painter_class.__name__)
         combo.activated.connect(lambda idx: app.select_painter_type(idx))
 
         # Initialize palette list.
-        combo = self.combo_palette_type  # type: QComboBox
+        combo: QComboBox = self.combo_palette_type
         combo.addItem("Grayscale")
         combo.addItem("Random")
         combo.addItem("Gradient")
@@ -151,10 +170,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.edit_rotation_deg.textChanged.connect(self.on_transform_text_edited)
 
         # Buttons.
-        self.button_reset_transform.clicked.connect(
-            lambda: self.app.reset_transform())
+        self.button_reset_transform.clicked.connect(lambda: self.app.reset_transform())
         self.button_reset_painter_config.clicked.connect(
-            lambda: self.confirm_then("Reset painter config?", self.app.reset_painter_config))
+            lambda: self.confirm_then("Reset painter config?", self.app.reset_painter_config)
+        )
         self.button_generate_palette.clicked.connect(self.on_generate_palette_click)
         self.button_reset_work_frame.clicked.connect(self.app.reset_work_frame)
         self.button_reset_video_preview.clicked.connect(self.app.reset_video_preview)
@@ -198,66 +217,75 @@ class MainWindow(QtWidgets.QMainWindow):
         self.transform_text_is_invalid = True
         self.ui_handlers_locked = False
 
-    def set_image(self, view, scene, image):
+    def set_image(
+        self,
+        view: QGraphicsView,
+        scene: QGraphicsScene,
+        image: np.ndarray | str,
+    ):
         if type(image) is str:
             scene.clear()
             scene.addText(image)
             return
-        image = QtGui.QImage(
-            image, image.shape[1], image.shape[0], image.shape[1] * 3, QtGui.QImage.Format_RGB888)
-        pix = QtGui.QPixmap(image)
+        image_array = cast(Any, image)
+        qt_image = QtGui.QImage(
+            image_array,
+            image_array.shape[1],
+            image_array.shape[0],
+            image_array.shape[1] * 3,
+            QtGui.QImage.Format_RGB888,
+        )
+        pix = QtGui.QPixmap(qt_image)
         if not (pix.width() == view.width() and pix.height() == view.height()):
-            scale = min(view.width() / pix.width(),
-                        view.height() / pix.height())
-            pix = pix.scaled(int(pix.width() * scale),
-                             int(pix.height() * scale))
+            scale = min(view.width() / pix.width(), view.height() / pix.height())
+            pix = pix.scaled(int(pix.width() * scale), int(pix.height() * scale))
         scene.clear()
         scene.addPixmap(pix)
-        if hasattr(scene, "frame_width_pxl"):
+        if isinstance(scene, WorkFrameScene):
             scene.frame_width_pxl = pix.width()
 
-    def set_movie_frame(self, image):
+    def set_movie_frame(self, image: np.ndarray | str):
         self.set_image(self.view_movie, self.scene_movie, image)
 
-    def set_work_frame(self, image):
+    def set_work_frame(self, image: np.ndarray | str):
         self.set_image(self.view_work_frame, self.scene_work_frame, image)
 
-    def set_mono_color(self, color):
+    def set_mono_color(self, color: Sequence[int]):
         pic = np.zeros((100, 100, 3), dtype=np.ubyte)
         for i in range(100):
             for j in range(100):
                 pic[i, j, :] = color
         self.set_movie_frame(pic)
 
-    def set_painter_config(self, text):
-        edit = self.edit_painter_config  # type: QPlainTextEdit
+    def set_painter_config(self, text: str):
+        edit: QPlainTextEdit = self.edit_painter_config
         edit.setPlainText(text)
 
     def on_config_text_changed(self):
         if self.app.is_loading_project or self.ui_handlers_locked:
             return
-        edit = self.edit_painter_config  # type: QPlainTextEdit
+        edit: QPlainTextEdit = self.edit_painter_config
         self.ui_handlers_locked = True
         self.app.set_painter_config(edit.toPlainText())
         self.ui_handlers_locked = False
 
-    def set_label_painter_status(self, status):
-        label = self.label_config_status  # type: QLabel
+    def set_label_painter_status(self, status: str):
+        label: QLabel = self.label_config_status
         label.setText(status)
         if status == "OK":
             label.setStyleSheet("color: green;")
         else:
             label.setStyleSheet("color: red;")
 
-    def confirm(self, text) -> bool:
+    def confirm(self, text: str) -> bool:
         qm = QMessageBox
-        return qm.question(self, '', text, qm.Yes | qm.No) == qm.Yes
+        return qm.question(self, "", text, qm.Yes | qm.No) == qm.Yes
 
-    def confirm_then(self, text, action):
+    def confirm_then(self, text: str, action: Callable[[], None]):
         if self.confirm(text):
             action()
 
-    def show_status(self, status):
+    def show_status(self, status: str):
         self.statusbar.showMessage(status)
 
     def on_generate_palette_click(self):
@@ -270,20 +298,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.app.update_work_frame_palette(palette)
 
     def generate_palette(self) -> ColorPalette:
-        combo = self.combo_palette_type  # type: QComboBox
+        combo: QComboBox = self.combo_palette_type
         palette_type = combo.itemText(combo.currentIndex())
-        spin_box = self.spin_box_palette_size  # type: QSpinBox
+        spin_box: QSpinBox = self.spin_box_palette_size
         size = spin_box.value()
         c1 = self.edit_color1.text()
         c2 = self.edit_color2.text()
-        if palette_type == 'Grayscale':
+        if palette_type == "Grayscale":
             return ColorPalette.grayscale(size=size)
-        elif palette_type == 'Random':
+        elif palette_type == "Random":
             return ColorPalette.random(size=size)
-        if palette_type == 'Gradient':
+        if palette_type == "Gradient":
             return ColorPalette.gradient(c1, c2, size=size)
-        elif palette_type == 'Gradient+Black':
-            return ColorPalette.gradient_plus_one(c1, c2, 'black', size=size)
+        elif palette_type == "Gradient+Black":
+            return ColorPalette.gradient_plus_one(c1, c2, "black", size=size)
         else:
             raise ValueError(f"Unrecognized palette type: {palette_type}")
 
@@ -316,7 +344,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def on_movie_updated(self):
         mov_len = len(self.app.frames)
         cur_idx = self.app.selected_frame_idx
-        sb = self.scroll_bar_movie  # type: QScrollBar
+        sb: QScrollBar = self.scroll_bar_movie
         if mov_len == 0:
             self.scene_movie.clear()
             self.label_frame_info.setText("Movie is empty")
@@ -330,8 +358,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.app.shown_movie_frame_is_invalid = True
         self.update_title()
 
-    def closeEvent(self, event):
-        event.ignore()
+    def closeEvent(self, a0: QCloseEvent | None):
+        if a0 is not None:
+            a0.ignore()
         self.on_exit()
 
     def on_exit(self):
@@ -344,11 +373,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.app.is_exiting = True
         self.app.work_frame_renderer.halt()
-        QThreadPool.globalInstance().clear()  # Cancels not yet started tasks.
+        thread_pool = global_thread_pool()
+        thread_pool.clear()  # Cancels not yet started tasks.
         self.app.settings.save()
-        if not QThreadPool.globalInstance().waitForDone(msecs=500):
+        if not thread_pool.waitForDone(msecs=500):
             show_alert("Please wait for active tasks to be finished or stopped.")
-        QThreadPool.globalInstance().waitForDone()
+        thread_pool.waitForDone()
 
         QCoreApplication.exit(0)
 
@@ -369,18 +399,26 @@ class MainWindow(QtWidgets.QMainWindow):
         height = self.spin_box_video_resolution_2.value()
         fps = self.app.settings.get_video_fps()
         filters = "MP4 video files (*.mp4);;All files (*.*)"
-        file_name = select_file(self, 'Choose video location', self.app.settings.work_dir,
-                                filters, QFileDialog.AcceptSave, default_suffix="mp4")
+        file_name = select_file(
+            self,
+            "Choose video location",
+            self.app.settings.work_dir,
+            filters,
+            QFileDialog.AcceptSave,
+            default_suffix="mp4",
+        )
         if len(file_name) == 0:
             return
         dur_sec = math.ceil(len(self.app.frames) / fps)
-        prompt = "\n".join([
-            "Confirm video render.",
-            f"Resolution: {width}x{height}",
-            f"Frame rate: {fps} FPS",
-            f"Location: {file_name}",
-            f"Duration: {len(self.app.frames)} frames, {dur_sec} seconds."
-        ])
+        prompt = "\n".join(
+            [
+                "Confirm video render.",
+                f"Resolution: {width}x{height}",
+                f"Frame rate: {fps} FPS",
+                f"Location: {file_name}",
+                f"Duration: {len(self.app.frames)} frames, {dur_sec} seconds.",
+            ]
+        )
         if not self.confirm(prompt):
             return
         render_video_async(self.app, width, height, fps, file_name)
@@ -398,8 +436,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_project(self):
         filters = "JSON files (*.json);;All files (*.*)"
-        file_name = select_file(self, 'Open Aldyparen project', self.app.settings.work_dir,
-                                filters, QFileDialog.AcceptOpen)
+        file_name = select_file(
+            self, "Open Aldyparen project", self.app.settings.work_dir, filters, QFileDialog.AcceptOpen
+        )
         if len(file_name) == 0:
             return
         self.app.load_project(file_name)
@@ -415,8 +454,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def save_project_as(self):
         filters = "JSON files (*.json);;All files (*.*)"
-        file_name = select_file(self, 'Save Aldyparen project', self.app.settings.work_dir,
-                                filters, QFileDialog.AcceptSave)
+        file_name = select_file(
+            self, "Save Aldyparen project", self.app.settings.work_dir, filters, QFileDialog.AcceptSave
+        )
         if len(file_name) == 0:
             show_alert("File not selected - nothing was saved.")
             return
@@ -448,7 +488,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tr = self.app.work_frame.transform
         self.edit_center_x.setText(str(tr.center_x))
         self.edit_center_y.setText(str(tr.center_y))
-        self.edit_scale_log10.setText(f'{tr.scale_log10:.5f}')
+        self.edit_scale_log10.setText(f"{tr.scale_log10:.5f}")
         self.edit_rotation_deg.setText(str(tr.rotation_deg()))
         self.transform_text_is_invalid = False
         self.ui_handlers_locked = False
@@ -460,9 +500,12 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             scale_log10 = float(self.edit_scale_log10.text())
             rotation_deg = float(self.edit_rotation_deg.text())
-            new_transform = Transform.create(center_x=self.edit_center_x.text(),
-                                             center_y=self.edit_center_y.text(),
-                                             scale_log10=scale_log10, rotation_deg=rotation_deg)
+            new_transform = Transform.create(
+                center_x=self.edit_center_x.text(),
+                center_y=self.edit_center_y.text(),
+                scale_log10=scale_log10,
+                rotation_deg=rotation_deg,
+            )
         except Exception as e:
             self.transform_text_is_invalid = True
             return

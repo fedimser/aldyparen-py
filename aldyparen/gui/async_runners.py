@@ -1,14 +1,18 @@
 import copy
-from typing import List
+from typing import TYPE_CHECKING, List
 
 import numpy as np
-from PyQt5.QtCore import QRunnable, QThreadPool
+from PyQt5.QtCore import QRunnable
 
-from ..graphics import Frame, ChunkingRenderer
+from ..graphics import ChunkingRenderer, Frame
 from ..video import VideoRenderer
+from .gui_utils import global_thread_pool
+
+if TYPE_CHECKING:
+    from .app import AldyparenApp
 
 
-def render_movie_preview_async(app: 'AldyparenApp', frame: Frame) -> np.ndarray | str:
+def render_movie_preview_async(app: "AldyparenApp", frame: Frame) -> np.ndarray | str:
     if hasattr(frame, "cached_movie_preview") and frame.cached_movie_preview is not None:
         if isinstance(frame.cached_movie_preview, str) and frame.cached_movie_preview == "wait":
             return "Rendering..."
@@ -18,14 +22,14 @@ def render_movie_preview_async(app: 'AldyparenApp', frame: Frame) -> np.ndarray 
         object.__setattr__(frame, "cached_movie_preview", "wait")
         task = MoviePreviewRenderRunnable(app, frame)
         task.setAutoDelete(True)
-        QThreadPool.globalInstance().start(task)
+        global_thread_pool().start(task)
         return "Rendering..."
 
 
 class MoviePreviewRenderRunnable(QRunnable):
     """Renders frame preview in a separate thread, caches it in Frame object and displays."""
 
-    def __init__(self, app: 'AldyparenApp', frame: Frame):
+    def __init__(self, app: "AldyparenApp", frame: Frame):
         super().__init__()
         self.app = app
         self.frame = frame
@@ -39,7 +43,7 @@ class MoviePreviewRenderRunnable(QRunnable):
 
 class ImageRenderRunnable(QRunnable):
 
-    def __init__(self, app: 'AldyparenApp', frame: Frame, renderer: ChunkingRenderer, file_name: str):
+    def __init__(self, app: "AldyparenApp", frame: Frame, renderer: ChunkingRenderer, file_name: str):
         super().__init__()
         self.app = app
         self.frame = frame
@@ -52,18 +56,18 @@ class ImageRenderRunnable(QRunnable):
         self.app.photo_rendering_tasks_count -= 1
 
 
-def render_video_async(app: 'AldyparenApp', width: int, height: int, fps: int, file_name: str):
+def render_video_async(app: "AldyparenApp", width: int, height: int, fps: int, file_name: str):
     renderer = VideoRenderer(width, height, fps, is_aborted=lambda: app.is_exiting)
     thread = VideoRenderRunnable(app, app.frames, renderer, file_name)
     thread.setAutoDelete(True)
     app.active_video_renderer = renderer
     app.video_rendering_tasks_count += 1
-    QThreadPool.globalInstance().start(thread)
+    global_thread_pool().start(thread)
 
 
 class VideoRenderRunnable(QRunnable):
 
-    def __init__(self, app: 'AldyparenApp', frames: List[Frame], renderer: VideoRenderer, file_name: str):
+    def __init__(self, app: "AldyparenApp", frames: List[Frame], renderer: VideoRenderer, file_name: str):
         super().__init__()
         self.app = app
         self.frames = copy.copy(frames)

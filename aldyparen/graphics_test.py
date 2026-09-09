@@ -63,7 +63,7 @@ def test_different_renderers():
     renderer2 = ChunkingRenderer(w, h, chunk_size=17)
     renderer3 = ChunkingRenderer(w, h, chunk_size=100000)
     transform = Transform.create(scale=4)
-    palette = ColorPalette.gradient('yellow', 'black', size=21)
+    palette = ColorPalette.gradient("yellow", "black", size=21)
     frame = Frame(MandelbroidPainter(gen_function="z*z+c", max_iter=10), transform, palette)
 
     pic1 = renderer1.render(frame)

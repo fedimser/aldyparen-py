@@ -1,15 +1,20 @@
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Callable, Dict, List
+from typing import TYPE_CHECKING, Callable, ClassVar, Dict, List, overload
 
-import matplotlib
 import numba
 import numpy as np
-from numpy.typing import NDArray
-from PyQt5.QtCore import QThread
+from matplotlib import colors
 from matplotlib import pyplot as plt
+from numpy.typing import ArrayLike, NDArray
+from PyQt5.QtCore import QThread
 
 from aldyparen.math.hpn import Hpn
+from aldyparen.painters.base import HighPrecisionPainter
+
+if TYPE_CHECKING:
+    from aldyparen.painters import Painter
 
 
 # u1[:,:,:](u4[:,:],u1[:,:])
@@ -27,10 +32,10 @@ def _numba_remap(pic: NDArray[np.uint32], colors: NDArray[np.uint8]) -> NDArray[
     return ans
 
 
-def _to_numpy_color(color) -> np.ndarray:
+def _to_numpy_color(color: str | ArrayLike) -> np.ndarray:
     """Converts string or RGB list to numpy uint8 array representing RGB"""
     if type(color) is str:
-        color = 255 * np.array(matplotlib.colors.to_rgb(color))
+        color = 255 * np.array(colors.to_rgb(color))
     ans = np.array(color, dtype=np.uint8)
     if not ans.shape == (3,):
         raise ValueError("Wrong shape")
@@ -44,11 +49,11 @@ class ColorPalette:
     def __post_init__(self):
         assert self.colors.shape == (self.colors.shape[0], 3)
 
-    def remap(self, pic):
+    def remap(self, pic: NDArray[np.uint32]) -> NDArray[np.uint8]:
         return _numba_remap(pic, self.colors)
 
     @staticmethod
-    def gradient(start_color, end_color, size=256):
+    def gradient(start_color: str | ArrayLike, end_color: str | ArrayLike, size: int = 256):
         colors = np.empty((size, 3), dtype=np.uint8)
         start_color = _to_numpy_color(start_color)
         end_color = _to_numpy_color(end_color)
@@ -58,14 +63,19 @@ class ColorPalette:
         return ColorPalette(colors)
 
     @staticmethod
-    def gradient_plus_one(start_color, end_color, extra_color, size=256):
+    def gradient_plus_one(
+        start_color: str | ArrayLike,
+        end_color: str | ArrayLike,
+        extra_color: str | ArrayLike,
+        size: int = 256,
+    ):
         colors = np.empty((size, 3), dtype=np.uint8)
-        colors[:size - 1, :] = ColorPalette.gradient(start_color, end_color, size=size - 1).colors
+        colors[: size - 1, :] = ColorPalette.gradient(start_color, end_color, size=size - 1).colors
         colors[-1, :] = _to_numpy_color(extra_color)
         return ColorPalette(colors)
 
     @staticmethod
-    def categorical(colors_html):
+    def categorical(colors_html: Sequence[str | ArrayLike]):
         size = len(colors_html)
         colors = np.empty((size, 3), dtype=np.uint8)
         for i in range(size):
@@ -75,32 +85,35 @@ class ColorPalette:
     @staticmethod
     def default():
         return ColorPalette.categorical(
-            ['white', 'yellow', 'purple', 'orange', 'lightblue', 'red', 'gray', 'green', 'black'])
+            ["white", "yellow", "purple", "orange", "lightblue", "red", "gray", "green", "black"]
+        )
 
     @staticmethod
-    def random(size=256):
+    def random(size: int = 256):
         return ColorPalette(np.random.randint(0, 256, (size, 3), dtype=np.uint8))
 
     @staticmethod
-    def grayscale(size=256):
+    def grayscale(size: int = 256):
         return ColorPalette.gradient([0, 0, 0], [255, 255, 255], size=size)
 
     @staticmethod
-    def color_to_html(color):
-        return '#{:02X}{:02X}{:02X}'.format(color[0], color[1], color[2])
+    def color_to_html(color: Sequence[int] | NDArray[np.uint8]):
+        return f"#{color[0]:02X}{color[1]:02X}{color[2]:02X}"
 
     def serialize(self) -> str:
         return self.colors.tobytes().hex()
 
     @staticmethod
-    def deserialize(data: str) -> 'ColorPalette':
+    def deserialize(data: str) -> "ColorPalette":
         colors = np.frombuffer(bytes.fromhex(data), dtype=np.uint8).reshape((-1, 3))
         return ColorPalette(np.array(colors))
 
-    def __eq__(self, other: 'ColorPalette'):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ColorPalette):
+            return False
         return np.array_equal(self.colors, other.colors)
 
-    def __add__(self, other: 'ColorPalette'):
+    def __add__(self, other: "ColorPalette"):
         return ColorPalette(np.concatenate([self.colors, other.colors]))
 
 
@@ -115,9 +128,16 @@ class Transform:
     rotation: float  # Radians, about frame center, counterclockwise.
 
     @staticmethod
-    def create(*, center=None, center_x: float | str | Hpn = None, center_y: float | str | Hpn = None,
-               scale_log10=None, scale=None,
-               rotation=None, rotation_deg=None) -> 'Transform':
+    def create(
+        *,
+        center: complex | np.number | None = None,
+        center_x: float | str | Hpn | None = None,
+        center_y: float | str | Hpn | None = None,
+        scale_log10: float | None = None,
+        scale: float | None = None,
+        rotation: float | None = None,
+        rotation_deg: float | None = None,
+    ) -> "Transform":
         if scale is not None:
             scale_log10 = np.log10(scale)
         if rotation_deg is not None:
@@ -133,13 +153,18 @@ class Transform:
         transform = Transform(Hpn(center_x), Hpn(center_y), scale_log10 or 0.0, rotation or 0.0)
         return transform
 
-    def translate(self, delta) -> 'Transform':
-        center_delta = - delta * self._k()
+    def translate(self, delta: complex | np.complexfloating) -> "Transform":
+        center_delta = -delta * self._k()
         new_center_x = self.center_x + np.real(center_delta)
         new_center_y = self.center_y + np.imag(center_delta)
         return Transform(new_center_x, new_center_y, self.scale_log10, self.rotation)
 
-    def rotate_and_scale_at(self, rel_screen_point, scale_factor=1.0, angle=0.0) -> 'Transform':
+    def rotate_and_scale_at(
+        self,
+        rel_screen_point: complex | np.complexfloating,
+        scale_factor: float = 1.0,
+        angle: float = 0.0,
+    ) -> "Transform":
         old_k = self._k()
         new_scale_log_10 = self.scale_log10 + np.log10(scale_factor)
         new_rotation = self.rotation + angle
@@ -155,7 +180,13 @@ class Transform:
     def _center(self):
         return self.center_x.to_float() + 1j * self.center_y.to_float()
 
-    def map_screen_to_math(self, screen_point: np.complex128) -> np.complex128:
+    @overload
+    def map_screen_to_math(self, screen_point: np.complex128) -> np.complex128: ...
+
+    @overload
+    def map_screen_to_math(self, screen_point: np.ndarray) -> np.ndarray: ...
+
+    def map_screen_to_math(self, screen_point: np.complex128 | np.ndarray) -> np.complex128 | np.ndarray:
         return self._center() + screen_point * self._k()
 
     def __str__(self):
@@ -163,22 +194,25 @@ class Transform:
         scale_exp = int(np.floor(self.scale_log10))
         scale_base = np.power(10, self.scale_log10 - scale_exp)
         scale_str = "%.2fe%d" % (scale_base, scale_exp)
-        return "c=(%.5e %.5e) s=%s r=%.1f°" % (
-            self.center_x.to_float(), self.center_y.to_float(), scale_str, rot_deg)
+        return "c=(%.5e %.5e) s=%s r=%.1f°" % (self.center_x.to_float(), self.center_y.to_float(), scale_str, rot_deg)
 
-    def serialize(self) -> List[float]:
+    def serialize(self) -> list[str | float]:
         return [str(self.center_x), str(self.center_y), self.scale_log10, self.rotation]
 
     @staticmethod
-    def deserialize(data: List) -> 'Transform':
+    def deserialize(data: list) -> "Transform":
         assert len(data) == 4
         return Transform.create(center_x=data[0], center_y=data[1], scale_log10=data[2], rotation=data[3])
 
-    def __eq__(self, other: 'Transform'):
-        return (np.isclose(self.center_x.to_float(), other.center_x.to_float())) and (
-            np.isclose(self.center_y.to_float(), other.center_y.to_float())) and (
-            np.isclose(self.scale_log10, other.scale_log10)) and (
-            np.isclose(self.rotation, other.rotation))
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Transform):
+            return False
+        return bool(
+            (np.isclose(self.center_x.to_float(), other.center_x.to_float()))
+            and (np.isclose(self.center_y.to_float(), other.center_y.to_float()))
+            and (np.isclose(self.scale_log10, other.scale_log10))
+            and (np.isclose(self.rotation, other.rotation))
+        )
 
     def rotation_deg(self):
         return 180 * self.rotation / np.pi
@@ -186,12 +220,15 @@ class Transform:
 
 @dataclass(frozen=True)
 class Frame:
-    painter: 'Painter'
+    painter: "Painter"
     transform: Transform
     palette: ColorPalette
 
-    def serialize(self, prev: 'Frame' = None):
-        data = {
+    if TYPE_CHECKING:
+        cached_movie_preview: ClassVar[np.ndarray | str | None]
+
+    def serialize(self, prev: "Frame | None" = None):
+        data: dict[str, object] = {
             "tr": self.transform.serialize(),
         }
         if prev is not None and prev.painter == self.painter:
@@ -206,25 +243,24 @@ class Frame:
         return data
 
     @staticmethod
-    def deserialize(data: Dict, prev: 'Frame' = None) -> 'Frame':
+    def deserialize(data: Dict, prev: "Frame | None" = None) -> "Frame":
         from aldyparen.painters import Painter
+
         if data["pn"] == "prev":
+            assert prev is not None
             painter = prev.painter
         else:
             painter = Painter.deserialize(data["pn"], data["pt"])
         if data["pl"] == "prev":
+            assert prev is not None
             palette = prev.palette
         else:
             palette = ColorPalette.deserialize(data["pl"])
-        return Frame(
-            painter=painter,
-            transform=Transform.deserialize(data["tr"]),
-            palette=palette
-        )
+        return Frame(painter=painter, transform=Transform.deserialize(data["tr"]), palette=palette)
 
 
 class Renderer:
-    def __init__(self, width_pxl, height_pxl):
+    def __init__(self, width_pxl: int, height_pxl: int):
         self.width_pxl = width_pxl
         self.height_pxl = height_pxl
 
@@ -244,7 +280,7 @@ class Renderer:
         w = self.width_pxl
         h = self.height_pxl
 
-        if hasattr(frame.painter, "paint_high_precision"):
+        if isinstance(frame.painter, HighPrecisionPainter):
             scale_exp = int(np.floor(tr.scale_log10))
             scale_base = np.power(10, tr.scale_log10 - scale_exp)
             cx = tr.center_x
@@ -266,11 +302,11 @@ class Renderer:
 
 
 class StaticRenderer(Renderer):
-    def __init__(self, width_pxl, height_pxl):
+    def __init__(self, width_pxl: int, height_pxl: int):
         super().__init__(width_pxl, height_pxl)
         self.mgrid_y, self.mgrid_x = np.mgrid[0:height_pxl, 0:width_pxl]
 
-    def render(self, frame):
+    def render(self, frame: Frame) -> NDArray[np.uint8]:
         pic = np.empty((self.height_pxl, self.width_pxl), dtype=np.uint32)
         self.render_meshgrid_mono(frame, self.mgrid_x, self.mgrid_y, pic)
         return frame.palette.remap(pic)
@@ -279,7 +315,13 @@ class StaticRenderer(Renderer):
 class ChunkingRenderer(Renderer):
     """Renders picture in chunks of `chunk_size` pixels. Can be aborted between chunks."""
 
-    def __init__(self, width_pxl, height_pxl, chunk_size=100000, is_aborted: Callable[[], bool] = lambda: False):
+    def __init__(
+        self,
+        width_pxl: int,
+        height_pxl: int,
+        chunk_size: int = 100000,
+        is_aborted: Callable[[], bool] = lambda: False,
+    ):
         super().__init__(width_pxl, height_pxl)
         self.chunk_size = chunk_size
         self.chunks_count = int(np.ceil((width_pxl * height_pxl) / self.chunk_size))
@@ -295,10 +337,10 @@ class ChunkingRenderer(Renderer):
             if self.is_aborted():
                 break
             st = i * cs
-            self.render_meshgrid_mono(frame, self.mgrid_x[st: st + cs], self.mgrid_y[st:st + cs], pic[st: st + cs])
+            self.render_meshgrid_mono(frame, self.mgrid_x[st : st + cs], self.mgrid_y[st : st + cs], pic[st : st + cs])
         return frame.palette.remap(pic.reshape(self.height_pxl, self.width_pxl))
 
-    def render_picture(self, frame, file_name):
+    def render_picture(self, frame: Frame, file_name: str):
         pic = self.render(frame)
         plt.imsave(file_name, pic)
 
@@ -316,7 +358,13 @@ def _rearrange_points(
 
 
 class InteractiveRenderer(Renderer):
-    def __init__(self, width_pxl, height_pxl, ui_callback: Callable[[np.ndarray], None], downsample_factor=2):
+    def __init__(
+        self,
+        width_pxl: int,
+        height_pxl: int,
+        ui_callback: Callable[[np.ndarray], None],
+        downsample_factor: int = 2,
+    ):
         super().__init__(width_pxl, height_pxl)
         self.ui_callback = ui_callback
         self.downsample_factor = downsample_factor
@@ -366,16 +414,17 @@ class InteractiveRenderer(Renderer):
             pic = np.empty((self.height_pxl, self.width_pxl), dtype=np.uint32)
             _rearrange_points(self.mono_pic, self.mgrid_x, self.mgrid_y, pic)
         else:
-            small_pic = self.mono_pic[0:self.chunk_size].reshape((self.height_mini, self.width_mini))
+            small_pic = self.mono_pic[0 : self.chunk_size].reshape((self.height_mini, self.width_mini))
             if self.chunks_rendered == 1:
                 pic = small_pic
             else:
                 pic = small_pic.repeat(self.downsample_factor, axis=0).repeat(self.downsample_factor, axis=1)
-                pic = pic[:self.height_pxl, :self.width_pxl]
+                pic = pic[: self.height_pxl, : self.width_pxl]
                 assert pic.shape == (self.height_pxl, self.width_pxl)
                 length = self.chunks_rendered * self.chunk_size
                 _rearrange_points(self.mono_pic[:length], self.mgrid_x[:length], self.mgrid_y[:length], pic)
 
+        assert self.frame_rendered is not None
         pic = self.frame_rendered.palette.remap(pic)
         self.ui_callback(pic)
         self.chunks_displayed = self.chunks_rendered
@@ -414,10 +463,12 @@ class RenderLoop(QThread):
                 continue
             if not (self.renderer.frame_to_display is self.renderer.frame_rendered):
                 self.is_idle = False
-                self.renderer.render_meshgrid_mono(self.renderer.frame_to_display,
-                                                   self.renderer.mgrid_x[:cs],
-                                                   self.renderer.mgrid_y[:cs],
-                                                   self.renderer.mono_pic[:cs])
+                self.renderer.render_meshgrid_mono(
+                    self.renderer.frame_to_display,
+                    self.renderer.mgrid_x[:cs],
+                    self.renderer.mgrid_y[:cs],
+                    self.renderer.mono_pic[:cs],
+                )
                 self.renderer.frame_rendered = self.renderer.frame_to_display
                 self.renderer.chunks_rendered = 1
                 self.renderer.need_immediate_update = True
@@ -428,11 +479,14 @@ class RenderLoop(QThread):
                 time.sleep(0.001)
                 continue
 
+            assert self.renderer.frame_rendered is not None
             cr = self.renderer.chunks_rendered * self.renderer.chunk_size
-            self.renderer.render_meshgrid_mono(self.renderer.frame_rendered,
-                                               self.renderer.mgrid_x[cr:cr + cs],
-                                               self.renderer.mgrid_y[cr:cr + cs],
-                                               self.renderer.mono_pic[cr: cr + cs])
+            self.renderer.render_meshgrid_mono(
+                self.renderer.frame_rendered,
+                self.renderer.mgrid_x[cr : cr + cs],
+                self.renderer.mgrid_y[cr : cr + cs],
+                self.renderer.mono_pic[cr : cr + cs],
+            )
             self.renderer.chunks_rendered += 1
         assert self.renderer.chunks_rendered == self.renderer.chunks_count
         self.renderer.need_immediate_update = True

@@ -1,8 +1,11 @@
-from aldyparen.math.hpn import *
 import numba
 import numpy as np
+from typing import Any
 from numpy.typing import NDArray
 
+from aldyparen.math.hpn import *
+
+from .base import HighPrecisionPainter
 
 # This is slower and not used, but left for reference.
 """
@@ -76,15 +79,20 @@ def _count_iters_vec_v2(
             break
 
 
-class MandelbrotHighPrecisionPainter:
+class MandelbrotHighPrecisionPainter(HighPrecisionPainter):
     """Mandelbrot set with high precision."""
 
-    def __init__(self, max_iter=10):
+    def __init__(self, max_iter: int = 10):
         assert 1 <= max_iter <= 1000000000, "bad max_iter"
         self.max_iter = max_iter
 
-    def to_object(self):
+    def to_object(self) -> dict[str, Any]:
         return {"max_iter": self.max_iter}
 
-    def paint_high_precision(self, points_x: np.ndarray, points_y: np.ndarray, ans: np.ndarray):
+    def paint_high_precision(
+        self,
+        points_x: NDArray[np.int64],
+        points_y: NDArray[np.int64],
+        ans: NDArray[np.uint32],
+    ) -> None:
         _count_iters_vec_v2(points_x, points_y, self.max_iter, ans)

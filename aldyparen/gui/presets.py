@@ -27,4 +27,6 @@ def load_preset(name: str) -> tuple[Painter, Transform, ColorPalette]:
         case "burning_ship_hp":
             painter = MandelbroidHighPrecisionPainter(gen_function="abscw(z)**2+c", max_iter=100, precision=4)
             transform = Transform.create(center=-1.769 - 0.035j, scale_log10=-0.8, rotation_deg=180)
+        case _:
+            raise ValueError(f"Unknown preset name: {name}")
     return painter, transform, palette
