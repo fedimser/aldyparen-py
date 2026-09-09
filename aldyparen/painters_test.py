@@ -1,15 +1,18 @@
 import json
-import random
 
 import numpy as np
 import pytest
 
-from aldyparen.graphics import Frame, StaticRenderer, Transform, ColorPalette
+from aldyparen.graphics import ColorPalette, Frame, StaticRenderer, Transform
 from aldyparen.gui.presets import PRESETS
-from aldyparen.math.complex_hpn import ComplexHpn
-from aldyparen.painters import MandelbroidPainter, SierpinskiCarpetPainter, \
-    MandelbrotHighPrecisionPainter, \
-    JuliaPainter, ALL_PAINTERS, MandelbroidHighPrecisionPainter
+from aldyparen.painters import (
+    ALL_PAINTERS,
+    JuliaPainter,
+    MandelbroidHighPrecisionPainter,
+    MandelbroidPainter,
+    MandelbrotHighPrecisionPainter,
+    SierpinskiCarpetPainter,
+)
 from aldyparen.test_util import _assert_picture
 from aldyparen.util import SUPPORTED_FUNCTIONS
 
@@ -86,6 +89,31 @@ def test_renders_julia_set():
                   Transform.create(center=2, scale=5),
                   ColorPalette.default())
     _assert_picture(renderer.render(frame), "newton_poly3")
+
+
+def test_julia_paint_handles_iteration_errors():
+    painter = JuliaPainter(iters=1)
+
+    def fail(_):
+        raise RuntimeError("iteration failed")
+
+    painter.iterate_func = fail
+    ans = np.full(2, 99, dtype=np.uint32)
+    painter.paint(np.array([0j, 1j]), ans)
+
+    np.testing.assert_array_equal(ans, [0, 0])
+    assert painter.warning == "Error: iteration failed"
+
+
+def test_julia_paint_warns_when_color_limit_is_exceeded():
+    painter = JuliaPainter(iters=1, tolerance=1e-6, max_colors=1)
+    painter.iterate_func = lambda points: points
+    ans = np.zeros(2, dtype=np.uint32)
+
+    painter.paint(np.array([1 + 0j, 2 + 0j]), ans)
+
+    np.testing.assert_array_equal(ans, [1, 2])
+    assert painter.warning == "Warning! Color limit exceeded, extra colors were mapped to 2."
 
 
 def test_renders_sierpinski_carpet():
