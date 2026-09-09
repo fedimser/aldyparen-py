@@ -8,6 +8,7 @@ from aldyparen.graphics import ColorPalette, Frame, Transform
 from aldyparen.math.hpn import Hpn
 from aldyparen.painters import (
     JuliaPainter,
+    LyapunovFractalPainter,
     MandelbroidPainter,
     MandelbrotHighPrecisionPainter,
     Painter,
@@ -41,6 +42,9 @@ def mix_painters[PainterT: Painter](p1: PainterT, p2: PainterT, w: float) -> Pai
     if isinstance(p1, JuliaPainter):
         assert isinstance(p2, JuliaPainter)
         return cast(PainterT, mix_julia(p1, p2, w))
+    if isinstance(p1, LyapunovFractalPainter):
+        assert isinstance(p2, LyapunovFractalPainter)
+        return cast(PainterT, mix_lyapunov(p1, p2, w))
     if isinstance(p1, MandelbrotHighPrecisionPainter):
         assert isinstance(p2, MandelbrotHighPrecisionPainter)
         return cast(PainterT, mix_mandelbrot_hp(p1, p2, w))
@@ -90,6 +94,20 @@ def mix_julia(p1: JuliaPainter, p2: JuliaPainter, w: float) -> JuliaPainter:
     tolerance = (1 - w) * p1.tolerance + w * p2.tolerance
     max_colors = int(np.round((1 - w) * p1.max_colors + w * p2.max_colors))
     return JuliaPainter(func=func, iters=iters, tolerance=tolerance, max_colors=max_colors)
+
+
+def mix_lyapunov(p1: LyapunovFractalPainter, p2: LyapunovFractalPainter, w: float) -> LyapunovFractalPainter:
+    if p1.sequence != p2.sequence:
+        raise ValueError("Cannot mix Lyapunov painters with different sequences")
+    warmup = int(np.round((1 - w) * p1.warmup + w * p2.warmup))
+    iterations = int(np.round((1 - w) * p1.iterations + w * p2.iterations))
+    color_scale = (1 - w) * p1.color_scale + w * p2.color_scale
+    return LyapunovFractalPainter(
+        sequence=p1.sequence,
+        warmup=warmup,
+        iterations=iterations,
+        color_scale=color_scale,
+    )
 
 
 def mix_functions(f1: str, f2: str, w: float):

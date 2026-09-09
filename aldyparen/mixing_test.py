@@ -7,6 +7,7 @@ from aldyparen.graphics import ColorPalette, Frame, Transform
 from aldyparen.mixing import make_animation, mix_functions, mix_painters, mix_palettes
 from aldyparen.painters import (
     JuliaPainter,
+    LyapunovFractalPainter,
     MandelbroidPainter,
     MandelbrotHighPrecisionPainter,
     SierpinskiCarpetPainter,
@@ -68,6 +69,30 @@ def test_mix_supported_and_unsupported_painters():
     assert mix_painters(painter, painter, 0.5) is painter
     with pytest.raises(ValueError, match="Cannot mix painters"):
         mix_painters(painter, SierpinskiCarpetPainter(depth=3), 0.5)
+
+
+def test_mix_lyapunov_painters():
+    mixed = mix_painters(
+        LyapunovFractalPainter(sequence="AAB", warmup=10, iterations=20, color_scale=4),
+        LyapunovFractalPainter(sequence="AAB", warmup=21, iterations=41, color_scale=8),
+        0.5,
+    )
+
+    assert mixed.to_object() == {
+        "sequence": "AAB",
+        "warmup": 16,
+        "iterations": 30,
+        "color_scale": 6.0,
+    }
+
+
+def test_mix_lyapunov_rejects_different_sequences():
+    with pytest.raises(ValueError, match="different sequences"):
+        mix_painters(
+            LyapunovFractalPainter(sequence="AB"),
+            LyapunovFractalPainter(sequence="AAB"),
+            0.5,
+        )
 
 
 def test_make_animation():
