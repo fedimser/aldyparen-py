@@ -99,6 +99,8 @@ Reference: [Apollonian gasket](https://en.wikipedia.org/wiki/Apollonian_gasket).
 2. Verify that selecting the painter in the GUI shows valid default JSON and that editing this JSON reconstructs and rerenders the painter. The GUI passes the object returned by `to_object()` back to the constructor as keyword arguments.
 3. Decide explicitly how animation should behave. If different configurations can be mixed, add a painter-specific branch and interpolation function in `aldyparen/mixing.py`. Interpolate continuous numeric values, round discrete numeric values deliberately, and reject incompatible structural parameters with `ValueError`. If mixing is not supported, equal painters will still work, while differing painters must continue to fail clearly.
 4. Add one or more useful defaults or presets when the bare constructor does not demonstrate the painter well. Presets must use a suitable transform and palette and must remain JSON serializable.
+4.1. Add menu item in "Presets" menu in main.xml for added preset and link it to 
+showing new preset, like it's done for other presets.
 5. Ensure the painter works through `StaticRenderer`, `ChunkingRenderer`, and `InteractiveRenderer`; these renderers may split the coordinate array into chunks, so output must not depend on chunk boundaries, processing order, or mutable global state.
 6. Add painter description to README.md, inlcuding references.
 
