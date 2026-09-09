@@ -58,6 +58,21 @@ as high-resolution images or videos.
     * `SierpinskiCarpetPainter` - renders [Sierpinski carpet](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_carpet),
       as an example of non-algebraic fractal.
         * Parameters: `depth`.
+    * `LyapunovFractalPainter` - renders a [Lyapunov fractal](https://en.wikipedia.org/wiki/Lyapunov_fractal)
+      showing stable and chaotic regions of a periodically forced logistic map.
+        * Each point in the image supplies two map parameters: `A` is the point's real coordinate and `B` is its
+          imaginary coordinate. A repeating sequence such as `"AABAB"` selects the parameter `r` for each iteration
+          of `x := r*x*(1-x)`.
+        * After discarding the initial warm-up iterations, the painter estimates the Lyapunov exponent as the mean of
+          `log(abs(r*(1-2*x)))`. Negative exponents indicate stable behavior, while positive exponents indicate chaos;
+          quantizing their signs and magnitudes produces branching and swallow-shaped structures.
+        * Parameters:
+            * `sequence` - a non-empty string containing only `A` and `B`, repeated throughout the calculation.
+            * `warmup` - number of initial iterations discarded before measuring the exponent.
+            * `iterations` - number of iterations used to estimate the exponent.
+            * `color_scale` - controls how exponent magnitude is mapped to palette indices.
+        * Stable exponent bands use odd palette indices and chaotic bands use even indices. Index 0 is reserved for
+          points where the exponent cannot be computed.
 * Configurable color palette.
     * Painters are supposed to return numbers of colors (0,1,2...). Then they are mapped
       to RGB colors using palette. If palette is smaller than number of colors, it's
