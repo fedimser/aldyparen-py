@@ -292,22 +292,41 @@ class AldyparenApp:
         task.setAutoDelete(True)
         global_thread_pool().start(task)
 
-    def save_project(self):
-        assert self.opened_file_name is not None
+    @staticmethod
+    def save_project_from_frames(
+        file_name: str,
+        frames: list[Frame],
+        *,
+        work_frame: Frame | None,
+        selected_frame_idx: int = 0,
+    ):
+        """Saves given frames into a project."""
+        if work_frame is None:
+            work_frame = frames[0]
+
         frames_json = []
         prev = None
-        for frame in self.frames:
+        for frame in frames:
             frames_json.append(frame.serialize(prev=prev))
             prev = frame
         data = {
             "saved_timestamp": datetime.now().isoformat(),
             "version": VERSION,
-            "work_frame": self.work_frame.serialize(),
+            "work_frame": work_frame.serialize(),
             "frames": frames_json,
-            "selected_frame_idx": self.selected_frame_idx,
+            "selected_frame_idx": selected_frame_idx,
         }
-        with open(self.opened_file_name, "w", encoding="utf-8") as f:
+        with open(file_name, "w", encoding="utf-8") as f:
             json.dump(data, f)
+
+    def save_project(self):
+        assert self.opened_file_name is not None
+        AldyparenApp.save_project_from_frames(
+            self.opened_file_name,
+            self.frames,
+            work_frame=self.work_frame,
+            selected_frame_idx=self.selected_frame_idx,
+        )
         self.have_unsaved_changes = False
 
     def load_project(self, file_name: str):
