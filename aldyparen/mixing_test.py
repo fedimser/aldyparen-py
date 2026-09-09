@@ -1,3 +1,5 @@
+from typing import cast
+
 import numpy as np
 import pytest
 
@@ -84,7 +86,7 @@ def test_make_animation():
     assert animation[10] == frame2
     mid_frame = animation[5]
     assert mid_frame.transform == Transform.create(center=1 + 2j, scale=5, rotation=1)
-    mid_painter = mid_frame.painter  # type: MandelbroidPainter
+    mid_painter = cast(MandelbroidPainter, mid_frame.painter)
     assert mid_painter.max_iter == 75
     assert np.allclose(mid_painter.radius, 15)
     assert mid_painter.gen_function == "z**6.0+c"

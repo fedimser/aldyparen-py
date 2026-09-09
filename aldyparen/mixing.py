@@ -1,21 +1,20 @@
 from io import BytesIO
-from tokenize import tokenize, untokenize, NUMBER
-from typing import List
+from tokenize import NUMBER, tokenize, untokenize
+from typing import cast
 
 import numpy as np
 
 from aldyparen.graphics import Frame, ColorPalette, Transform
 from aldyparen.math.hpn import Hpn
 from aldyparen.painters import (
-    MandelbroidPainter,
     JuliaPainter,
-    Painter,
+    MandelbroidPainter,
     MandelbrotHighPrecisionPainter,
-    MandelbroidHighPrecisionPainter,
+    Painter,
 )
 
 
-def make_animation(frame1: Frame, frame2: Frame, length: int) -> List[Frame]:
+def make_animation(frame1: Frame, frame2: Frame, length: int) -> list[Frame]:
     """Continuously transforms frame1 to frame2.
     Returns list of `length+1` frames, where first is frame1, last is frame2.
     """
@@ -32,21 +31,20 @@ def mix_frames(frame1: Frame, frame2: Frame, w: float) -> Frame:
     )
 
 
-def mix_painters(p1: "Painter", p2: "Painter", w: float) -> Painter:
+def mix_painters[PainterT: Painter](p1: PainterT, p2: PainterT, w: float) -> PainterT:
     if p1 == p2:
         return p1
-    cl = p1.__class__
-    assert p2.__class__ == cl
-    if cl == MandelbroidPainter:
-        return mix_mandelbroid(p1, p2, w)
-    if cl == JuliaPainter:
-        return mix_julia(p1, p2, w)
-    if cl == MandelbrotHighPrecisionPainter:
-        return mix_mandelbrot_hp(p1, p2, w)
-    else:
-        if p1 != p2:
-            raise ValueError("Cannot mix painters.")
-        return p1
+    assert type(p2) is type(p1)
+    if isinstance(p1, MandelbroidPainter):
+        assert isinstance(p2, MandelbroidPainter)
+        return cast(PainterT, mix_mandelbroid(p1, p2, w))
+    if isinstance(p1, JuliaPainter):
+        assert isinstance(p2, JuliaPainter)
+        return cast(PainterT, mix_julia(p1, p2, w))
+    if isinstance(p1, MandelbrotHighPrecisionPainter):
+        assert isinstance(p2, MandelbrotHighPrecisionPainter)
+        return cast(PainterT, mix_mandelbrot_hp(p1, p2, w))
+    raise ValueError("Cannot mix painters.")
 
 
 def mix_transforms(x: Transform, y: Transform, w: float) -> Transform:
