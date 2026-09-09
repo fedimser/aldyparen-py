@@ -8,6 +8,8 @@ from aldyparen.graphics import ColorPalette, Frame, Transform
 from aldyparen.math.hpn import Hpn
 from aldyparen.painters import (
     JuliaPainter,
+    LyapunovFractalPainter,
+    MagneticPendulumPainter,
     MandelbroidPainter,
     MandelbrotHighPrecisionPainter,
     Painter,
@@ -41,6 +43,12 @@ def mix_painters[PainterT: Painter](p1: PainterT, p2: PainterT, w: float) -> Pai
     if isinstance(p1, JuliaPainter):
         assert isinstance(p2, JuliaPainter)
         return cast(PainterT, mix_julia(p1, p2, w))
+    if isinstance(p1, LyapunovFractalPainter):
+        assert isinstance(p2, LyapunovFractalPainter)
+        return cast(PainterT, mix_lyapunov(p1, p2, w))
+    if isinstance(p1, MagneticPendulumPainter):
+        assert isinstance(p2, MagneticPendulumPainter)
+        return cast(PainterT, mix_magnetic_pendulum(p1, p2, w))
     if isinstance(p1, MandelbrotHighPrecisionPainter):
         assert isinstance(p2, MandelbrotHighPrecisionPainter)
         return cast(PainterT, mix_mandelbrot_hp(p1, p2, w))
@@ -90,6 +98,41 @@ def mix_julia(p1: JuliaPainter, p2: JuliaPainter, w: float) -> JuliaPainter:
     tolerance = (1 - w) * p1.tolerance + w * p2.tolerance
     max_colors = int(np.round((1 - w) * p1.max_colors + w * p2.max_colors))
     return JuliaPainter(func=func, iters=iters, tolerance=tolerance, max_colors=max_colors)
+
+
+def mix_lyapunov(p1: LyapunovFractalPainter, p2: LyapunovFractalPainter, w: float) -> LyapunovFractalPainter:
+    if p1.sequence != p2.sequence:
+        raise ValueError("Cannot mix Lyapunov painters with different sequences")
+    warmup = int(np.round((1 - w) * p1.warmup + w * p2.warmup))
+    iterations = int(np.round((1 - w) * p1.iterations + w * p2.iterations))
+    color_scale = (1 - w) * p1.color_scale + w * p2.color_scale
+    return LyapunovFractalPainter(
+        sequence=p1.sequence,
+        warmup=warmup,
+        iterations=iterations,
+        color_scale=color_scale,
+    )
+
+
+def mix_magnetic_pendulum(
+    p1: MagneticPendulumPainter, p2: MagneticPendulumPainter, w: float
+) -> MagneticPendulumPainter:
+    if len(p1.magnets) != len(p2.magnets):
+        raise ValueError("Cannot mix magnetic pendulum painters with different magnet counts")
+
+    magnets = []
+    for magnet1, magnet2 in zip(p1.magnets, p2.magnets, strict=True):
+        magnets.append({field: (1 - w) * magnet1[field] + w * magnet2[field] for field in ("x", "y", "strength")})
+    return MagneticPendulumPainter(
+        magnets=magnets,
+        height=(1 - w) * p1.height + w * p2.height,
+        damping=(1 - w) * p1.damping + w * p2.damping,
+        gravity=(1 - w) * p1.gravity + w * p2.gravity,
+        time_step=(1 - w) * p1.time_step + w * p2.time_step,
+        max_steps=int(np.round((1 - w) * p1.max_steps + w * p2.max_steps)),
+        settle_distance=(1 - w) * p1.settle_distance + w * p2.settle_distance,
+        settle_speed=(1 - w) * p1.settle_speed + w * p2.settle_speed,
+    )
 
 
 def mix_functions(f1: str, f2: str, w: float):

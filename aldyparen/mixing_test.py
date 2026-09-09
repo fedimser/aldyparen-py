@@ -7,6 +7,8 @@ from aldyparen.graphics import ColorPalette, Frame, Transform
 from aldyparen.mixing import make_animation, mix_functions, mix_painters, mix_palettes
 from aldyparen.painters import (
     JuliaPainter,
+    LyapunovFractalPainter,
+    MagneticPendulumPainter,
     MandelbroidPainter,
     MandelbrotHighPrecisionPainter,
     SierpinskiCarpetPainter,
@@ -68,6 +70,67 @@ def test_mix_supported_and_unsupported_painters():
     assert mix_painters(painter, painter, 0.5) is painter
     with pytest.raises(ValueError, match="Cannot mix painters"):
         mix_painters(painter, SierpinskiCarpetPainter(depth=3), 0.5)
+
+
+def test_mix_lyapunov_painters():
+    mixed = mix_painters(
+        LyapunovFractalPainter(sequence="AAB", warmup=10, iterations=20, color_scale=4),
+        LyapunovFractalPainter(sequence="AAB", warmup=21, iterations=41, color_scale=8),
+        0.5,
+    )
+
+    assert mixed.to_object() == {
+        "sequence": "AAB",
+        "warmup": 16,
+        "iterations": 30,
+        "color_scale": 6.0,
+    }
+
+
+def test_mix_lyapunov_rejects_different_sequences():
+    with pytest.raises(ValueError, match="different sequences"):
+        mix_painters(
+            LyapunovFractalPainter(sequence="AB"),
+            LyapunovFractalPainter(sequence="AAB"),
+            0.5,
+        )
+
+
+def test_mix_magnetic_pendulum_painters():
+    magnets1 = [
+        {"x": -1, "y": 0, "strength": 1},
+        {"x": 1, "y": 0, "strength": 2},
+        {"x": 0, "y": 1, "strength": 3},
+    ]
+    magnets2 = [
+        {"x": -2, "y": 1, "strength": 2},
+        {"x": 2, "y": 1, "strength": 4},
+        {"x": 0, "y": 2, "strength": 6},
+    ]
+
+    mixed = mix_painters(
+        MagneticPendulumPainter(magnets=magnets1, height=0.2, max_steps=10),
+        MagneticPendulumPainter(magnets=magnets2, height=0.4, max_steps=21),
+        0.5,
+    )
+
+    assert mixed.magnets == [
+        {"x": -1.5, "y": 0.5, "strength": 1.5},
+        {"x": 1.5, "y": 0.5, "strength": 3.0},
+        {"x": 0.0, "y": 1.5, "strength": 4.5},
+    ]
+    assert mixed.height == pytest.approx(0.3)
+    assert mixed.max_steps == 16
+
+
+def test_mix_magnetic_pendulum_rejects_different_magnet_counts():
+    magnets = MagneticPendulumPainter().magnets
+    with pytest.raises(ValueError, match="different magnet counts"):
+        mix_painters(
+            MagneticPendulumPainter(magnets=magnets),
+            MagneticPendulumPainter(magnets=magnets + [{"x": 0, "y": 0, "strength": 1}]),
+            0.5,
+        )
 
 
 def test_make_animation():

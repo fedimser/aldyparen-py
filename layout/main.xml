@@ -1031,6 +1031,8 @@
     <addaction name="menu_mandelbrot_hp"/>
     <addaction name="menu_burning_ship"/>
     <addaction name="menu_burning_ship_hp"/>
+    <addaction name="menu_lyapunov"/>
+    <addaction name="menu_magnetic_pendulum"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuVideo_edit"/>
@@ -1192,6 +1194,16 @@
   <action name="menu_mandelbrot_hp">
    <property name="text">
     <string>Mandelbrot set (high precision)</string>
+   </property>
+  </action>
+  <action name="menu_lyapunov">
+   <property name="text">
+    <string>Lyapunov fractal</string>
+   </property>
+  </action>
+  <action name="menu_magnetic_pendulum">
+   <property name="text">
+    <string>Magnetic pendulum</string>
    </property>
   </action>
  </widget>
