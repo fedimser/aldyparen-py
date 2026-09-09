@@ -385,6 +385,7 @@ class InteractiveRenderer(Renderer):
 
     def halt(self):
         self.renderer_thread.requestInterruption()
+        self.renderer_thread.wait()
 
 
 class RenderLoop(QThread):
