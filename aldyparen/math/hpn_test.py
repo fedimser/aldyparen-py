@@ -1,5 +1,6 @@
-from aldyparen.math.hpn import *
 import pytest
+
+from aldyparen.math.hpn import *
 
 CANONICAL_NUMBERS = ["0.", "1.", "-1.", "0.1", "0.001", "-0.001", "3.14", "0.99", "-2.15"]
 NON_CANONICAL_NUMBERS = [("1e5", "100000."),

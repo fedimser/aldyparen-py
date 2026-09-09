@@ -38,7 +38,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         self.drag_start_x = 0.0
         self.drag_start_y = 0.0
         self.frame_width_pxl = 0
-        self.cursor_math_pos : np.complex128 | None = None 
+        self.cursor_math_pos: np.complex128 | None = None
         self.cursor_rel_screen_pos = None
 
     def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent):
