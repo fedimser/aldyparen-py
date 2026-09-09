@@ -1,17 +1,23 @@
 import math
 import os
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
-from PyQt5 import QtWidgets, QtGui, uic, QtCore
-from PyQt5.QtCore import QPointF, QCoreApplication, QUrl, QThreadPool, QSize
-from PyQt5.QtGui import QDesktopServices, QColor, QIcon
-from PyQt5.QtWidgets import QMessageBox, QGraphicsSceneWheelEvent, QGraphicsSceneMouseEvent, QApplication, QComboBox, \
-    QPlainTextEdit, QLabel, QSpinBox, QScrollBar, QFileDialog, QColorDialog
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt5.QtCore import QCoreApplication, QPointF, QSize, QThreadPool, QUrl
+from PyQt5.QtGui import QColor, QDesktopServices, QIcon
+from PyQt5.QtWidgets import (
+    QApplication,
+    QColorDialog,
+    QFileDialog,
+    QGraphicsSceneMouseEvent,
+    QGraphicsSceneWheelEvent,
+    QMessageBox,
+)
 
-from .async_runners import render_movie_preview_async, render_video_async
 from ..graphics import ColorPalette, Transform
 from ..painters import ALL_PAINTERS
+from .async_runners import render_video_async
 
 if TYPE_CHECKING:
     from .app import AldyparenApp
@@ -32,7 +38,7 @@ class WorkFrameScene(QtWidgets.QGraphicsScene):
         self.drag_start_x = 0.0
         self.drag_start_y = 0.0
         self.frame_width_pxl = 0
-        self.cursor_math_pos = None  # type: Union[None, np.complex128]
+        self.cursor_math_pos : np.complex128 | None = None 
         self.cursor_rel_screen_pos = None
 
     def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent):
