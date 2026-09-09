@@ -34,7 +34,7 @@ from .presets import PRESET_NAMES, load_preset
 from .settings import AldyparenSettings
 
 APP_NAME = "Aldyparen"
-VERSION = "3.1"
+VERSION = "3.2"
 
 
 class AldyparenApp:
