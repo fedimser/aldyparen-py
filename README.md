@@ -111,3 +111,9 @@ To run tests and validate style before commit, run:
 ```
 pycodestyle --max-line-length=120 ./aldyparen && python3 -m pytest .
 ```
+
+To check test coverage:
+
+```
+python -m coverage run -m pytest . && python -m coverage report -m
+```

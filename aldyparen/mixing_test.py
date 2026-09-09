@@ -1,10 +1,14 @@
 import numpy as np
 import pytest
 
-from aldyparen.graphics import Frame, Transform, ColorPalette
-from aldyparen.mixing import mix_functions, make_animation, mix_painters, mix_palettes
-from aldyparen.painters import JuliaPainter, MandelbroidPainter, MandelbrotHighPrecisionPainter, \
-    SierpinskiCarpetPainter
+from aldyparen.graphics import ColorPalette, Frame, Transform
+from aldyparen.mixing import make_animation, mix_functions, mix_painters, mix_palettes
+from aldyparen.painters import (
+    JuliaPainter,
+    MandelbroidPainter,
+    MandelbrotHighPrecisionPainter,
+    SierpinskiCarpetPainter,
+)
 
 
 def test_mix_functions():
