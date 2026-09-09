@@ -4,7 +4,7 @@ from typing import cast
 
 import numpy as np
 
-from aldyparen.graphics import Frame, ColorPalette, Transform
+from aldyparen.graphics import ColorPalette, Frame, Transform
 from aldyparen.math.hpn import Hpn
 from aldyparen.painters import (
     JuliaPainter,

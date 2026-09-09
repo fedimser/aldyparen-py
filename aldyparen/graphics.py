@@ -451,9 +451,11 @@ class RenderLoop(QThread):
                 time.sleep(0.001)
                 continue
 
+            frame = self.renderer.frame_rendered
+            assert frame is not None
             cr = self.renderer.chunks_rendered * self.renderer.chunk_size
             self.renderer.render_meshgrid_mono(
-                self.renderer.frame_rendered,
+                frame,
                 self.renderer.mgrid_x[cr : cr + cs],
                 self.renderer.mgrid_y[cr : cr + cs],
                 self.renderer.mono_pic[cr : cr + cs],
