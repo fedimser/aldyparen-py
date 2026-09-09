@@ -299,6 +299,7 @@ class AldyparenApp:
         *,
         work_frame: Frame | None,
         selected_frame_idx: int = 0,
+        description: str = "",
     ):
         """Saves given frames into a project."""
         if work_frame is None:
@@ -315,6 +316,7 @@ class AldyparenApp:
             "work_frame": work_frame.serialize(),
             "frames": frames_json,
             "selected_frame_idx": selected_frame_idx,
+            "description": description,
         }
         with open(file_name, "w", encoding="utf-8") as f:
             json.dump(data, f)
