@@ -4,34 +4,6 @@ This document proposes five ordinary-precision painters that are visually and ma
 
 Aldyparen's current ordinary painter API is point based: each input complex coordinate is classified independently and converted to a palette index. Proposals that fit this model are preferable because they retain interactive, chunked, and video rendering without requiring a second rendering architecture.
 
-## 1. LyapunovFractalPainter
-
-A Lyapunov fractal maps stability and chaos in a periodically forced logistic map. Each point in the image supplies two parameters, `A = real(point)` and `B = imag(point)`. A repeated sequence such as `AABAB` selects which parameter is used at every iteration:
-
-```text
-x[n + 1] = r[n] * x[n] * (1 - x[n])
-r[n] = A or B, as selected by the sequence
-```
-
-After discarding warm-up iterations, approximate the Lyapunov exponent:
-
-```text
-lambda = mean(log(abs(r[n] * (1 - 2 * x[n]))))
-```
-
-Stable regions have `lambda < 0`; chaotic regions have `lambda > 0`. Quantizing the sign and magnitude into palette indices produces branching and swallow-shaped structures unlike Mandelbrot and Julia sets.
-
-Suggested parameters:
-
-- `sequence`: non-empty string containing `A` and `B`, for example `"AABAB"`.
-- `warmup`: iterations discarded before measuring the exponent.
-- `iterations`: iterations used to estimate the exponent.
-- `color_scale`: maps exponent magnitude to palette indices.
-
-This painter fits the existing point-independent API and should be efficient with Numba. For video, numeric parameters can be interpolated. A more ambitious version could support a fixed third parameter `C` and sequences containing `C`, allowing animation through slices of a three-dimensional parameter space.
-
-Reference: [Lyapunov fractal](https://en.wikipedia.org/wiki/Lyapunov_fractal).
-
 ## 2. MagneticPendulumPainter
 
 Treat every image coordinate as the initial horizontal position of a damped pendulum above three or more magnets. Numerically integrate the pendulum's motion until it settles near a magnet or reaches a step limit. Color primarily by the magnet reached and secondarily by settling time.

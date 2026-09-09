@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 from dataclasses import replace
 from datetime import datetime
@@ -278,12 +279,12 @@ class AldyparenApp:
             dir = os.path.join(os.getcwd(), "images")
             if not os.path.exists(dir):
                 os.makedirs(dir)
-            file_name = datetime.now().isoformat()[:19]
+            file_name = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             if type(self.work_frame.painter) is MandelbroidPainter:
-                # TODO: this doesn't work on Windows, sanitize special characters.
                 file_name += "[" + self.work_frame.painter.gen_function + "]"
             elif type(self.work_frame.painter) is MandelbroidHighPrecisionPainter:
                 file_name += "[" + self.work_frame.painter.gen_function + "]"
+            file_name = re.sub(r'[<>:"/\\|?*]', "_", file_name)
             file_name += ".bmp"
             file_name = os.path.join(dir, file_name)
         renderer = ChunkingRenderer(width, height, is_aborted=lambda: self.is_exiting)

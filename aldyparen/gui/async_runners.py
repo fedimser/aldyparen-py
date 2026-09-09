@@ -52,8 +52,12 @@ class ImageRenderRunnable(QRunnable):
 
     def run(self):
         self.app.photo_rendering_tasks_count += 1
-        self.renderer.render_picture(self.frame, self.file_name)
-        self.app.photo_rendering_tasks_count -= 1
+        try:
+            self.renderer.render_picture(self.frame, self.file_name)
+        except Exception as e:
+            self.app.show_error_message_async(str(e))
+        finally:
+            self.app.photo_rendering_tasks_count -= 1
 
 
 def render_video_async(app: "AldyparenApp", width: int, height: int, fps: int, file_name: str):
