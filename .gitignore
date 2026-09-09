@@ -13,6 +13,7 @@ TODO.txt
 *.ipynb
 !/examples/*.ipynb
 .venv
+.coverage
 
 # PyInstaller
 /build
