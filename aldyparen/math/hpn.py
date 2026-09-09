@@ -23,6 +23,7 @@ import re
 
 import numba
 import numpy as np
+from numpy.typing import NDArray
 
 DIG_GROUP_LENGTH = 8
 DIG_RANGE = 10 ** DIG_GROUP_LENGTH
@@ -112,16 +113,18 @@ class Hpn:
             arg.digits = Hpn._extend_precision(arg.digits, prec)
 
 
-@numba.jit("void(i8[:])", nopython=True, inline="always")
-def hpn_normalize_in_place(x):
+# void(i8[:])
+@numba.jit(nopython=True, inline="always")
+def hpn_normalize_in_place(x: NDArray[np.int64]):
     prec = x.shape[0]
     for i in range(prec - 1, 0, -1):
         x[i - 1] += x[i] // DIG_RANGE
         x[i] %= DIG_RANGE
 
 
-@numba.jit("void(i8[:,:])", nopython=True)
-def hpn_normalize_in_place_vec(x):
+# void(i8[:,:])
+@numba.jit(nopython=True)
+def hpn_normalize_in_place_vec(x: NDArray[np.int64]):
     prec = x.shape[1]
     for i in range(prec - 1, 0, -1):
         x[:, i - 1] += x[:, i] // DIG_RANGE
@@ -220,8 +223,9 @@ def _hpn_to_float(x: np.ndarray) -> float:
     return float(_hpn_to_str(x))
 
 
-@numba.jit("i8[:](i8[:],i8[:])", nopython=True)
-def hpn_mul(x, y):
+# i8[:](i8[:],i8[:])
+@numba.jit(nopython=True)
+def hpn_mul(x: NDArray[np.int64], y: NDArray[np.int64]) -> NDArray[np.int64]:
     prec = x.shape[0]
     ans = np.zeros_like(x)
     for i in range(prec):
@@ -229,15 +233,25 @@ def hpn_mul(x, y):
     return ans
 
 
-@numba.jit(numba.types.void(HPN_TYPE, HPN_TYPE, HPN_MUT), nopython=True)
-def hpn_mul_inplace_noclear(x, y, ans):
+# void(HPN_TYPE, HPN_TYPE, HPN_MUT)
+@numba.jit(nopython=True)
+def hpn_mul_inplace_noclear(
+    x: NDArray[np.int64],
+    y: NDArray[np.int64],
+    ans: NDArray[np.int64],
+) -> None:
     prec = x.shape[0]
     for i in range(prec):
         ans[i:] += x[i] * y[:prec - i]
 
 
-@numba.jit("void(i8[:,:],i8[:,:],i8[:,:])", parallel=True, nopython=True)
-def hpn_mul_vec_inplace(x, y, ans):
+# void(i8[:,:],i8[:,:],i8[:,:])
+@numba.jit(parallel=True, nopython=True)
+def hpn_mul_vec_inplace(
+    x: NDArray[np.int64],
+    y: NDArray[np.int64],
+    ans: NDArray[np.int64],
+) -> None:
     n, prec = x.shape
     ans[:] = 0
     for j in numba.prange(n):
@@ -245,15 +259,17 @@ def hpn_mul_vec_inplace(x, y, ans):
             ans[j, i:] += x[j, i] * y[j, :prec - i]
 
 
-@numba.jit("i8[:](i8[:])", nopython=True)
-def hpn_square(x):
+# i8[:](i8[:])
+@numba.jit(nopython=True)
+def hpn_square(x: NDArray[np.int64]) -> NDArray[np.int64]:
     ans = hpn_mul(x, x)
     hpn_normalize_in_place(ans)
     return ans
 
 
-@numba.jit(HPN_MUT(HPN_TYPE), nopython=True)
-def hpn_abs(x):
+# HPN_MUT(HPN_TYPE)
+@numba.jit(nopython=True)
+def hpn_abs(x: NDArray[np.int64]) -> NDArray[np.int64]:
     if x[0] >= 0:
         return np.copy(x)
     ans = x * -1

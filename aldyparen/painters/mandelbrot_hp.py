@@ -1,9 +1,11 @@
 from aldyparen.math.hpn import *
 import numba
 import numpy as np
+from numpy.typing import NDArray
 
 
 # This is slower and not used, but left for reference.
+"""
 @numba.guvectorize([(numba.int64[:], numba.int64[:], numba.uint32[:], numba.uint32[:])], '(n),(n),(m)->(m)',
                    nopython=True)
 # @numba.jit("void(i8[:],i8[:],u4[:],u4[:])", nogil=True, nopython=True)
@@ -30,10 +32,17 @@ def _count_iters_vec_v1(x0, y0, max_iter, ans):
     ans = ans.reshape((-1, 1))
     max_iter = np.full_like(ans, max_iter)
     _count_iters_v1(x0, y0, max_iter, ans)
+"""
 
 
-@numba.jit("void(i8[:,:],i8[:,:],u4,u4[:])", nogil=True, nopython=True)
-def _count_iters_vec_v2(x0, y0, max_iter, ans):
+# void(i8[:,:],i8[:,:],u4,u4[:])
+@numba.jit(nogil=True, nopython=True)
+def _count_iters_vec_v2(
+    x0: NDArray[np.int64],
+    y0: NDArray[np.int64],
+    max_iter: int,
+    ans: NDArray[np.uint32],
+) -> None:
     hpn_normalize_in_place_vec(x0)
     hpn_normalize_in_place_vec(y0)
     n = len(ans)
