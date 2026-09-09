@@ -15,6 +15,7 @@ TODO.txt
 .venv
 .coverage
 *.egg_info
+aldyparen-video-projects
 
 # PyInstaller
 /build
