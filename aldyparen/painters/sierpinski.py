@@ -4,7 +4,7 @@ import numpy as np
 
 # If point is inside, returns 0.
 # If point is outside, returns at which iteration we exited it.
-@numba.jit("u4(f8,f8,i8)", nopython=True)
+@numba.jit("i8(f8,f8,i8)", nopython=True)
 def is_point_outside_carpet(x, y, depth):
     if depth <= 0:
         return 0

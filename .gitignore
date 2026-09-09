@@ -12,6 +12,7 @@
 TODO.txt
 *.ipynb
 !/examples/*.ipynb
+.venv
 
 # PyInstaller
 /build
