@@ -5,8 +5,15 @@ HPCNs are represented as Numba tuples of 2 HPNs.
 import numba
 import numpy as np
 
-from aldyparen.math.hpn import hpn_normalize_in_place, Hpn, hpn_mul_inplace_noclear, hpn_abs, \
-    HPN_TYPE, HPN_MUT, DEFAULT_PRECISION
+from aldyparen.math.hpn import (
+    DEFAULT_PRECISION,
+    HPN_MUT,
+    HPN_TYPE,
+    Hpn,
+    hpn_abs,
+    hpn_mul_inplace_noclear,
+    hpn_normalize_in_place,
+)
 
 # Numba types
 HPCN_TYPE = numba.types.UniTuple(HPN_TYPE, 2)

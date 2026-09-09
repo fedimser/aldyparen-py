@@ -1,9 +1,10 @@
-from aldyparen.math.complex_hpn import ComplexHpn
-from aldyparen.math.hpn_compiler import compile_expression_hpcn
+import random
+from collections.abc import Callable
 
 import numpy as np
-import random
-from typing import Callable
+
+from aldyparen.math.complex_hpn import ComplexHpn
+from aldyparen.math.hpn_compiler import compile_expression_hpcn
 
 
 def check_univariate(expr: str, golden: Callable[[complex], complex]):
