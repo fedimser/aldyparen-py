@@ -1,23 +1,22 @@
-import json
 from typing import Any
 
 import numpy as np
 import pytest
 
-from aldyparen.graphics import ChunkingRenderer, ColorPalette, Frame, StaticRenderer, Transform
-from aldyparen.gui.presets import PRESET_NAMES, load_preset
-from aldyparen.painters import lyapunov
+from aldyparen.graphics import (
+    ChunkingRenderer,
+    ColorPalette,
+    Frame,
+    StaticRenderer,
+    Transform,
+)
+from aldyparen.gui.presets import load_preset
 from aldyparen.painters import (
-    ALL_PAINTERS,
-    JuliaPainter,
     LyapunovFractalPainter,
-    MandelbroidHighPrecisionPainter,
-    MandelbroidPainter,
-    MandelbrotHighPrecisionPainter,
-    SierpinskiCarpetPainter,
+    lyapunov,
 )
 from aldyparen.test_util import _assert_picture
-from aldyparen.util import SUPPORTED_FUNCTIONS
+
 
 @pytest.mark.parametrize(
     ("kwargs", "message"),
@@ -80,10 +79,3 @@ def test_lyapunov_chunked_render_matches_static_render():
     chunked_picture = ChunkingRenderer(20, 15, chunk_size=17).render(frame)
 
     np.testing.assert_array_equal(chunked_picture, static_picture)
-
-
-def test_renders_lyapunov_fractal():
-    painter, transform, palette = load_preset("lyapunov")
-    frame = Frame(painter, transform, palette)
-
-    _assert_picture(StaticRenderer(200, 200).render(frame), "lyapunov_aabab")

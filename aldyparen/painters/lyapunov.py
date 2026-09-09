@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 from .base import Painter
 
 
-@numba.jit(nopython=True, parallel=True)
+@numba.njit(parallel=True)
 def paint_lyapunov_numba(
     points: NDArray[np.complex128],
     ans: NDArray[np.uint32],
@@ -62,9 +62,8 @@ def paint_lyapunov_numba(
             continue
 
         exponent = exponent_sum / iterations
-        magnitude_bin = int(math.floor(abs(exponent) * color_scale))
-        if magnitude_bin > 0x7FFFFFFE:
-            magnitude_bin = 0x7FFFFFFE
+        magnitude_bin = math.floor(abs(exponent) * color_scale)
+        magnitude_bin = min(magnitude_bin, 0x7FFFFFFE)
         ans[point_index] = np.uint32(2 * magnitude_bin + (1 if exponent < 0.0 else 2))
 
     return numerical_failures
