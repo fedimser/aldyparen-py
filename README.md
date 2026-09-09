@@ -87,7 +87,7 @@ Run from command line:
 ```
 git clone https://github.com/fedimser/aldyparen-py.git
 cd aldyparen-py
-pip3 install -r requirements.txt
+pip install -e .[lint,test,dev]
 python3 run_gui.py
 ```
 
@@ -103,13 +103,12 @@ This app has all the functionality of the old Aldyparen, plus some extra feature
 
 To start development, create virtualenv and install dependencies:
 ```
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+pip install -e .[lint,test,dev]
 ```
 
 To run tests and validate style before commit, run:
 ```
-pycodestyle --max-line-length=120 ./aldyparen && python3 -m pytest .
+./lint.sh && python3 -m pytest .
 ```
 
 To check test coverage:

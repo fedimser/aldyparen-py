@@ -7,6 +7,19 @@ on:
     branches: [ main ]
 
 jobs:
+  lint:
+    name: Lint (black+pylint+mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          architecture: 'x64'
+      - name: Install requirements
+        run: pip install .[lint,test]
+      - name: Lint
+        run: ./lint.sh
   pytest-ubuntu:
     strategy:
       matrix:
@@ -20,9 +33,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: 'x64'
       - name: Install requirements
-        run: |
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+        run: pip install .[test]
       - name: Run tests
         run: pytest
   pytest-windows:
@@ -35,9 +46,7 @@ jobs:
           python-version: '3.14'
           architecture: 'x64'
       - name: Install requirements
-        run: |
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+        run: pip install .[test]
       - name: Run tests
         run: pytest
   pytest-macos:
@@ -50,8 +59,6 @@ jobs:
           python-version: '3.14'
           architecture: 'x64'
       - name: Install requirements
-        run: |
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+        run: pip install .[test]
       - name: Run tests
         run: pytest

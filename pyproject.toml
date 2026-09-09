@@ -1,2 +1,86 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools"]
+
+[project]
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
+name = "aldyparen-py"
+version = "3.2.0"
+description = "Renders pictures and videos of algebraic fractals"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT" 
+authors = [{ name = "Dima Fedoriaka" }]
+
+# https://pypi.org/classifiers/
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Topic :: Multimedia :: Graphics",
+]
+
+# https://peps.python.org/pep-0508/
+dependencies = [
+    "matplotlib>=3.7.1",
+    "moviepy>=2.2.1",
+    "numba>=0.67",
+    "numpy>=2.5",
+    "PyQt5>=5.15.9",
+]
+
+# Development dependencies
+# pip install .[lint,test,dev]
+[project.optional-dependencies]
+lint = [
+    "black==25.1.0",
+    "mypy==1.15.0",
+    "pylint"
+]
+test = [
+    "pytest>=8.4.0",
+]
+dev = [
+    "coverage",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/fedimser/aldyparen-py"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aldyparen"]
+
+[[tool.mypy.overrides]]
+module = ["numba.*"]
+ignore_missing_imports = true
+
+[tool.pylint."FORMAT"]
+max-line-length = 120
+max-module-lines = 2000
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "consider-using-enumerate",
+    "consider-using-f-string",
+    "fixme",
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "no-else-return",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-branches",
+    "too-many-instance-attributes",
+    "too-many-locals",
+    "too-many-positional-arguments",
+    "too-many-public-methods",
+    "too-many-return-statements",
+    "too-many-statements",
+]
+
+[tool.pylint.SIMILARITIES]
+ignore-comments = true
+ignore-docstrings = true
+ignore-imports = true
+ignore-signatures = true
+min-similarity-lines = 10
+
 [tool.black]
 line-length = 120
