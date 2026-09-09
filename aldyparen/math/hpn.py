@@ -32,8 +32,8 @@ NUMBER_PATTERN = re.compile(r"^([-]?\d+)([.](\d*))?(e([-+]?\d+))?$")
 DEFAULT_PRECISION = 16
 
 # Numba types
-HPN_TYPE = numba.types.Array(numba.types.int64, 1, "A", readonly=True)
-HPN_MUT = numba.types.Array(numba.types.int64, 1, "A")
+# HPN_TYPE = numba.types.Array(numba.types.int64, 1, "A", readonly=True)
+# HPN_MUT = numba.types.Array(numba.types.int64, 1, "A")
 
 
 class Hpn:
@@ -224,7 +224,7 @@ def _hpn_to_float(x: np.ndarray) -> float:
 
 
 # i8[:](i8[:],i8[:])
-@numba.jit(nopython=True)
+@numba.njit()
 def hpn_mul(x: NDArray[np.int64], y: NDArray[np.int64]) -> NDArray[np.int64]:
     prec = x.shape[0]
     ans = np.zeros_like(x)
@@ -234,7 +234,7 @@ def hpn_mul(x: NDArray[np.int64], y: NDArray[np.int64]) -> NDArray[np.int64]:
 
 
 # void(HPN_TYPE, HPN_TYPE, HPN_MUT)
-@numba.jit(nopython=True)
+@numba.njit()
 def hpn_mul_inplace_noclear(
     x: NDArray[np.int64],
     y: NDArray[np.int64],
@@ -260,7 +260,7 @@ def hpn_mul_vec_inplace(
 
 
 # i8[:](i8[:])
-@numba.jit(nopython=True)
+@numba.njit()
 def hpn_square(x: NDArray[np.int64]) -> NDArray[np.int64]:
     ans = hpn_mul(x, x)
     hpn_normalize_in_place(ans)
@@ -268,7 +268,7 @@ def hpn_square(x: NDArray[np.int64]) -> NDArray[np.int64]:
 
 
 # HPN_MUT(HPN_TYPE)
-@numba.jit(nopython=True)
+@numba.njit()
 def hpn_abs(x: NDArray[np.int64]) -> NDArray[np.int64]:
     if x[0] >= 0:
         return np.copy(x)

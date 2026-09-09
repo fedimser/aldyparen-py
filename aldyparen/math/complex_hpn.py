@@ -9,8 +9,6 @@ from numpy.typing import NDArray
 
 from aldyparen.math.hpn import (
     DEFAULT_PRECISION,
-    HPN_MUT,
-    HPN_TYPE,
     Hpn,
     hpn_abs,
     hpn_mul_inplace_noclear,
@@ -18,8 +16,8 @@ from aldyparen.math.hpn import (
 )
 
 # Numba types
-HPCN_TYPE = numba.types.UniTuple(HPN_TYPE, 2)
-HPCN_MUT = numba.types.UniTuple(HPN_MUT, 2)
+# HPCN_TYPE = numba.types.UniTuple(HPN_TYPE, 2)
+# HPCN_MUT = numba.types.UniTuple(HPN_MUT, 2)
 
 
 class ComplexHpn:
