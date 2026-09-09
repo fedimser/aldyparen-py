@@ -50,7 +50,7 @@ class CompilerExpression:
     def __pow__(self, other):
         if type(other) is int and other == 2:
             return CompilerExpression(function=("complex_hpn.sqr", [self]))
-        raise f"Power of {other} is not supported"
+        raise ValueError(f"Power of {other} is not supported")
 
     def to_hpn_expression(self, constants: dict[str, ComplexHpn], prec: int) -> str:
         if self.variable is not None:

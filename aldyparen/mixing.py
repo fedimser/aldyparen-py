@@ -120,7 +120,10 @@ def mix_functions(f1: str, f2: str, w: float):
                 result.append((type1, val1))
             else:
                 raise ValueError("Incompatible tokens: %s %s" % (val1, val2))
-    return untokenize(result).decode("utf-8").replace(" ", "")
+    mixed = untokenize(result)
+    if isinstance(mixed, bytes):
+        mixed = mixed.decode("utf-8")
+    return mixed.replace(" ", "")
 
 
 def mix_mandelbrot_hp(

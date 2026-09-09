@@ -47,7 +47,7 @@ class AldyparenApp:
         self.is_loading_project = False
         self.is_exiting = False
         self.shown_movie_frame_is_invalid = True
-        self.error_messages_to_show = []  # type: List[str]
+        self.error_messages_to_show: list[str] = []
 
         self.saved_painter_configs = dict()  # TODO: this better store actual painters.
         for painter_class in ALL_PAINTERS:
@@ -73,12 +73,12 @@ class AldyparenApp:
         self.timer = QTimer()
         self.timer.timeout.connect(self.tick)
 
-        self.frames = []  # type: List[Frame]
+        self.frames: list[Frame] = []
         self.selected_frame_idx = -1
 
         self.photo_rendering_tasks_count = 0
         self.video_rendering_tasks_count = 0
-        self.active_video_renderer = None  # type: VideoRenderer | None
+        self.active_video_renderer: VideoRenderer | None = None
 
     def run(self):
         self.main_window.show()
