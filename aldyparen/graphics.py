@@ -11,6 +11,7 @@ from numpy.typing import ArrayLike, NDArray
 from PyQt5.QtCore import QThread
 
 from aldyparen.math.hpn import Hpn
+from aldyparen.painters import ALL_PAINTERS
 from aldyparen.painters.base import HighPrecisionPainter
 
 if TYPE_CHECKING:
@@ -153,6 +154,10 @@ class Transform:
         transform = Transform(Hpn(center_x), Hpn(center_y), scale_log10 or 0.0, rotation or 0.0)
         return transform
 
+    @staticmethod
+    def default() -> "Transform":
+        return Transform.create(scale=4)
+
     def translate(self, delta: complex | np.complexfloating) -> "Transform":
         center_delta = -delta * self._k()
         new_center_x = self.center_x + np.real(center_delta)
@@ -257,6 +262,11 @@ class Frame:
         else:
             palette = ColorPalette.deserialize(data["pl"])
         return Frame(painter=painter, transform=Transform.deserialize(data["tr"]), palette=palette)
+
+    @staticmethod
+    def default() -> "Frame":
+        default_painter = ALL_PAINTERS[0]()
+        return Frame(default_painter, Transform.default(), ColorPalette.default())
 
 
 class Renderer:

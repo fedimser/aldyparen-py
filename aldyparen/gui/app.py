@@ -27,15 +27,16 @@ from ..painters import (
     MandelbroidPainter,
     Painter,
 )
-from ..video import VideoRenderer, deserialize_movie
+from ..project import AldyparenProject
+from ..version import VERSION
+from ..video import VideoRenderer
 from .async_runners import ImageRenderRunnable, render_movie_preview_async
 from .gui_utils import global_thread_pool
 from .main import MainWindow
-from .presets import PRESET_NAMES, load_preset
+from .presets import load_preset
 from .settings import AldyparenSettings
 
 APP_NAME = "Aldyparen"
-VERSION = "3.2"
 
 
 class AldyparenApp:
@@ -54,10 +55,8 @@ class AldyparenApp:
         for painter_class in ALL_PAINTERS:
             painter_name = painter_class.__name__
             self.saved_painter_configs[painter_name] = painter_class().to_object()
-        self.selected_painter_class = ALL_PAINTERS[0]
-        default_painter = ALL_PAINTERS[0]()
-        self.default_transform = Transform.create(scale=4)
-        self.work_frame = Frame(default_painter, self.default_transform, ColorPalette.default())
+        self.work_frame = Frame.default()
+        self.selected_painter_class = self.work_frame.painter.__class__
 
         self.main_window = MainWindow(self)
         self.settings = AldyparenSettings(self)
@@ -124,7 +123,7 @@ class AldyparenApp:
         self.on_work_frame_changed()
 
     def reset_transform(self):
-        self.update_work_frame_transform(self.default_transform)
+        self.update_work_frame_transform(Transform.default())
 
     def reset_painter_config(self):
         self.work_frame = replace(self.work_frame, painter=self.selected_painter_class())
@@ -292,54 +291,24 @@ class AldyparenApp:
         task.setAutoDelete(True)
         global_thread_pool().start(task)
 
-    @staticmethod
-    def save_project_from_frames(
-        file_name: str,
-        frames: list[Frame],
-        *,
-        work_frame: Frame | None,
-        selected_frame_idx: int = 0,
-        description: str = "",
-    ):
-        """Saves given frames into a project."""
-        if work_frame is None:
-            work_frame = frames[0]
-
-        frames_json = []
-        prev = None
-        for frame in frames:
-            frames_json.append(frame.serialize(prev=prev))
-            prev = frame
-        data = {
-            "saved_timestamp": datetime.now().isoformat(),
-            "version": VERSION,
-            "work_frame": work_frame.serialize(),
-            "frames": frames_json,
-            "selected_frame_idx": selected_frame_idx,
-            "description": description,
-        }
-        with open(file_name, "w", encoding="utf-8") as f:
-            json.dump(data, f)
-
     def save_project(self):
         assert self.opened_file_name is not None
-        AldyparenApp.save_project_from_frames(
-            self.opened_file_name,
+        project = AldyparenProject.create(
             self.frames,
             work_frame=self.work_frame,
             selected_frame_idx=self.selected_frame_idx,
         )
+        project.save(self.opened_file_name)
         self.have_unsaved_changes = False
 
     def load_project(self, file_name: str):
         self.is_loading_project = True
         if not os.path.exists(file_name):
             raise ValueError(f"File doesn't exist: {file_name}")
-        with open(file_name, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        project = AldyparenProject.load(file_name)
 
         # Load work frame to UI.
-        self.work_frame = Frame.deserialize(data["work_frame"])
+        self.work_frame = project.work_frame
         painter_idx = PAINTERS_INDEX[self.work_frame.painter.__class__.__name__]
         self.main_window.combo_painter_type.setCurrentIndex(painter_idx)
         self.main_window.set_painter_config(json.dumps(self.work_frame.painter.to_object()))
@@ -348,8 +317,8 @@ class AldyparenApp:
         self.on_work_frame_changed()
 
         # Load movie to UI.
-        self.frames = deserialize_movie(data["frames"])
-        self.selected_frame_idx = data["selected_frame_idx"]
+        self.frames = project.frames
+        self.selected_frame_idx = project.selected_frame_idx
         self.opened_file_name = file_name
         self.have_unsaved_changes = False
         self.main_window.on_movie_updated()

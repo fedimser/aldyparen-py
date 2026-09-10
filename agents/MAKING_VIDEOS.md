@@ -16,10 +16,10 @@ projects programmatically. The public rendering types are available from `aldypa
 
 ```python
 from aldyparen import ColorPalette, Frame, StaticRenderer, Transform, VideoRenderer
-from aldyparen.gui.app import AldyparenApp
 from aldyparen.gui.presets import PRESET_NAMES, load_preset
 from aldyparen.mixing import make_animation
 from aldyparen.painters import MandelbroidPainter
+from aldyparen.project import AldyparenProject
 ```
 
 See `examples/example.ipynb` for a small library example. The most important APIs are:
@@ -30,13 +30,13 @@ image = StaticRenderer(width, height).render(frame)  # uint8 RGB NumPy array
 
 segment = make_animation(frame1, frame2, length)
 
-AldyparenApp.save_project_from_frames(
-    file_name,
+project = AldyparenProject.create(
     frames,
     work_frame=frames[0],
     selected_frame_idx=0,
     description=description,
 )
+project.save(file_name)
 ```
 
 `make_animation(frame1, frame2, length)` treats `length` as the number of frame intervals and returns
@@ -44,9 +44,9 @@ AldyparenApp.save_project_from_frames(
 at 12 FPS, `length=36` adds three seconds to a multi-key-frame timeline when the shared endpoint is deduplicated.
 As a standalone list, those 37 rendered frames last $37/12$ seconds.
 
-`work_frame` is a required keyword argument to `save_project_from_frames`; pass `frames[0]` or `None`. The method
-stores the frames, project version, timestamp, selected frame, and description in the repository's JSON format.
-Do not construct that JSON by hand.
+Pass `work_frame=frames[0]` to `AldyparenProject.create`, or omit it to use the first frame automatically. The
+resulting project stores the frames, selected frame, and description; `project.save(file_name)` adds the project
+version and timestamp and writes the repository's JSON format. Do not construct that JSON by hand.
 
 ## Core Concepts
 
@@ -203,7 +203,7 @@ Use the project number reserved before exploration. It must have been selected b
 `aldyparen-video-projects/` and `examples/`, taking the greatest existing `aldyparen_XXX.json` number plus one, and
 formatting it with three digits. Confirm again that the destination is still unused, and refuse to overwrite it.
 
-The description passed to `save_project_from_frames` should be ready to adapt for YouTube. Include:
+The description passed to `AldyparenProject.create` should be ready to adapt for YouTube. Include:
 
 - a short title and an engaging one- or two-sentence summary;
 - timestamped scene descriptions based on 12 FPS, unless another planning FPS was requested;
@@ -228,7 +228,7 @@ Before finishing:
 1. Confirm that the frame list is non-empty and that the duration matches the plan.
 2. Preview all key frames and representative intermediate frames at 16:9.
 3. Check each painter's `warning` after rendering and investigate warnings rather than silently accepting them.
-4. Save the project with `AldyparenApp.save_project_from_frames`.
+4. Construct the project with `AldyparenProject.create`, then save it with `project.save`.
 5. Load the JSON and deserialize every frame in sequence with `Frame.deserialize(..., prev=previous_frame)`, or
    open it through the application, to verify that the project is readable.
 6. Confirm that the output name is the next sequential name and that no existing file was modified.

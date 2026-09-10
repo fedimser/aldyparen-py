@@ -1,5 +1,6 @@
-import pytest
 from pathlib import Path
+
+import pytest
 from moviepy import VideoFileClip
 
 from aldyparen.graphics import ColorPalette, Frame, Transform

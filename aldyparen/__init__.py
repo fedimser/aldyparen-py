@@ -1,3 +1,3 @@
 from . import painters
-from .graphics import Frame, ColorPalette, Transform, StaticRenderer
+from .graphics import ColorPalette, Frame, StaticRenderer, Transform
 from .video import VideoRenderer
