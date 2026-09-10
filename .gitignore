@@ -16,6 +16,7 @@ TODO.txt
 .coverage
 *.egg_info
 aldyparen-video-projects
+examples/render-video.ipynb
 
 # PyInstaller
 /build

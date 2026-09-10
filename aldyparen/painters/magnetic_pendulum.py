@@ -48,6 +48,8 @@ def paint_magnetic_pendulum_numba(
         for step in range(max_steps):
             nearest_magnet = -1
             nearest_distance_squared = np.inf
+            acceleration_x = -gravity * x - damping * velocity_x
+            acceleration_y = -gravity * y - damping * velocity_y
             for magnet_index in range(magnet_count):
                 dx = magnet_positions[magnet_index, 0] - x
                 dy = magnet_positions[magnet_index, 1] - y
@@ -56,21 +58,18 @@ def paint_magnetic_pendulum_numba(
                     nearest_distance_squared = distance_squared
                     nearest_magnet = magnet_index
 
+                force_distance_squared = distance_squared + height_squared
+                force_scale = magnet_strengths[magnet_index] / (
+                    force_distance_squared * math.sqrt(force_distance_squared)
+                )
+                acceleration_x += force_scale * dx
+                acceleration_y += force_scale * dy
+
             speed_squared = velocity_x * velocity_x + velocity_y * velocity_y
             if nearest_distance_squared <= settle_distance_squared and speed_squared <= settle_speed_squared:
                 time_bin = min((step * SETTLING_TIME_BINS) // max_steps, SETTLING_TIME_BINS - 1)
                 ans[point_index] = np.uint32(1 + nearest_magnet + magnet_count * time_bin)
                 break
-
-            acceleration_x = -gravity * x - damping * velocity_x
-            acceleration_y = -gravity * y - damping * velocity_y
-            for magnet_index in range(magnet_count):
-                dx = magnet_positions[magnet_index, 0] - x
-                dy = magnet_positions[magnet_index, 1] - y
-                distance_squared = dx * dx + dy * dy + height_squared
-                force_scale = magnet_strengths[magnet_index] / (distance_squared * math.sqrt(distance_squared))
-                acceleration_x += force_scale * dx
-                acceleration_y += force_scale * dy
 
             if not np.isfinite(acceleration_x) or not np.isfinite(acceleration_y):
                 valid = False
