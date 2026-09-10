@@ -1,7 +1,7 @@
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable, ClassVar, Dict, List, overload
+from typing import TYPE_CHECKING, Callable, ClassVar, Dict, overload
 
 import numba
 import numpy as np
@@ -10,12 +10,12 @@ from matplotlib import pyplot as plt
 from numpy.typing import ArrayLike, NDArray
 from PyQt5.QtCore import QThread
 
-from aldyparen.math.hpn import Hpn
-from aldyparen.painters import ALL_PAINTERS
-from aldyparen.painters.base import HighPrecisionPainter
+from .math.hpn import Hpn
+from .painters import ALL_PAINTERS
+from .painters.base import HighPrecisionPainter
 
 if TYPE_CHECKING:
-    from aldyparen.painters import Painter
+    from .painters import Painter
 
 
 # u1[:,:,:](u4[:,:],u1[:,:])
@@ -249,7 +249,7 @@ class Frame:
 
     @staticmethod
     def deserialize(data: Dict, prev: "Frame | None" = None) -> "Frame":
-        from aldyparen.painters import Painter
+        from .painters import Painter
 
         if data["pn"] == "prev":
             assert prev is not None

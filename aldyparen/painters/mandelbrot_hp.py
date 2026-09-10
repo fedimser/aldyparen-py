@@ -3,8 +3,7 @@ import numpy as np
 from typing import Any
 from numpy.typing import NDArray
 
-from aldyparen.math.hpn import *
-
+from ..math.hpn import *
 from .base import HighPrecisionPainter
 
 # This is slower and not used, but left for reference.

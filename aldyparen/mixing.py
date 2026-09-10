@@ -4,9 +4,9 @@ from typing import cast
 
 import numpy as np
 
-from aldyparen.graphics import ColorPalette, Frame, Transform
-from aldyparen.math.hpn import Hpn
-from aldyparen.painters import (
+from .graphics import ColorPalette, Frame, Transform
+from .math.hpn import Hpn
+from .painters import (
     JuliaPainter,
     LyapunovFractalPainter,
     MagneticPendulumPainter,

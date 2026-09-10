@@ -4,8 +4,8 @@ from contextlib import ExitStack, closing
 from tempfile import TemporaryDirectory
 from time import time
 
-from aldyparen.graphics import ChunkingRenderer, Frame
-from aldyparen.project import AldyparenProject
+from .graphics import ChunkingRenderer, Frame
+from .project import AldyparenProject
 
 
 class VideoRenderer:
@@ -79,9 +79,7 @@ class VideoRenderer:
             if len(parts) > 1:
                 self.log("Concatenating parts...")
                 with ExitStack() as open_clips:
-                    clips = [
-                        open_clips.enter_context(closing(VideoFileClip(part_name))) for part_name, _ in parts
-                    ]
+                    clips = [open_clips.enter_context(closing(VideoFileClip(part_name))) for part_name, _ in parts]
                     final_clip = open_clips.enter_context(closing(concatenate_videoclips(clips)))
                     final_clip.write_videofile(file_name, codec="libx264")
                 self.log("Deleting temporary files...")
