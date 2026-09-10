@@ -1,22 +1,28 @@
 import os
+from collections.abc import Callable
 from time import time
-from typing import Callable
 
 from aldyparen.graphics import ChunkingRenderer, Frame
 from aldyparen.project import AldyparenProject
 
 
 class VideoRenderer:
-    MAX_MEMORY_USAGE_BYTES = 100_000_000  # 100 MB
 
     def __init__(
-        self, width: int, height: int, fps: int, verbose: bool = False, is_aborted: Callable[[], bool] = lambda: False
+        self,
+        width: int,
+        height: int,
+        fps: int,
+        verbose: bool = False,
+        is_aborted: Callable[[], bool] = lambda: False,
+        max_memory_bytes: int = 100_000_000,  # 100 MB
     ):
         self.image_renderer = ChunkingRenderer(width, height, chunk_size=100000)
         self.fps = fps
         self.status_string = "Ready"
         self.is_aborted = is_aborted
         self.verbose = verbose
+        self.max_memory_bytes = max_memory_bytes
 
     def render_video(self, frames: list[Frame], file_name: str):
         from moviepy import ImageClip, VideoFileClip, concatenate_videoclips
@@ -30,7 +36,7 @@ class VideoRenderer:
         # Split work into parts to limit RAM usage.
         n = len(frames)
         frames_per_part = max(
-            0, self.MAX_MEMORY_USAGE_BYTES // (self.image_renderer.width_pxl * self.image_renderer.height_pxl * 3)
+            0, self.max_memory_bytes // (self.image_renderer.width_pxl * self.image_renderer.height_pxl * 3)
         )
         parts_num = (n + frames_per_part - 1) // frames_per_part
         parts: list[tuple[str, list[int]]] = []

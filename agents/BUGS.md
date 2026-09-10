@@ -1,10 +1,5 @@
 ## Serious findings
 
-3. **High — asynchronous preview races with frame deletion**
-   - `async_runners.py:33-36` indexes the current frame after rendering without checking whether the movie was cleared or changed meanwhile.
-   - Confirmed with an emptied frame list: `IndexError: list index out of range`.
-   - The same access treats index `-1` as the last frame, so invalid selection state can also identify the wrong frame.
-
 4. **High — deep-zoom arithmetic crashes above 128 decimal digits**
    - `hpn.py:61-68` correctly creates `digits` for scalar operands, but then incorrectly accesses `other.digits`.
    - Any scalar operation on an `Hpn` whose precision exceeds the default 16 groups fails.
