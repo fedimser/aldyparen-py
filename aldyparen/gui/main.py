@@ -168,6 +168,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.edit_center_y.textChanged.connect(self.on_transform_text_edited)
         self.edit_scale_log10.textChanged.connect(self.on_transform_text_edited)
         self.edit_rotation_deg.textChanged.connect(self.on_transform_text_edited)
+        self.edit_description.textChanged.connect(self.on_description_changed)
 
         # Buttons.
         self.button_reset_transform.clicked.connect(lambda: self.app.reset_transform())
@@ -270,6 +271,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui_handlers_locked = True
         self.app.set_painter_config(edit.toPlainText())
         self.ui_handlers_locked = False
+
+    def set_description(self, text: str):
+        edit: QPlainTextEdit = self.edit_description
+        if edit.toPlainText() == text:
+            return
+        edit.blockSignals(True)
+        edit.setPlainText(text)
+        edit.blockSignals(False)
+
+    def on_description_changed(self):
+        edit: QPlainTextEdit = self.edit_description
+        self.app.description = edit.toPlainText()
 
     def set_label_painter_status(self, status: str):
         label: QLabel = self.label_config_status

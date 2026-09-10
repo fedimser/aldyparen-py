@@ -1,9 +1,9 @@
-import json
 import os
 from time import time
-from typing import Callable, List
+from typing import Callable
 
 from aldyparen.graphics import ChunkingRenderer, Frame
+from aldyparen.project import AldyparenProject
 
 
 class VideoRenderer:
@@ -73,23 +73,11 @@ class VideoRenderer:
         self.log("Done")
 
     def render_movie_from_file(self, input_file: str, output_file: str):
-        with open(input_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        frames = deserialize_movie(data["frames"])
+        project = AldyparenProject.load(input_file)
         self.verbose = True
-        self.render_video(frames, output_file)
+        self.render_video(project.frames, output_file)
 
     def log(self, text: str):
         self.status_string = text
         if self.verbose:
             print(text)
-
-
-def deserialize_movie(data: List):
-    frames = []
-    prev = None
-    for frame_json in data:
-        frame = Frame.deserialize(frame_json, prev=prev)
-        frames.append(frame)
-        prev = frame
-    return frames
