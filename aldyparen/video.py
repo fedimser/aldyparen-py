@@ -81,4 +81,3 @@ class VideoRenderer:
         self.status_string = text
         if self.verbose:
             print(text)
-
