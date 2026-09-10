@@ -30,6 +30,12 @@ dependencies = [
 # Development dependencies
 # pip install .[lint,test,dev]
 [project.optional-dependencies]
+cuda12 = [
+    "numba-cuda[cu12]",
+]
+cuda13 = [
+    "numba-cuda[cu13]",
+]
 lint = [
     "black==25.1.0",
     "pyright==1.1.411",
@@ -50,3 +56,8 @@ include = ["aldyparen*"]
 
 [tool.black]
 line-length = 120
+
+[tool.pytest.ini_options]
+markers = [
+    "cuda_sim: tests that require NUMBA_ENABLE_CUDASIM=1 before pytest starts",
+]

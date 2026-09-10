@@ -124,6 +124,17 @@ pip install -e .[lint,test,dev]
 python3 run_gui.py
 ```
 
+## CUDA
+
+For NVIDIA GPU acceleration, install the optional dependencies matching the installed CUDA major version:
+```
+pip install -e .[cuda12]
+# or
+pip install -e .[cuda13]
+```
+Painters with CUDA support use it automatically when a compatible GPU and driver are available, and otherwise fall back
+to the CPU implementation.
+
 ## Development notes
 
 This application is written in Python using PyQt5.
@@ -142,6 +153,7 @@ pip install -e .[lint,test,dev]
 To run tests and validate style before commit, run:
 ```
 ./lint.sh && python3 -m pytest .
+NUMBA_ENABLE_CUDASIM=1 python3 -m pytest -m cuda_sim .
 ```
 
 To check test coverage:
