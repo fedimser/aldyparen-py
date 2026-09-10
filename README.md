@@ -153,7 +153,6 @@ pip install -e .[lint,test,dev]
 To run tests and validate style before commit, run:
 ```
 ./lint.sh && python3 -m pytest .
-NUMBA_ENABLE_CUDASIM=1 python3 -m pytest -m cuda_sim .
 ```
 
 To check test coverage:

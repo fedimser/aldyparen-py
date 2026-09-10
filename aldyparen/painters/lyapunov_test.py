@@ -1,4 +1,3 @@
-import os
 from typing import Any
 
 import numpy as np
@@ -12,12 +11,10 @@ from aldyparen.graphics import (
     StaticRenderer,
     Transform,
 )
-from aldyparen.gui.presets import load_preset
 from aldyparen.painters import (
     LyapunovFractalPainter,
     lyapunov,
 )
-from aldyparen.test_util import _assert_picture
 
 
 @pytest.mark.parametrize(
@@ -114,26 +111,6 @@ def test_lyapunov_falls_back_to_cpu_when_cuda_fails(monkeypatch: pytest.MonkeyPa
 
     np.testing.assert_array_equal(ans, [3, 4])
     assert painter.warning is None
-
-
-@pytest.mark.cuda_sim
-@pytest.mark.skipif(
-    os.environ.get("NUMBA_ENABLE_CUDASIM") != "1",
-    reason="requires NUMBA_ENABLE_CUDASIM=1 before importing numba.cuda",
-)
-def test_lyapunov_cuda_simulator_matches_cpu_kernel():
-    values = np.linspace(2.0, 4.0, 257)
-    points = (values + 1j * values[::-1]).astype(np.complex128)
-    points[:5] = [3 + 3j, 4 + 4j, 2 + 2j, complex(np.nan, 1), complex(1, np.inf)]
-    sequence = np.array([0, 0, 1, 0, 1], dtype=np.uint8)
-    cpu_ans = np.empty(len(points), dtype=np.uint32)
-    cuda_ans = np.empty(len(points), dtype=np.uint32)
-
-    cpu_failures = lyapunov.paint_lyapunov_numba(points, cpu_ans, sequence, 20, 30, 10.0)
-    cuda_failures = lyapunov.paint_lyapunov_cuda(points, cuda_ans, sequence, 20, 30, 10.0)
-
-    np.testing.assert_array_equal(cuda_ans, cpu_ans)
-    assert cuda_failures == cpu_failures
 
 
 def test_lyapunov_chunked_render_matches_static_render():

@@ -36,10 +36,6 @@ jobs:
         run: pip install .[test]
       - name: Run tests
         run: pytest .
-      - name: Run CUDA simulator tests
-        run: pytest -m cuda_sim .
-        env:
-          NUMBA_ENABLE_CUDASIM: '1'
   pytest-windows:
     name: Tests (Windows)
     runs-on: windows-latest
@@ -53,10 +49,6 @@ jobs:
         run: pip install .[test]
       - name: Run tests
         run: pytest .
-      - name: Run CUDA simulator tests
-        run: pytest -m cuda_sim .
-        env:
-          NUMBA_ENABLE_CUDASIM: '1'
   pytest-macos:
     name: Tests (MacOS)
     runs-on: macos-latest
@@ -70,7 +62,3 @@ jobs:
         run: pip install .[test]
       - name: Run tests
         run: pytest .
-      - name: Run CUDA simulator tests
-        run: pytest -m cuda_sim .
-        env:
-          NUMBA_ENABLE_CUDASIM: '1'

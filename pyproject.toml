@@ -56,8 +56,3 @@ include = ["aldyparen*"]
 
 [tool.black]
 line-length = 120
-
-[tool.pytest.ini_options]
-markers = [
-    "cuda_sim: tests that require NUMBA_ENABLE_CUDASIM=1 before pytest starts",
-]
