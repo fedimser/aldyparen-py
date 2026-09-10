@@ -50,6 +50,7 @@ class AldyparenApp:
         self.is_exiting = False
         self.shown_movie_frame_is_invalid = True
         self.error_messages_to_show: list[str] = []
+        self._description = ""
 
         self.saved_painter_configs = dict()  # TODO: this better store actual painters.
         for painter_class in ALL_PAINTERS:
@@ -79,6 +80,20 @@ class AldyparenApp:
         self.photo_rendering_tasks_count = 0
         self.video_rendering_tasks_count = 0
         self.active_video_renderer: VideoRenderer | None = None
+
+    @property
+    def description(self) -> str:
+        return self._description
+
+    @description.setter
+    def description(self, value: str):
+        if value == self._description:
+            return
+        self._description = value
+        self.main_window.set_description(value)
+        if not self.is_loading_project:
+            self.have_unsaved_changes = True
+            self.main_window.update_title()
 
     def run(self):
         self.main_window.show()
@@ -297,6 +312,7 @@ class AldyparenApp:
             self.frames,
             work_frame=self.work_frame,
             selected_frame_idx=self.selected_frame_idx,
+            description=self.description,
         )
         project.save(self.opened_file_name)
         self.have_unsaved_changes = False
@@ -306,6 +322,7 @@ class AldyparenApp:
         if not os.path.exists(file_name):
             raise ValueError(f"File doesn't exist: {file_name}")
         project = AldyparenProject.load(file_name)
+        self.description = project.description
 
         # Load work frame to UI.
         self.work_frame = project.work_frame
@@ -328,6 +345,7 @@ class AldyparenApp:
         # Do not reset work frame.
         self.frames = []
         self.selected_frame_idx = -1
+        self.description = ""
         self.have_unsaved_changes = False
         self.main_window.on_movie_updated()
         self.opened_file_name = None
