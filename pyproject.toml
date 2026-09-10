@@ -31,10 +31,10 @@ dependencies = [
 # pip install .[lint,test,dev]
 [project.optional-dependencies]
 cuda12 = [
-    "numba-cuda[cu12]",
+    "numba-cuda-mlir[cu12]",
 ]
 cuda13 = [
-    "numba-cuda[cu13]",
+    "numba-cuda-mlir[cu13]",
 ]
 lint = [
     "black==25.1.0",
