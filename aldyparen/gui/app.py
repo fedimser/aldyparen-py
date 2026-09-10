@@ -260,6 +260,14 @@ class AldyparenApp:
         self.have_unsaved_changes = True
         self.main_window.on_movie_updated()
 
+    def clear_movie(self):
+        if len(self.frames) == 0:
+            return
+        self.frames = []
+        self.selected_frame_idx = -1
+        self.have_unsaved_changes = True
+        self.main_window.on_movie_updated()
+
     def clone_selected_frame(self):
         if len(self.frames) == 0:
             return

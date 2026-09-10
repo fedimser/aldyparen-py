@@ -1,10 +1,5 @@
 ## Serious findings
 
-1. **Critical — clearing a movie can silently discard project data**
-   - `main.py:332-335` empties `frames` directly but does not set `have_unsaved_changes` or reset `selected_frame_idx`.
-   - Confirmed runtime state after clearing: `frames=[]`, `selected_frame_idx=0`, `have_unsaved_changes=False`.
-   - A user can clear a previously saved movie and exit without an unsaved-changes warning.
-
 3. **High — asynchronous preview races with frame deletion**
    - `async_runners.py:33-36` indexes the current frame after rendering without checking whether the movie was cleared or changed meanwhile.
    - Confirmed with an emptied frame list: `IndexError: list index out of range`.

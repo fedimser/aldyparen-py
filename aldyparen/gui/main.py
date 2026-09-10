@@ -347,8 +347,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def clear_movie(self):
         if self.confirm("Permanently delete all frames?"):
-            self.app.frames = []
-            self.on_movie_updated()
+            self.app.clear_movie()
 
     def on_movie_scroll(self):
         new_idx = self.scroll_bar_movie.value()
