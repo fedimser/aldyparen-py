@@ -5,8 +5,7 @@ import numba
 import numpy as np
 from numpy.typing import NDArray
 
-from aldyparen.util import prepare_function
-
+from ..util import prepare_function
 from .base import Painter
 
 

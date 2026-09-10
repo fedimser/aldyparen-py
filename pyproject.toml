@@ -46,7 +46,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["aldyparen"]
+include = ["aldyparen*"]
 
 [tool.black]
 line-length = 120

@@ -1,8 +1,7 @@
 import numpy as np
 
-from aldyparen import Transform
-from aldyparen.graphics import ColorPalette
-from aldyparen.painters import (
+from ..graphics import ColorPalette, Transform
+from ..painters import (
     LyapunovFractalPainter,
     MagneticPendulumPainter,
     MandelbroidHighPrecisionPainter,

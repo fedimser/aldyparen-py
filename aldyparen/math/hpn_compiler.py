@@ -1,11 +1,11 @@
 import string
-from typing import Callable, Optional, Any
+from typing import Any, Callable, Optional
 
 import numba
 
-from aldyparen.math import complex_hpn
-from aldyparen.math.complex_hpn import ComplexHpn
-from aldyparen.util import prepare_eval_env
+from ..util import prepare_eval_env
+from . import complex_hpn
+from .complex_hpn import ComplexHpn
 
 ALLOWED_CHARS = set(string.ascii_lowercase + string.digits + ".,()+-*")
 SUPPORTED_UNARY_FUNCTIONS = ["sqr", "abscw"]

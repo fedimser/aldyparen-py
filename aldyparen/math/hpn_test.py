@@ -41,6 +41,17 @@ def test_arithmetic():
                 assert np.allclose((x * y).to_float(), numbers_np[i] * numbers_np[j])
 
 
+def test_scalar_arithmetic_above_default_precision():
+    x = Hpn.from_str("1", prec=18)
+
+    for result, expected in ((x + 0.5, "1.5"), (x - 0.5, "0.5"), (x * 0.5, "0.5")):
+        assert result.prec() == 18
+        assert str(result) == expected
+
+    tiny = Hpn.from_str("0." + "0" * 128 + "2", prec=18)
+    assert str(tiny * 2) == "0." + "0" * 128 + "4"
+
+
 def test_conversion_precision_errors():
     with pytest.raises(Exception) as e:
         Hpn.from_str("0.0001", prec=1000)

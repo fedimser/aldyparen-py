@@ -2,14 +2,31 @@ import json
 import os
 import time
 from pathlib import Path
+from unittest.mock import Mock
 
 import matplotlib.image as mpimg
 import pytest
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QFileDialog
 
+from aldyparen.graphics import Frame
 from aldyparen.gui.app import AldyparenApp
 from aldyparen.test_util import _assert_picture
+
+
+def test_clear_movie_marks_project_as_changed_and_resets_selection():
+    app = AldyparenApp.__new__(AldyparenApp)
+    app.frames = [Frame.default(), Frame.default()]
+    app.selected_frame_idx = 1
+    app.have_unsaved_changes = False
+    app.main_window = Mock()
+
+    app.clear_movie()
+
+    assert app.frames == []
+    assert app.selected_frame_idx == -1
+    assert app.have_unsaved_changes
+    app.main_window.on_movie_updated.assert_called_once_with()
 
 
 def test_app_runs_and_closes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
