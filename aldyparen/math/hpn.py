@@ -65,7 +65,7 @@ class Hpn:
         else:
             digits = _hpn_from_number(other)
         if len(digits) < self.prec():
-            digits = Hpn._extend_precision(other.digits, self.prec())
+            digits = Hpn._extend_precision(digits, self.prec())
         return digits
 
     def __add__(self, other: Any):
