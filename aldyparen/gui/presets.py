@@ -1,3 +1,5 @@
+import functools
+
 import numpy as np
 
 from ..graphics import ColorPalette, Transform
@@ -10,9 +12,11 @@ from ..painters import (
     Painter,
 )
 
-BS_PALETTE = ColorPalette.categorical(["black"]) + ColorPalette.gradient("orange", "blue", 20)
-
 PRESET_NAMES = ["mandelbrot", "mandelbrot_hp", "burning_ship", "burning_ship_hp", "lyapunov", "magnetic_pendulum"]
+
+
+def _default_palette() -> ColorPalette:
+    return ColorPalette.categorical(["black"]) + ColorPalette.gradient("orange", "blue", 20)
 
 
 def _lyapunov_palette() -> ColorPalette:
@@ -31,8 +35,9 @@ def _magnetic_pendulum_palette() -> ColorPalette:
     return ColorPalette(colors)
 
 
+@functools.cache
 def load_preset(name: str) -> tuple[Painter, Transform, ColorPalette]:
-    palette = BS_PALETTE
+    palette = _default_palette()
     match name:
         case "mandelbrot":
             painter = MandelbroidPainter(gen_function="z*z+c", max_iter=100, radius=2)

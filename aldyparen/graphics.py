@@ -5,8 +5,6 @@ from typing import TYPE_CHECKING, Callable, ClassVar, Dict, overload
 
 import numba
 import numpy as np
-from matplotlib import colors
-from matplotlib import pyplot as plt
 from numpy.typing import ArrayLike, NDArray
 from PyQt5.QtCore import QThread
 
@@ -36,6 +34,8 @@ def _numba_remap(pic: NDArray[np.uint32], colors: NDArray[np.uint8]) -> NDArray[
 def _to_numpy_color(color: str | ArrayLike) -> np.ndarray:
     """Converts string or RGB list to numpy uint8 array representing RGB"""
     if type(color) is str:
+        from matplotlib import colors
+
         color = 255 * np.array(colors.to_rgb(color))
     ans = np.array(color, dtype=np.uint8)
     if not ans.shape == (3,):
@@ -86,7 +86,17 @@ class ColorPalette:
     @staticmethod
     def default():
         return ColorPalette.categorical(
-            ["white", "yellow", "purple", "orange", "lightblue", "red", "gray", "green", "black"]
+            [
+                [255, 255, 255],  # white
+                [255, 255, 0],  # yellow
+                [128, 0, 128],  # purple
+                [255, 165, 0],  # orange
+                [173, 216, 230],  # light blue
+                [255, 0, 0],  # red
+                [128, 128, 128],  # gray
+                [0, 128, 0],  # green
+                [0, 0, 0],  # black
+            ]
         )
 
     @staticmethod
@@ -357,6 +367,8 @@ class ChunkingRenderer(Renderer):
         return frame.palette.remap(pic.reshape(self.height_pxl, self.width_pxl))
 
     def render_picture(self, frame: Frame, file_name: str):
+        from matplotlib import pyplot as plt
+
         pic = self.render(frame)
         plt.imsave(file_name, pic)
 

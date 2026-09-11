@@ -22,8 +22,8 @@ def is_point_outside_carpet(x: float, y: float, depth: int) -> int:
         return 1
     return is_point_outside_carpet(x - kx, y - ky, depth - 1)
 
-
-@numba.vectorize("u4(c16,i8)", target="parallel", nopython=True)
+# u4(c16,i8)
+@numba.vectorize(nopython=True)
 def sierpinski_numba(p: Any, depth: Any) -> int:
     x = np.real(p)
     y = np.imag(p)

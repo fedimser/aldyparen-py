@@ -52,12 +52,9 @@ class AldyparenApp:
         self.error_messages_to_show: list[str] = []
         self._description = ""
 
-        self.saved_painter_configs = dict()  # TODO: this better store actual painters.
-        for painter_class in ALL_PAINTERS:
-            painter_name = painter_class.__name__
-            self.saved_painter_configs[painter_name] = painter_class().to_object()
         self.work_frame = Frame.default()
         self.selected_painter_class = self.work_frame.painter.__class__
+        self.saved_painter_configs = {self.selected_painter_class.__name__: self.work_frame.painter.to_object()}
 
         self.main_window = MainWindow(self)
         self.settings = AldyparenSettings(self)
@@ -113,9 +110,20 @@ class AldyparenApp:
         if self.is_loading_project:
             return
         self.selected_painter_class = painter_class
-        config = self.saved_painter_configs[painter_class.__name__]
+        painter_name = painter_class.__name__
+        config = self.saved_painter_configs.get(painter_name)
+        if config is None:
+            painter = painter_class()
+            config = painter.to_object()
+            self.saved_painter_configs[painter_name] = config
+        else:
+            painter = painter_class(**config)
+
+        self.main_window.ui_handlers_locked = True
         self.main_window.set_painter_config(json.dumps(config))
-        self.work_frame = replace(self.work_frame, painter=painter_class(**config))
+        self.main_window.ui_handlers_locked = False
+
+        self.work_frame = replace(self.work_frame, painter=painter)
         self.on_work_frame_changed()
 
     def set_painter_config(self, config_json: str):
