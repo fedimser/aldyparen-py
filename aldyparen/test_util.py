@@ -30,5 +30,5 @@ def _assert_picture(
     if os.path.exists(golden_path):
         golden = mpimg.imread(golden_path)
     if not _match_pictures(picture, golden, max_mismatched_pixels):
-        plt.imsave(os.path.join(GOLDEN_DIR, golden_name + "_expected.bmp"), picture)
+        plt.imsave(os.path.join(GOLDEN_DIR, golden_name + "_actual.bmp"), picture)
         raise AssertionError(f"Golden mismatch: {golden_name}")

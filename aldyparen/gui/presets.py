@@ -15,10 +15,12 @@ from ..painters import (
 PRESET_NAMES = ["mandelbrot", "mandelbrot_hp", "burning_ship", "burning_ship_hp", "lyapunov", "magnetic_pendulum"]
 
 
+@functools.cache
 def _default_palette() -> ColorPalette:
     return ColorPalette.categorical(["black"]) + ColorPalette.gradient("orange", "blue", 20)
 
 
+@functools.cache
 def _lyapunov_palette() -> ColorPalette:
     colors = np.zeros((65, 3), dtype=np.uint8)
     colors[1::2] = ColorPalette.gradient("lightcyan", "navy", 32).colors
@@ -26,6 +28,7 @@ def _lyapunov_palette() -> ColorPalette:
     return ColorPalette(colors)
 
 
+@functools.cache
 def _magnetic_pendulum_palette() -> ColorPalette:
     colors = np.zeros((49, 3), dtype=np.uint8)
     magnet_colors = np.array([[255, 80, 70], [70, 150, 255], [255, 220, 60]], dtype=np.float64)
@@ -35,7 +38,6 @@ def _magnetic_pendulum_palette() -> ColorPalette:
     return ColorPalette(colors)
 
 
-@functools.cache
 def load_preset(name: str) -> tuple[Painter, Transform, ColorPalette]:
     palette = _default_palette()
     match name:
