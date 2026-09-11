@@ -35,3 +35,32 @@ def test_render_video_with_current_moviepy(tmp_path: Path):
         assert len(decoded_frames) == 4
     finally:
         clip.close()
+
+
+@pytest.mark.filterwarnings(
+    "ignore:Setting the shape on a NumPy array has been deprecated:DeprecationWarning:moviepy.video.io.ffmpeg_reader"
+)
+def test_render_video_retains_and_concatenates_parts(tmp_path: Path):
+    frame_size_bytes = 8 * 8 * 3
+    renderer = VideoRenderer(8, 8, fps=1, max_memory_bytes=2 * frame_size_bytes)
+    palette = ColorPalette.categorical(["black", "white"])
+    first = Frame(SierpinskiCarpetPainter(depth=1), Transform.create(scale=1), palette)
+    second = Frame(SierpinskiCarpetPainter(depth=2), Transform.create(scale=1), palette)
+    frames = [first, first, second, second]
+    output_file = tmp_path / "video.mp4"
+
+    with patch.object(renderer.image_renderer, "render", wraps=renderer.image_renderer.render) as render:
+        renderer.render_video(frames, str(output_file))
+
+    parts_dir = tmp_path / "video_parts"
+    assert render.call_count == 2
+    assert (parts_dir / "part_0000.mp4").stat().st_size > 0
+    assert (parts_dir / "part_0001.mp4").stat().st_size > 0
+    assert (parts_dir / "concat.txt").is_file()
+    assert (parts_dir / "concat.txt").read_text() == "file 'part_0000.mp4'\nfile 'part_0001.mp4'\n"
+
+    clip = VideoFileClip(str(output_file))
+    try:
+        assert len(list(clip.iter_frames(fps=1))) == 4
+    finally:
+        clip.close()

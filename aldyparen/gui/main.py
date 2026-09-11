@@ -423,6 +423,12 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         if len(file_name) == 0:
             return
+        extension = os.path.splitext(file_name)[1]
+        if not extension:
+            file_name += ".mp4"
+        elif extension != ".mp4":
+            show_alert("Video file extension must be .mp4")
+            return
         dur_sec = math.ceil(len(self.app.frames) / fps)
         prompt = "\n".join(
             [
