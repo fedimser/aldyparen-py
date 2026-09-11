@@ -65,6 +65,7 @@ def _render_with_interactive_renderer(w: int, h: int, frame: Frame) -> np.ndarra
         time.sleep(0.01)
         r.tick()
     r.halt()
+    r.show_rendered()
     assert not r.renderer_thread.isRunning()
     return results[-1]
 

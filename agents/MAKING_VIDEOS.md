@@ -341,6 +341,16 @@ This is a creative starting point, not a mandatory formula. Replace any scene th
   `color_scale`, and carefully chosen iteration counts.
 - For Mandelbroid or Julia formula morphs, test every intermediate formula. Token-compatible interpolation does not
   guarantee that the intermediate images are visually useful.
+- For an automated deep-zoom search, repeatedly render the current view, choose a well-composed boundary window
+  with both interior and exterior pixels plus strong local gradients, recenter there, and reduce scale. Preserve
+  and inspect every zoom level: a strong wide view can still lead into noise, a flat interior, or an empty exterior.
+- Treat a zoom as a sequence of visual discoveries rather than one start/end interpolation. Use at least five
+  deliberately inspected scale levels, and slow briefly near levels where a recognizable secondary structure
+  appears.
+- Arbitrary-formula Mandelbroid morphs can trigger a separate Numba compilation for every distinct interpolated
+  formula. Quantize a tested morph into a modest number of cached formula states, hold each state for multiple
+  frames, and let transform/palette motion supply continuity; this retains the morph while avoiding hundreds of
+  one-use compilations.
 - Increase iteration counts during a zoom when needed to preserve detail, but avoid unnecessary values that make
   every frame expensive.
 - A palette can evolve gradually within a scene, but preserve luminance contrast around important boundaries.

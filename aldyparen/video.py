@@ -19,6 +19,7 @@ class VideoRenderer:
         verbose: bool = False,
         is_aborted: Callable[[], bool] = lambda: False,
         max_memory_bytes: int = 100_000_00,  # 100 MB
+        skip_existing_parts: bool = False,
     ):
         assert 0 < width < 10000
         assert 0 < height < 10000
@@ -29,16 +30,22 @@ class VideoRenderer:
         self.is_aborted = is_aborted
         self.verbose = verbose
         self.max_memory_bytes = max_memory_bytes
+        self.skip_existing_parts = skip_existing_parts
 
         # State for logging progress.
         self.total_frames = 0
         self.rendered_frame_counter = 0
         self.time_redering_started = 0
 
-    def _render_clip(self, frames: list[Frame], file_name: str):
+    def _render_clip(self, frames: list[Frame], file_name: str) -> bool:
         # Renders sequence of frames into given file.
         # Internal helper: assumes that directory exists, all frames fit in memory.
         from moviepy import ImageClip, concatenate_videoclips
+
+        if self.skip_existing_parts and os.path.exists(file_name):
+            self.log(f"Not rendering existing {file_name}")
+            self.total_frames -= len(frames)
+            return True
 
         assert os.path.splitext(file_name)[1] == ".mp4"
         assert len(frames) > 0
@@ -102,11 +109,14 @@ class VideoRenderer:
         # Render video in parts.
         parts_dir = os.path.splitext(file_name)[0] + "_parts"
         if os.path.exists(parts_dir):
-            if os.path.isdir(parts_dir):
-                shutil.rmtree(parts_dir)
-            else:
-                os.remove(parts_dir)
-        os.makedirs(parts_dir)
+            if not self.skip_existing_parts:
+                if os.path.isdir(parts_dir):
+                    shutil.rmtree(parts_dir)
+                else:
+                    os.remove(parts_dir)
+                os.makedirs(parts_dir)
+        else:
+            os.makedirs(parts_dir)
         part_file_names = []
         for part_id in range(parts_num):
             begin_frame = part_id * frames_per_part
