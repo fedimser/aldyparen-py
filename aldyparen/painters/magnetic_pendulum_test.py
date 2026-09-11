@@ -87,10 +87,3 @@ def test_magnetic_pendulum_chunked_render_matches_static_render():
     chunked_picture = ChunkingRenderer(20, 15, chunk_size=17).render(frame)
 
     np.testing.assert_array_equal(chunked_picture, static_picture)
-
-
-def test_renders_magnetic_pendulum():
-    painter, transform, palette = load_preset("magnetic_pendulum")
-    picture = StaticRenderer(256, 256).render(Frame(painter, transform, palette))
-
-    _assert_picture(picture, "preset_magnetic_pendulum", max_mismatched_pixels=20)

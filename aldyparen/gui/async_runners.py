@@ -1,4 +1,5 @@
 import copy
+import os
 from typing import TYPE_CHECKING, List
 
 import numpy as np
@@ -75,6 +76,7 @@ class VideoRenderRunnable(QRunnable):
 
     def __init__(self, app: "AldyparenApp", frames: List[Frame], renderer: VideoRenderer, file_name: str):
         super().__init__()
+        assert os.path.splitext(file_name)[1] == ".mp4"
         self.app = app
         self.frames = copy.copy(frames)
         self.renderer = renderer

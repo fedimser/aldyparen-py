@@ -406,6 +406,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if frames_count == 0:
             show_alert("Movie is empty, can't render.")
             return
+        if self.app.video_rendering_tasks_count > 0:
+            show_alert("Another video rendering is in progress.")
+            return
         if self.app.photo_rendering_tasks_count > 0:
             show_alert("Movie is empty, can't render.")
             return
@@ -422,6 +425,12 @@ class MainWindow(QtWidgets.QMainWindow):
             default_suffix="mp4",
         )
         if len(file_name) == 0:
+            return
+        extension = os.path.splitext(file_name)[1]
+        if not extension:
+            file_name += ".mp4"
+        elif extension != ".mp4":
+            show_alert("Video file extension must be .mp4")
             return
         dur_sec = math.ceil(len(self.app.frames) / fps)
         prompt = "\n".join(
