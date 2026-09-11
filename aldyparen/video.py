@@ -59,16 +59,22 @@ class VideoRenderer:
             time_start = time()
             self.log("Started")
             frame_ctr = 0
+            previous_frame: Frame | None = None
+            rendered_frame = None
             for part_name, frame_ids in parts:
                 with ExitStack() as open_clips:
                     clips = []
                     for frame_id in frame_ids:
                         if self.is_aborted():
                             return
-                        rendered_frame = self.image_renderer.render(frames[frame_id])
+                        frame = frames[frame_id]
+                        if frame != previous_frame:
+                            rendered_frame = self.image_renderer.render(frame)
+                        assert rendered_frame is not None
                         clips.append(
                             open_clips.enter_context(closing(ImageClip(rendered_frame, duration=1.0 / self.fps)))
                         )
+                        previous_frame = frame
                         frame_ctr += 1
                         render_rate = (time() - time_start) / frame_ctr
                         self.log(f"{frame_ctr}/{n} frames, {render_rate:.1f} s/frame")
