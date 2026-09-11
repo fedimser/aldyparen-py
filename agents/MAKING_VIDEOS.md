@@ -104,6 +104,82 @@ Unless the user requests otherwise, plan at 12 FPS. Most moving segments should 
 intervals). A brief hold can be made by repeating a frame. Avoid long static shots, abrupt accidental jumps, and
 rapid motion that makes fine detail impossible to follow.
 
+## Audio-Synchronized Videos
+
+When the user supplies an audio track, analyze it before storyboarding and make the visual timeline from measured
+musical events rather than from an assumed constant tempo. Keep the original audio file unchanged. Aldyparen
+project files do not contain audio, so save the visual project normally and, only if a final movie is requested,
+mux the original track into the rendered video afterward.
+
+### Audio-analysis tools
+
+Use the following local tools; audio-analysis packages are working dependencies and do not need to be added to
+Aldyparen's runtime dependencies:
+
+- `ffprobe` for exact duration, codec, channel count, and sample rate;
+- `ffmpeg` to decode a temporary mono floating-point or PCM WAV at a consistent sample rate, and later to mux or
+  trim audio without changing the source file;
+- Python with `librosa` and NumPy for onset strength, onset times, beat tracking, local tempo, RMS energy, spectral
+  centroid/rolloff/contrast, and chroma; use `scipy.signal.find_peaks` when explicit peak filtering is useful; and
+- Matplotlib for a waveform/spectrogram/feature plot used to inspect the automatic analysis.
+
+Install analysis-only packages in the selected Python environment if they are unavailable. Save generated WAVs,
+plots, feature tables, and scripts under the reserved `tmp/aldyparen_XXX/` directory. Export a machine-readable
+analysis table (CSV, TSV, or JSON) containing at least event time, event type, strength, nearest video frame, local
+tempo, and local energy. Do not rely on one global BPM: electronic tracks can contain tempo changes, half-time
+sections, breakdowns, pickups, and syncopated onsets. Compare beat-track results with onset peaks and the plotted
+waveform, and correct obvious octave, phase, or section-boundary errors before designing visuals.
+
+### Turn the analysis into a 12 FPS schedule
+
+1. Determine the exact visual duration from the user's request and track duration. At 12 FPS, three minutes is
+  exactly 2,160 frames. Record any trim, fade, or duration mismatch explicitly rather than silently drifting out
+  of sync.
+2. Divide the track into musical sections using sustained changes in energy, onset density, timbre, and harmonic
+  content. Refine those boundaries to nearby strong onsets or downbeats. Give each section a mood, painter,
+  movement vocabulary, palette family, and rendering-cost budget.
+3. Convert event time to the nearest frame with `round(time_seconds * FPS)`. Resolve collisions deliberately when
+  several events quantize to one frame: preserve the strongest/downbeat event, combine compatible accents, or
+  move a weaker accent by one frame only when that improves the rhythm. Keep all schedule calculations in
+  floating-point time and quantize only the final visual events so rounding error cannot accumulate.
+4. Use strong beats and downbeats for major palette pulses, cuts, direction changes, or parameter accents. Use
+  weaker beats for small luminance/hue pulses. An effective palette pulse has a fast one-frame attack followed by
+  a two-to-five-frame decay toward its baseline; scale its amplitude by normalized onset strength and preserve
+  enough luminance contrast to keep the fractal readable.
+5. In breakdowns and low-energy passages, favor longer transform interpolation, restrained colors, and breathing
+  room. In high-energy passages, cut among preselected strong images on beats or subdivisions and use shorter
+  motion phrases. Do not make every detected onset a cut, and do not animate expensive painter parameters merely
+  to acknowledge a beat when a palette or transform accent will read more clearly.
+6. Render contact sheets or low-resolution previews with timecodes for every section, then preview representative
+  beat pulses and all rapid-cut passages at 12 FPS. Check sync against the actual audio, not only against the
+  feature plot. Revise the schedule if an automatically detected event does not feel musically important.
+
+It is sometimes desirable to put several exactly identical frames in a row. During a rapid-cut section, for
+example, repeating each selected image for two or three frames makes it readable for $2/12$ or $3/12$ seconds while
+retaining a crisp cut. Identical consecutive frames should reuse one rendered image (or be coalesced into one clip
+with the combined duration), so such holds can also save substantial rendering time. Do not replace a deliberate
+hold with near-identical interpolated frames, because those still require separate renders.
+
+### Keep audio-driven projects practical to render
+
+Benchmark promising frames after Numba's first-call compilation at the low preview resolution and reject costly
+parameter paths early. Start with the following conservative ranges, increasing them only where a preview proves
+that the extra work adds visible detail:
+
+- `MandelbroidPainter`: simple formulas and `max_iter` around 60–140; reserve roughly 180–250 for a small number of
+  detailed key frames rather than an entire rapid sequence.
+- `JuliaPainter`: simple Newton/rational formulas, `iters` around 20–60, and `max_colors` around 8–24.
+- `LyapunovFractalPainter`: `warmup` around 30–70 and `iterations` around 40–100; prefer `color_scale` and transform
+  changes over unnecessarily raising both iteration counts.
+- `MagneticPendulumPainter`: three or four magnets and `max_steps` around 300–700. Tune damping, time step,
+  `settle_distance`, and `settle_speed` so most points settle early; use larger step counts only for short scenes
+  whose added basin detail is visibly worthwhile.
+
+These are starting budgets, not fixed artistic limits. For fast passages, render a modest bank of visually distinct
+frames and hold/cut between them instead of calculating a unique expensive fractal for every one of the 12 frames
+per second. Record section boundaries, beat-frame mappings, pulse rules, painter parameters, and any audio trim in
+the reproducible build script and project description.
+
 ## Autonomous Workflow
 
 ### 1. Interpret the prompt
@@ -209,6 +285,7 @@ The description passed to `AldyparenProject.create` should be ready to adapt for
 - timestamped scene descriptions based on 12 FPS, unless another planning FPS was requested;
 - every painter used, with its defining formula or mathematical process;
 - important formulas, sequences, or changing parameters;
+- the track name when an audio track was used for analysis or synchronization;
 - a brief credit to aldyparen-py; and
 - no claims about resolution, FPS, audio, or rendered quality that the project file cannot guarantee.
 
