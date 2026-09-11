@@ -406,6 +406,9 @@ class MainWindow(QtWidgets.QMainWindow):
         if frames_count == 0:
             show_alert("Movie is empty, can't render.")
             return
+        if self.app.video_rendering_tasks_count > 0:
+            show_alert("Another video rendering is in progress.")
+            return
         if self.app.photo_rendering_tasks_count > 0:
             show_alert("Movie is empty, can't render.")
             return

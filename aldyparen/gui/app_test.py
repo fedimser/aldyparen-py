@@ -10,6 +10,7 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QFileDialog
 
 from aldyparen.graphics import Frame
+from aldyparen.gui import main
 from aldyparen.gui.app import AldyparenApp
 from aldyparen.test_util import _assert_picture
 
