@@ -12,7 +12,7 @@ from aldyparen.video import VideoRenderer
 @pytest.mark.filterwarnings(
     "ignore:Setting the shape on a NumPy array has been deprecated:DeprecationWarning:moviepy.video.io.ffmpeg_reader"
 )
-def test_render_video_with_current_moviepy(tmp_path: Path):
+def test_render_video(tmp_path: Path):
     renderer = VideoRenderer(8, 8, fps=1)
     palette = ColorPalette.categorical(["black", "white"])
     frames = [
@@ -40,7 +40,7 @@ def test_render_video_with_current_moviepy(tmp_path: Path):
 @pytest.mark.filterwarnings(
     "ignore:Setting the shape on a NumPy array has been deprecated:DeprecationWarning:moviepy.video.io.ffmpeg_reader"
 )
-def test_render_video_retains_and_concatenates_parts(tmp_path: Path):
+def test_render_video_with_parts(tmp_path: Path):
     frame_size_bytes = 8 * 8 * 3
     renderer = VideoRenderer(8, 8, fps=1, max_memory_bytes=2 * frame_size_bytes)
     palette = ColorPalette.categorical(["black", "white"])
@@ -52,12 +52,7 @@ def test_render_video_retains_and_concatenates_parts(tmp_path: Path):
     with patch.object(renderer.image_renderer, "render", wraps=renderer.image_renderer.render) as render:
         renderer.render_video(frames, str(output_file))
 
-    parts_dir = tmp_path / "video_parts"
     assert render.call_count == 2
-    assert (parts_dir / "part_0000.mp4").stat().st_size > 0
-    assert (parts_dir / "part_0001.mp4").stat().st_size > 0
-    assert (parts_dir / "concat.txt").is_file()
-    assert (parts_dir / "concat.txt").read_text() == "file 'part_0000.mp4'\nfile 'part_0001.mp4'\n"
 
     clip = VideoFileClip(str(output_file))
     try:

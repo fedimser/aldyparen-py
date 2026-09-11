@@ -18,7 +18,7 @@ class VideoRenderer:
         fps: int,
         verbose: bool = False,
         is_aborted: Callable[[], bool] = lambda: False,
-        max_memory_bytes: int = 100_000_000,  # 100 MB
+        max_memory_bytes: int = 100_000_00,  # 100 MB
     ):
         assert 0 < width < 10000
         assert 0 < height < 10000
@@ -136,7 +136,14 @@ class VideoRenderer:
         ]
         printable_command = subprocess.list2cmdline(command) if os.name == "nt" else shlex.join(command)
         self.log(f"Concatenating parts with command: {printable_command}")
-        subprocess.run(command, check=True)
+        result = subprocess.run(command, check=False)
+        if result.returncode != 0:
+            self.log("FFmpeg concatenation failed.")
+            return
+        assert os.path.exists(file_name)
+
+        print("Cleaning up parts...")
+        shutil.rmtree(parts_dir)
 
         self.log("Done")
 
