@@ -38,11 +38,23 @@ def test_frame_serialization_reuses_previous_painter_and_palette():
     data = current.serialize(prev=previous)
     restored = Frame.deserialize(data, prev=previous)
 
+    assert isinstance(data, dict)
     assert data["pn"] == "prev"
     assert data["pl"] == "prev"
     assert restored.painter is painter
     assert restored.palette is palette
     assert restored.transform == current.transform
+
+
+def test_frame_serialization_reuses_equal_previous_frame():
+    previous = Frame(MandelbroidPainter(gen_function="z*z+c"), Transform.create(), ColorPalette.grayscale(3))
+    current = Frame(previous.painter, previous.transform, previous.palette)
+
+    data = current.serialize(prev=previous)
+    restored = Frame.deserialize(data, prev=previous)
+
+    assert data == "prev"
+    assert restored is previous
 
 
 def _render_with_interactive_renderer(w: int, h: int, frame: Frame) -> np.ndarray:

@@ -233,6 +233,8 @@ class Frame:
         cached_movie_preview: ClassVar[np.ndarray | str | None]
 
     def serialize(self, prev: "Frame | None" = None):
+        if prev is not None and self == prev:
+            return "prev"
         data: dict[str, object] = {
             "tr": self.transform.serialize(),
         }
@@ -248,9 +250,13 @@ class Frame:
         return data
 
     @staticmethod
-    def deserialize(data: Dict, prev: "Frame | None" = None) -> "Frame":
+    def deserialize(data: Dict | str, prev: "Frame | None" = None) -> "Frame":
         from .painters import Painter
 
+        if data == "prev":
+            assert prev is not None
+            return prev
+        assert isinstance(data, dict)
         if data["pn"] == "prev":
             assert prev is not None
             painter = prev.painter
