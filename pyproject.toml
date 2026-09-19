@@ -5,7 +5,7 @@ requires = ["setuptools"]
 [project]
 # https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
 name = "aldyparen-py"
-version = "3.2.0"
+version = "3.3.0"
 description = "Renders pictures and videos of algebraic fractals"
 readme = "README.md"
 requires-python = ">=3.12"
